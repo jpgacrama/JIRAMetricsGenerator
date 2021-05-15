@@ -13,25 +13,30 @@ members = {
     'Austin': '5fbb3d037cc1030069500950'
 }
 
-class JIRAQuery():
+class JIRALoginAndQuery():
     username = None
     api_token = None
     
     def __init__(self):
-        # Add call to enterCredentials -> logInToJIRA
         pass
-
-    def enterCredentials(self):
-        username = input("Please enter your username: ")
-        api_token = input("Please enter your api-token: ")
-        jiraLogInResult = JIRA(URL, basic_auth=(username, api_token))
-        return jiraLogInResult
 
     def logInToJIRA(self):
         username = input("Please enter your username: ")
         api_token = input("Please enter your api-token: ")
         jiraLogInResult = JIRA(URL, basic_auth=(username, api_token))
         return jiraLogInResult
+
+    def queryJIRA(self):
+        # NOTE:
+        # You need to create two JIRA queries: one where you can access the worklog
+        # And another to access the Issue types... WHY? 
+        allIssuesFromAustin = self.jira.search_issues(
+            f'assignee in ({members["Austin"]}) AND project = {PROJECT}')
+
+        allWorklogsFromAustin = self.jira.search_issues(
+            f'assignee in ({members["Austin"]}) AND project = {PROJECT}', fields="worklog")
+
+        return allIssuesFromAustin, allWorklogsFromAustin
 
 class GenerateMetrics(object):
     jira = None
@@ -45,16 +50,9 @@ class GenerateMetrics(object):
 
     def getAllInProgressTasksFromAustin(self, jira):
         desiredMonth = self.getDesiredMonth()
+
+
         
-        # NOTE:
-        # You need to create two JIRA queries: one where you can access the worklog
-        # And another to access the Issue types... WHY? 
-        allIssuesFromAustin = self.jira.search_issues(
-            f'assignee in ({members["Austin"]}) AND project = {PROJECT}')
-
-        allWorklogsFromAustin = self.jira.search_issues(
-            f'assignee in ({members["Austin"]}) AND project = {PROJECT}', fields="worklog")
-
         for value in allIssuesFromAustin:
             print(dir(value.fields.issuetype))
             
@@ -76,7 +74,7 @@ class GenerateMetrics(object):
             #                 value.fields.worklog.worklogs[i].updated)
 
 def main():
-    jiraQuery = JIRAQuery()
+    jiraQuery = JIRALoginAndQuery()
     jiraLogInResult = jiraQuery.logInToJIRA()
     
     metrics = GenerateMetrics(jiraLogInResult)
