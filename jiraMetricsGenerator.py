@@ -68,7 +68,7 @@ class GenerateMetrics(object):
                 if extractedDateTime.month == desiredMonth:
                     print(dir(value.fields))
                     print ( value.key, 
-                            value.fields.issuetype.description,
+                            # value.fields.issuetype.description, 
                             value.fields.worklog.worklogs[i].timeSpent,
                             value.fields.worklog.worklogs[i].updateAuthor,
                             value.fields.worklog.worklogs[i].updated)
