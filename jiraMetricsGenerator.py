@@ -6,6 +6,7 @@ os.system('cls' if os.name == 'nt' else 'clear')
 
 from jira import JIRA
 from datetime import datetime
+import numpy as np
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -50,7 +51,14 @@ class GenerateMetrics(object):
         month = input("Enter the desired Month in number form: ")
         return int(month)
 
-    def getAllInProgressWorklogs(self, allIssues, allWorklogs):
+    # Issues contain information about Issue Types
+    # It may contain the SW and Component fields. But I still need to investigate this
+    def getAllInProgressIssues(self, allIssues):
+        pass
+
+    # Worklogs contains all time spent information.
+    # I want to transform this into a matrix for now, so I can plot it
+    def getAllInProgressWorklogs(self, allWorklogs):
         desiredMonth = self.getDesiredMonth()
 
         for value in self.allWorklogs:
@@ -66,12 +74,20 @@ class GenerateMetrics(object):
                 extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
 
                 if extractedDateTime.month == desiredMonth:
-                    print(dir(value.fields))
+                    # print(dir(value.fields))
                     print ( value.key, 
                             # value.fields.issuetype.description, 
-                            value.fields.worklog.worklogs[i].timeSpent,
-                            value.fields.worklog.worklogs[i].updateAuthor,
-                            value.fields.worklog.worklogs[i].updated)
+                            value.fields.worklog.worklogs[i].timeSpent)
+                            # value.fields.worklog.worklogs[i].updateAuthor,
+                            # value.fields.worklog.worklogs[i].updated)
+
+    def transformDictionaryToMatrix(self):
+        pass
+
+    # Function to plot the hours spent for each JIRA ID
+    # TODO: I need to plot this against SW, but I need to extract its custom ID
+    def plotData(self):
+        pass
 
 def main():
     jiraService = JIRAService()
@@ -79,7 +95,7 @@ def main():
     allIssuesFromAustin, allWorklogsFromAustin = jiraService.queryJIRA()
 
     metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin)
-    metrics.getAllInProgressWorklogs(allIssuesFromAustin, allWorklogsFromAustin)
+    metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
 
 if __name__ == "__main__":
     main()
