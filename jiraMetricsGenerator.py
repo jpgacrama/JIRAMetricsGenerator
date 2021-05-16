@@ -50,7 +50,7 @@ class GenerateMetrics(object):
         month = input("Enter the desired Month in number form: ")
         return int(month)
 
-    def getAllInProgressWorklogs(self):
+    def getAllInProgressWorklogs(self, allIssues, allWorklogs):
         desiredMonth = self.getDesiredMonth()
 
         for value in self.allWorklogs:
@@ -78,8 +78,8 @@ def main():
     jiraService.logInToJIRA()
     allIssuesFromAustin, allWorklogsFromAustin = jiraService.queryJIRA()
 
-    metrics = GenerateMetrics(jiraLogInResult)
-    metrics.getAllInProgressWorklogs(jiraLogInResult)
+    metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin)
+    metrics.getAllInProgressWorklogs(allIssuesFromAustin, allWorklogsFromAustin)
 
 if __name__ == "__main__":
     main()
