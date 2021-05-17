@@ -6,7 +6,7 @@ os.system('cls' if os.name == 'nt' else 'clear')
 
 from jira import JIRA
 from datetime import datetime
-import numpy as np
+import matplotlib.pyplot as pyplot
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -105,15 +105,18 @@ class GenerateMetrics(object):
                     # - value.fields.worklog.worklogs[i].updateAuthor
                     # - value.fields.worklog.worklogs[i].updated
 
-        print(dictionaryWorklog)
-
-    def transformDictionaryToMatrix(self):
-        pass
+        return dictionaryWorklog
 
     # Function to plot the hours spent for each JIRA ID
     # TODO: I need to plot this against SW, but I need to extract its custom ID
-    def plotData(self):
-        pass
+    def plotData(self, dictionaryWorklog):
+        numerOfItems = len(dictionaryWorklog)
+        pyplot.axis("equal")
+        pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
+                    labels = [str(k) for k in dictionaryWorklog],
+                    autopct = None)
+        pyplot.title("Hours distributon for Austin")
+        pyplot.show()
 
 def main():
     jiraService = JIRAService()
@@ -122,8 +125,10 @@ def main():
 
     timeConverter = TimeConverter()
 
+    dictionaryWorklog = {}
     metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin, timeConverter)
-    metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
+    dictionaryWorklog = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
+    metrics.plotData(dictionaryWorklog)
 
 if __name__ == "__main__":
     main()
