@@ -60,6 +60,9 @@ class GenerateMetrics(object):
     # I want to transform this into a matrix for now, so I can plot it
     def getAllInProgressWorklogs(self, allWorklogs):
         desiredMonth = self.getDesiredMonth()
+        previousKey = None
+        totalTimeSpent = 0
+        dictionaryWorklog = {}
 
         for value in self.allWorklogs:
             # print(dir(value.fields.issuetype))
@@ -74,12 +77,24 @@ class GenerateMetrics(object):
                 extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
 
                 if extractedDateTime.month == desiredMonth:
-                    # print(dir(value.fields))
-                    print ( value.key, 
-                            # value.fields.issuetype.description, 
-                            value.fields.worklog.worklogs[i].timeSpent)
-                            # value.fields.worklog.worklogs[i].updateAuthor,
-                            # value.fields.worklog.worklogs[i].updated)
+                    if previousKey != value.key:
+                        previousKey = value.key
+                        totalTimeSpent = value.fields.worklog.worklogs[i].timeSpent
+                        dictionaryWorklog[previousKey] = totalTimeSpent
+                    else:
+                        totalTimeSpent += value.fields.worklog.worklogs[i].timeSpent
+                        dictionaryWorklog[value.key] = totalTimeSpent
+
+                    # Debug print to show the non-cumulative values of timeSpent
+                    # print ( value.key, 
+                    #         value.fields.worklog.worklogs[i].timeSpent)
+
+                    # Some items you may be interested in the future:
+                    # - value.fields.issuetype.description
+                    # - value.fields.worklog.worklogs[i].updateAuthor
+                    # - value.fields.worklog.worklogs[i].updated
+
+        print(dictionaryWorklog)
 
     def transformDictionaryToMatrix(self):
         pass
