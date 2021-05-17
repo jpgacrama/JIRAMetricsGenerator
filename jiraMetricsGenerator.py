@@ -62,7 +62,10 @@ class GenerateMetrics(object):
     # TODO: Issues contain information about Issue Types
     # It may contain the SW and Component fields. But I still need to investigate this
     def getAllInProgressIssues(self, allIssues):
-        pass
+        for value in self.allIssues:
+            print(dir(value.fields.customfield_10000))
+            
+            log_entry_count = len(value.fields.worklog.worklogs)
 
     def getAllInProgressWorklogs(self, allWorklogs):
         desiredMonth = self.getDesiredMonth()
@@ -112,10 +115,14 @@ def main():
 
     timeConverter = TimeConverter()
 
-    dictionaryWorklog = {}
+    worklogs = {}
+    issues = {}
     metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin, timeConverter)
-    dictionaryWorklog = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
-    metrics.plotData(dictionaryWorklog, "Austin")
+    
+    # worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
+    # metrics.plotData(worklogs, "Austin")
+
+    metrics.getAllInProgressIssues(issues)
 
 if __name__ == "__main__":
     main()
