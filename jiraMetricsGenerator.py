@@ -11,7 +11,8 @@ import matplotlib.pyplot as pyplot
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 members = {
-    'Austin': '5fbb3d037cc1030069500950'
+    'Austin': '5fbb3d037cc1030069500950',
+    'Jerred': '5ed4c8d844cc830c23027b31'
 }
 
 class TimeConverter(object):
@@ -34,24 +35,17 @@ class JIRAService(object):
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
     def queryJIRA(self, memberToQuery):
-        # NOTE:
-        # You need to create two JIRA queries: one where you can access the worklog
-        # And another to access the Issue types... WHY? 
-        allIssues = self.jiraService.search_issues(
-            f'assignee in ({members[memberToQuery]}) AND project = {PROJECT}')
-
         allWorklogs = self.jiraService.search_issues(
-            f'assignee in ({members[memberToQuery]}) AND project = {PROJECT}', fields="worklog")
+            f'assignee in ({members[memberToQuery]}) AND project = {PROJECT}',
+                fields="worklog")
 
-        return allIssues, allWorklogs
+        return allWorklogs
 
 class GenerateMetrics(object):
-    allIssues = None
     allWorklogs = None
     TimeConverter = None
     
-    def __init__(self, allIssues, allWorklogs, timeConverter):
-        self.allIssues = allIssues
+    def __init__(self, allWorklogs, timeConverter):
         self.allWorklogs = allWorklogs
         self.timeConverter = timeConverter
 
@@ -59,13 +53,6 @@ class GenerateMetrics(object):
         month = input("Enter the desired Month in number form: ")
         return int(month)
 
-    # TODO: Issues contain information about Issue Types
-    # It may contain the SW and Component fields. But I still need to investigate this
-    def getAllInProgressIssues(self, allIssues):
-        for value in self.allIssues:
-            print(dir(value.fields.customfield_10000))
-            
-            log_entry_count = len(value.fields.worklog.worklogs)
 
     def getAllInProgressWorklogs(self, allWorklogs):
         desiredMonth = self.getDesiredMonth()
@@ -111,18 +98,30 @@ class GenerateMetrics(object):
 def main():
     jiraService = JIRAService()
     jiraService.logInToJIRA()
-    allIssuesFromAustin, allWorklogsFromAustin = jiraService.queryJIRA("Austin")
+    
+    # AUSTIN
+    # allWorklogsFromAustin = jiraService.queryJIRA("Austin")
+
+    # timeConverter = TimeConverter()
+
+    # worklogs = {}
+    # issues = {}
+    # metrics = GenerateMetrics(allWorklogsFromAustin, timeConverter)
+    
+    # worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
+    # metrics.plotData(worklogs, "Austin")
+
+    # JERRED
+    allWorklogsFromJerred = jiraService.queryJIRA("Jerred")
 
     timeConverter = TimeConverter()
 
     worklogs = {}
     issues = {}
-    metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin, timeConverter)
+    metrics = GenerateMetrics(allWorklogsFromJerred, timeConverter)
     
-    # worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
-    # metrics.plotData(worklogs, "Austin")
-
-    metrics.getAllInProgressIssues(issues)
+    worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromJerred)
+    metrics.plotData(worklogs, "Jerred")
 
 if __name__ == "__main__":
     main()
