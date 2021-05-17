@@ -10,10 +10,25 @@ import matplotlib.pyplot as pyplot
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
-members = {
+MEMBERS = {
     'Austin': '5fbb3d037cc1030069500950',
     'Jerred': '5ed4c8d844cc830c23027b31'
 }
+
+SOFTWARE = ['Macrovue',
+            'HALO']
+
+# This class is responsible for querying each of the
+# OMNI items belonging to the various SW
+class TimeSpentPerSoftware(object):
+    softwareQuery = dict.fromkeys(SOFTWARE)
+    print(softwareQuery)
+    
+    def extractItemsPerSW(self, memberToQuery, jIRAService):
+        for sw in SOFTWARE:
+            softwareQuery = jIRAService.queryJIRA(memberToQuery, sw)
+
+        print(softwareQuery)
 
 class TimeConverter(object):
     # Converts the time to hours given the number in seconds
@@ -34,11 +49,12 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
-    def queryJIRA(self, memberToQuery):
+    def queryJIRA(self, memberToQuery, swToQuery):
         allWorklogs = self.jiraService.search_issues(
-            f'assignee in ({members[memberToQuery]}) AND project = {PROJECT}',
+            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Software = {swToQuery}',
                 fields="worklog")
 
+        # Returns a list of Worklogs
         return allWorklogs
 
 class GenerateMetrics(object):
@@ -112,16 +128,18 @@ def main():
     # metrics.plotData(worklogs, "Austin")
 
     # JERRED
-    allWorklogsFromJerred = jiraService.queryJIRA("Jerred")
-
-    timeConverter = TimeConverter()
-
-    worklogs = {}
-    issues = {}
-    metrics = GenerateMetrics(allWorklogsFromJerred, timeConverter)
+    timeSpentPerSoftware = TimeSpentPerSoftware()
+    timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
     
-    worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromJerred)
-    metrics.plotData(worklogs, "Jerred")
+    # allWorklogsFromJerred = jiraService.queryJIRA("Jerred")
+    # timeConverter = TimeConverter()
+
+    # worklogs = {}
+    # issues = {}
+    # metrics = GenerateMetrics(allWorklogsFromJerred, timeConverter)
+    
+    # worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromJerred)
+    # metrics.plotData(worklogs, "Jerred")
 
 if __name__ == "__main__":
     main()
