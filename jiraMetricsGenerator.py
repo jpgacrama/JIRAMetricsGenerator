@@ -14,6 +14,12 @@ members = {
     'Austin': '5fbb3d037cc1030069500950'
 }
 
+class TimeConverter(object):
+    # Converts the time to hours given the number in seconds
+    def convertToHours(self, timeInSeconds):
+        timeInHours = round(timeInSeconds / (60*60), 2)
+        return timeInHours
+
 class JIRAService(object):
     username = None
     api_token = None
@@ -42,10 +48,12 @@ class JIRAService(object):
 class GenerateMetrics(object):
     allIssues = None
     allWorklogs = None
+    TimeConverter = None
     
-    def __init__(self, allIssues, allWorklogs):
+    def __init__(self, allIssues, allWorklogs, timeConverter):
         self.allIssues = allIssues
         self.allWorklogs = allWorklogs
+        self.timeConverter = timeConverter
 
     def getDesiredMonth(self):
         month = input("Enter the desired Month in number form: ")
@@ -79,10 +87,13 @@ class GenerateMetrics(object):
                 if extractedDateTime.month == desiredMonth:
                     if previousKey != value.key:
                         previousKey = value.key
-                        totalTimeSpent = value.fields.worklog.worklogs[i].timeSpent
+
+                        totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
+                        totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
                         dictionaryWorklog[previousKey] = totalTimeSpent
                     else:
-                        totalTimeSpent += value.fields.worklog.worklogs[i].timeSpent
+                        totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
+                        totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
                         dictionaryWorklog[value.key] = totalTimeSpent
 
                     # Debug print to show the non-cumulative values of timeSpent
@@ -109,7 +120,9 @@ def main():
     jiraService.logInToJIRA()
     allIssuesFromAustin, allWorklogsFromAustin = jiraService.queryJIRA()
 
-    metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin)
+    timeConverter = TimeConverter()
+
+    metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin, timeConverter)
     metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
 
 if __name__ == "__main__":
