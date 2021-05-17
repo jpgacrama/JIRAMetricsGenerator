@@ -29,6 +29,9 @@ class TimeSpentPerSoftware(object):
 
         print(self.software['HALO'])
 
+class GenerateMetricsForEachSW(object):
+    pass
+
 class TimeConverter(object):
     # Converts the time to hours given the number in seconds
     def convertToHours(self, timeInSeconds):
