@@ -59,13 +59,11 @@ class GenerateMetrics(object):
         month = input("Enter the desired Month in number form: ")
         return int(month)
 
-    # Issues contain information about Issue Types
+    # TODO: Issues contain information about Issue Types
     # It may contain the SW and Component fields. But I still need to investigate this
     def getAllInProgressIssues(self, allIssues):
         pass
 
-    # Worklogs contains all time spent information.
-    # I want to transform this into a matrix for now, so I can plot it
     def getAllInProgressWorklogs(self, allWorklogs):
         desiredMonth = self.getDesiredMonth()
         previousKey = None
@@ -73,8 +71,6 @@ class GenerateMetrics(object):
         dictionaryWorklog = {}
 
         for value in self.allWorklogs:
-            # print(dir(value.fields.issuetype))
-            
             log_entry_count = len(value.fields.worklog.worklogs)
 
             for i in range(log_entry_count):
@@ -95,15 +91,6 @@ class GenerateMetrics(object):
                         totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
                         totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
                         dictionaryWorklog[value.key] = totalTimeSpent
-
-                    # Debug print to show the non-cumulative values of timeSpent
-                    # print ( value.key, 
-                    #         value.fields.worklog.worklogs[i].timeSpent)
-
-                    # Some items you may be interested in the future:
-                    # - value.fields.issuetype.description
-                    # - value.fields.worklog.worklogs[i].updateAuthor
-                    # - value.fields.worklog.worklogs[i].updated
 
         return dictionaryWorklog
 
