@@ -21,14 +21,13 @@ SOFTWARE = ['Macrovue',
 # This class is responsible for querying each of the
 # OMNI items belonging to the various SW
 class TimeSpentPerSoftware(object):
-    softwareQuery = dict.fromkeys(SOFTWARE)
-    print(softwareQuery)
-    
+    software = {}
+
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         for sw in SOFTWARE:
-            softwareQuery = jIRAService.queryJIRA(memberToQuery, sw)
+            self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
-        print(softwareQuery)
+        print(self.software['HALO'])
 
 class TimeConverter(object):
     # Converts the time to hours given the number in seconds
