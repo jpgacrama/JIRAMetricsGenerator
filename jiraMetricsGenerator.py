@@ -114,7 +114,7 @@ class GenerateMetrics(object):
         pyplot.axis("equal")
         pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
                     labels = [str(k) for k in dictionaryWorklog],
-                    autopct = None)
+                    autopct = '%.2f')
         pyplot.title("Hours distributon for Austin")
         pyplot.show()
 
