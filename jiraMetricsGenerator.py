@@ -33,17 +33,17 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
-    def queryJIRA(self):
+    def queryJIRA(self, memberToQuery):
         # NOTE:
         # You need to create two JIRA queries: one where you can access the worklog
         # And another to access the Issue types... WHY? 
-        allIssuesFromAustin = self.jiraService.search_issues(
-            f'assignee in ({members["Austin"]}) AND project = {PROJECT}')
+        allIssues = self.jiraService.search_issues(
+            f'assignee in ({members[memberToQuery]}) AND project = {PROJECT}')
 
-        allWorklogsFromAustin = self.jiraService.search_issues(
-            f'assignee in ({members["Austin"]}) AND project = {PROJECT}', fields="worklog")
+        allWorklogs = self.jiraService.search_issues(
+            f'assignee in ({members[memberToQuery]}) AND project = {PROJECT}', fields="worklog")
 
-        return allIssuesFromAustin, allWorklogsFromAustin
+        return allIssues, allWorklogs
 
 class GenerateMetrics(object):
     allIssues = None
@@ -109,26 +109,26 @@ class GenerateMetrics(object):
 
     # Function to plot the hours spent for each JIRA ID
     # TODO: I need to plot this against SW, but I need to extract its custom ID
-    def plotData(self, dictionaryWorklog):
+    def plotData(self, dictionaryWorklog, person):
         numerOfItems = len(dictionaryWorklog)
         pyplot.axis("equal")
         pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
                     labels = [str(k) for k in dictionaryWorklog],
                     autopct = '%.2f')
-        pyplot.title("Hours distributon for Austin")
+        pyplot.title(f"Hours distributon for {person} shown in percent")
         pyplot.show()
 
 def main():
     jiraService = JIRAService()
     jiraService.logInToJIRA()
-    allIssuesFromAustin, allWorklogsFromAustin = jiraService.queryJIRA()
+    allIssuesFromAustin, allWorklogsFromAustin = jiraService.queryJIRA("Austin")
 
     timeConverter = TimeConverter()
 
     dictionaryWorklog = {}
     metrics = GenerateMetrics(allIssuesFromAustin, allWorklogsFromAustin, timeConverter)
     dictionaryWorklog = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
-    metrics.plotData(dictionaryWorklog)
+    metrics.plotData(dictionaryWorklog, "Austin")
 
 if __name__ == "__main__":
     main()
