@@ -18,6 +18,16 @@ MEMBERS = {
 SOFTWARE = ['Macrovue',
             'HALO']
 
+# Generic plotter function
+def plotData(dictionaryWorklog, person):
+    numerOfItems = len(dictionaryWorklog)
+    pyplot.axis("equal")
+    pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
+                labels = [str(k) for k in dictionaryWorklog],
+                autopct = '%.2f')
+    pyplot.title(f"Hours distributon for {person} shown in percent")
+    pyplot.show()
+
 class TimeHelper(object):
     def trimDate(self, jiraValue, index):
         dateOfLog = jiraValue.fields.worklog.worklogs[index].updated
@@ -49,7 +59,7 @@ class TimeSpentPerSoftware(object):
     def setDesiredMonth(self):
         self.month = int(input("Enter the desired Month in number form: "))
 
-    def calculateTimeSpentForEachSW(self):
+    def getWorklogForEachSW(self):
         previousKey = None
         dictionaryWorklog = {}
 
@@ -73,6 +83,8 @@ class TimeSpentPerSoftware(object):
                                 totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
                                 totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
                                 dictionaryWorklog[sw][value.key] = totalTimeSpent
+                
+                dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
 
             return dictionaryWorklog
 
@@ -172,7 +184,8 @@ def main():
     # JERRED
     timeSpentPerSoftware = TimeSpentPerSoftware()
     timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
-    timeSpentPerSoftware.calculateTimeSpentForEachSW()
+    worklog = timeSpentPerSoftware.getWorklogForEachSW()
+    plotData(worklog, "Jerred")
     
     # allWorklogsFromJerred = jiraService.queryJIRA("Jerred")
     # timeConverter = TimeConverter()
