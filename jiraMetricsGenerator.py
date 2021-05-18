@@ -20,18 +20,21 @@ SOFTWARE = ['Macrovue',
 
 # Generic plotter function
 def plotData(dictionaryWorklog, person):
-    numerOfItems = len(dictionaryWorklog)
-    pyplot.axis("equal")
-    pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
-                labels = [str(k) for k in dictionaryWorklog],
-                autopct = '%.2f')
-    pyplot.title(f"Hours distributon for {person} shown in percent")
-    pyplot.show()
+    if dictionaryWorklog == None or len(dictionaryWorklog) == 0 or person == None:
+        print("You cannot plot data without any entries")
+        exit(1)
+    else:
+        numerOfItems = len(dictionaryWorklog)
+        pyplot.axis("equal")
+        pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
+                    labels = [str(k) for k in dictionaryWorklog],
+                    autopct = '%.2f')
+        pyplot.title(f"Hours distributon for {person} shown in percent")
+        pyplot.show()
 
 # Helper function to get Work Logs per SW
 def getWorkLogs(month, software):
     previousKey = None
-    month = None
     dictionaryWorklog = {}
     timeHelper = TimeHelper()
     
@@ -43,7 +46,7 @@ def getWorkLogs(month, software):
                     
                 for i in range(numberOfJiraTicketsForEachSW):
                     extractedDateTime = timeHelper.trimDate(value, i)
-                    if extractedDateTime.month == self.month:
+                    if extractedDateTime.month == month:
                         if previousKey != value.key:
                             previousKey = value.key
                             totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
@@ -112,41 +115,13 @@ class TimeSpentPerSoftware(object):
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
-    def setDesiredMonth(self):
+    def getDesiredMonth(self):
         self.month = int(input("Enter the desired Month in number form: "))
+        return self.month
 
     def getWorklogForEachSW(self):
-        previousKey = None
-        dictionaryWorklog = {}
-
-        self.setDesiredMonth()
+        return getWorkLogs(self.getDesiredMonth(), self.software)
         
-        if (self.software != None):
-            for sw in self.software:
-                dictionaryWorklog[sw] = {}
-                for value in self.software[sw]:
-                    numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
-                    
-                    for i in range(numberOfJiraTicketsForEachSW):
-                        extractedDateTime = self.timeHelper.trimDate(value, i)
-                        if extractedDateTime.month == self.month:
-                            if previousKey != value.key:
-                                previousKey = value.key
-                                totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                                totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
-                                dictionaryWorklog[sw][previousKey] = totalTimeSpent
-                            else:
-                                totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                                totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
-                                dictionaryWorklog[sw][value.key] = totalTimeSpent
-                
-                dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
-
-            return dictionaryWorklog
-
-        else:
-            print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
-            exit()
 
 class TimeSpentPerWorkItem(object):
     software = {}
