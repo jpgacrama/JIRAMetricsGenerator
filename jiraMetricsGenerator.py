@@ -29,13 +29,16 @@ def plotData(dictionaryWorklog, person):
     pyplot.show()
 
 # Helper function to get Work Logs per SW
-def getWorkLogs(month):
-    timerHelper = timerHelper()
+def getWorkLogs(month, software):
+    previousKey = None
+    month = None
+    dictionaryWorklog = {}
+    timeHelper = TimeHelper()
     
-    if (self.software != None):
-        for sw in self.software:
+    if (software != None):
+        for sw in software:
             dictionaryWorklog[sw] = {}
-            for value in self.software[sw]:
+            for value in software[sw]:
                 numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
                     
                 for i in range(numberOfJiraTicketsForEachSW):
@@ -44,11 +47,11 @@ def getWorkLogs(month):
                         if previousKey != value.key:
                             previousKey = value.key
                             totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                            totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
+                            totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
                             dictionaryWorklog[sw][previousKey] = totalTimeSpent
                         else:
                             totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                            totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
+                            totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
                             dictionaryWorklog[sw][value.key] = totalTimeSpent
                 
             dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
