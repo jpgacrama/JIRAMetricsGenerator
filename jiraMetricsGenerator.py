@@ -105,11 +105,9 @@ class JIRAService(object):
 class TimeSpentPerSoftware(object):
     software = {}
     month = None
-    timeHelper = None
 
     def __init__(self) -> None:
         super().__init__()
-        self.timeHelper = TimeHelper()
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         for sw in SOFTWARE:
@@ -123,6 +121,7 @@ class TimeSpentPerSoftware(object):
         return getWorkLogs(self.getDesiredMonth(), self.software)
         
 
+# TODO: Time to refactor this class
 class TimeSpentPerWorkItem(object):
     software = {}
     timeHelper = None
