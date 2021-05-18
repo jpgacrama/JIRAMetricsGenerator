@@ -42,24 +42,46 @@ class TimeSpentPerSoftware(object):
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
-    def getDesiredMonth(self):
+    def setDesiredMonth(self):
         self.month = int(input("Enter the desired Month in number form: "))
 
     def calculateTimeSpentForEachSW(self):
-        self.getDesiredMonth()
+        previousKey = None
+        dictionaryWorklog = {}
+
+        self.setDesiredMonth()
         
         if (self.software != None):
             for sw in self.software:
-                # DEBUG: Remove this when you are finished making changes
-                # print(f"\n\nSW ---- {sw}\n: {self.software[sw]}")
-                # print(f"\n\nNumber of items for {sw}: {len(self.software[sw])}")
+                
+                # TODO: Why am I not getting any data from self.software[sw]
+                # print((self.software[sw][0].raw)['fields'])
+                # print((self.software[sw][0].fields.worklog.worklogs))
+                # print(f"Number of items for {sw}: {len(self.software[sw])}")
+                print(self.software[sw])
 
                 for value in self.software[sw]:
+                    print(value.fields.worklog.worklogs)
                     numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
-                    extractedDateTime = self.timeHelper.trimDate(value, 0)
-                    print(extractedDateTime)
+                    
+                    if numberOfJiraTicketsForEachSW > 0:
+                        extractedDateTime = self.timeHelper.trimDate(value, 0)
+                        print(f"value.key: {value.key}")
+                        if extractedDateTime.month == self.month:
+                            if previousKey != value.key:
+                                previousKey = value.key
+                                totalTimeSpent = value.fields.worklog.worklogs[0].timeSpentSeconds
+                                totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
+                                dictionaryWorklog[previousKey] = totalTimeSpent
+                            else:
+                                totalTimeSpent += value.fields.worklog.worklogs[0].timeSpentSeconds
+                                totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
+                                dictionaryWorklog[value.key] = totalTimeSpent
+                    else:
+                        print("There are no worklogs!")
+                        exit()
 
-            # for i in range(log_entry_count):
+                    print (dictionaryWorklog)
 
         else:
             print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
@@ -112,6 +134,7 @@ class GenerateMetrics(object):
 
         for value in self.allWorklogs:
             log_entry_count = len(value.fields.worklog.worklogs)
+            print(value.fields.worklog.worklogs)
 
             for i in range(log_entry_count):
                 dateOfLog = value.fields.worklog.worklogs[i].updated
@@ -150,21 +173,20 @@ def main():
     jiraService.logInToJIRA()
     
     # AUSTIN
-    # allWorklogsFromAustin = jiraService.queryJIRA("Austin")
+    allWorklogsFromAustin = jiraService.queryJIRA("Austin", "Macrovue")
+    timeConverter = TimeConverter()
 
-    # timeConverter = TimeConverter()
-
-    # worklogs = {}
-    # issues = {}
-    # metrics = GenerateMetrics(allWorklogsFromAustin, timeConverter)
+    worklogs = {}
+    issues = {}
+    metrics = GenerateMetrics(allWorklogsFromAustin, timeConverter)
     
-    # worklogs = metrics.getTimeSpentPerJiraItem(allWorklogsFromAustin)
-    # metrics.plotData(worklogs, "Austin")
+    worklogs = metrics.getTimeSpentPerJiraItem(allWorklogsFromAustin)
+    metrics.plotData(worklogs, "Austin")
 
     # JERRED
-    timeSpentPerSoftware = TimeSpentPerSoftware()
-    timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
-    timeSpentPerSoftware.calculateTimeSpentForEachSW() # month is HARD-CODED for now
+    # timeSpentPerSoftware = TimeSpentPerSoftware()
+    # timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
+    # timeSpentPerSoftware.calculateTimeSpentForEachSW() # month is HARD-CODED for now
     
     # allWorklogsFromJerred = jiraService.queryJIRA("Jerred")
     # timeConverter = TimeConverter()
