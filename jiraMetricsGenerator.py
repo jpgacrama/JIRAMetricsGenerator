@@ -25,12 +25,18 @@ class TimeHelper(object):
         dateOfLog[-1] = dateOfLog[-1][:10]
         dateOfLog = " ".join(dateOfLog)
         extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
+        return extractedDateTime
 
 # This class is responsible for querying each of the
 # OMNI items belonging to the various SW
 class TimeSpentPerSoftware(object):
     software = {}
     month = None
+    timeHelper = None
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.timeHelper = TimeHelper()
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         for sw in SOFTWARE:
@@ -50,7 +56,8 @@ class TimeSpentPerSoftware(object):
 
                 for value in self.software[sw]:
                     numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
-                    print((value.fields.worklog))
+                    extractedDateTime = self.timeHelper.trimDate(value, 0)
+                    print(extractedDateTime)
 
             # for i in range(log_entry_count):
 
