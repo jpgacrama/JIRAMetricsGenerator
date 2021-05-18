@@ -18,19 +18,45 @@ MEMBERS = {
 SOFTWARE = ['Macrovue',
             'HALO']
 
+class TimeHelper(object):
+    def trimDate(self, jiraValue, index):
+        dateOfLog = jiraValue.fields.worklog.worklogs[index].updated
+        dateOfLog = dateOfLog.split(" ")
+        dateOfLog[-1] = dateOfLog[-1][:10]
+        dateOfLog = " ".join(dateOfLog)
+        extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
+
 # This class is responsible for querying each of the
 # OMNI items belonging to the various SW
 class TimeSpentPerSoftware(object):
     software = {}
+    month = None
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
-        print(self.software['HALO'])
+    def getDesiredMonth(self):
+        self.month = int(input("Enter the desired Month in number form: "))
 
-class GenerateMetricsForEachSW(object):
-    pass
+    def calculateTimeSpentForEachSW(self):
+        self.getDesiredMonth()
+        
+        if (self.software != None):
+            for sw in self.software:
+                # DEBUG: Remove this when you are finished making changes
+                # print(f"\n\nSW ---- {sw}\n: {self.software[sw]}")
+                # print(f"\n\nNumber of items for {sw}: {len(self.software[sw])}")
+
+                for value in self.software[sw]:
+                    numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
+                    print((value.fields.worklog))
+
+            # for i in range(log_entry_count):
+
+        else:
+            print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
+            exit()
 
 class TimeConverter(object):
     # Converts the time to hours given the number in seconds
@@ -71,8 +97,7 @@ class GenerateMetrics(object):
         month = input("Enter the desired Month in number form: ")
         return int(month)
 
-
-    def getAllInProgressWorklogs(self, allWorklogs):
+    def getTimeSpentPerJiraItem(self, allWorklogs):
         desiredMonth = self.getDesiredMonth()
         previousKey = None
         totalTimeSpent = 0
@@ -126,12 +151,13 @@ def main():
     # issues = {}
     # metrics = GenerateMetrics(allWorklogsFromAustin, timeConverter)
     
-    # worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromAustin)
+    # worklogs = metrics.getTimeSpentPerJiraItem(allWorklogsFromAustin)
     # metrics.plotData(worklogs, "Austin")
 
     # JERRED
     timeSpentPerSoftware = TimeSpentPerSoftware()
     timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
+    timeSpentPerSoftware.calculateTimeSpentForEachSW() # month is HARD-CODED for now
     
     # allWorklogsFromJerred = jiraService.queryJIRA("Jerred")
     # timeConverter = TimeConverter()
@@ -140,7 +166,7 @@ def main():
     # issues = {}
     # metrics = GenerateMetrics(allWorklogsFromJerred, timeConverter)
     
-    # worklogs = metrics.getAllInProgressWorklogs(allWorklogsFromJerred)
+    # worklogs = metrics.getTimeSpentPerJiraItem(allWorklogsFromJerred)
     # metrics.plotData(worklogs, "Jerred")
 
 if __name__ == "__main__":
