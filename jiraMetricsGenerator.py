@@ -28,6 +28,37 @@ def plotData(dictionaryWorklog, person):
     pyplot.title(f"Hours distributon for {person} shown in percent")
     pyplot.show()
 
+# Helper function to get Work Logs per SW
+def getWorkLogs(month):
+    timerHelper = timerHelper()
+    
+    if (self.software != None):
+        for sw in self.software:
+            dictionaryWorklog[sw] = {}
+            for value in self.software[sw]:
+                numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
+                    
+                for i in range(numberOfJiraTicketsForEachSW):
+                    extractedDateTime = timeHelper.trimDate(value, i)
+                    if extractedDateTime.month == self.month:
+                        if previousKey != value.key:
+                            previousKey = value.key
+                            totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
+                            totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
+                            dictionaryWorklog[sw][previousKey] = totalTimeSpent
+                        else:
+                            totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
+                            totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
+                            dictionaryWorklog[sw][value.key] = totalTimeSpent
+                
+            dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
+
+        return dictionaryWorklog
+
+    else:
+        print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
+        exit()
+
 class TimeHelper(object):
     def trimDate(self, jiraValue, index):
         dateOfLog = jiraValue.fields.worklog.worklogs[index].updated
@@ -165,9 +196,9 @@ def main():
     jiraService.logInToJIRA()
     
     # AUSTIN
-    timeSpentPerWorkItem = TimeSpentPerWorkItem()
-    timeSpentPerWorkItem.extractJiraTickets("Austin", jiraService)
-    worklog = timeSpentPerWorkItem.getTimeSpentPerJiraItem()
+    # timeSpentPerWorkItem = TimeSpentPerWorkItem()
+    # timeSpentPerWorkItem.extractJiraTickets("Austin", jiraService)
+    # worklog = timeSpentPerWorkItem.getTimeSpentPerJiraItem()
 
     # JERRED
     timeSpentPerSoftware = TimeSpentPerSoftware()
