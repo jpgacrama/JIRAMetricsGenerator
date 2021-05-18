@@ -27,6 +27,10 @@ class TimeHelper(object):
         extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
         return extractedDateTime
 
+    def convertToHours(self, timeInSeconds):
+        timeInHours = round(timeInSeconds / (60*60), 2)
+        return timeInHours
+
 # This class is responsible for querying each of the
 # OMNI items belonging to the various SW
 class TimeSpentPerSoftware(object):
@@ -61,26 +65,19 @@ class TimeSpentPerSoftware(object):
                 print(self.software[sw])
 
                 for value in self.software[sw]:
-                    print(value.fields.worklog.worklogs)
                     numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
                     
                     for i in range(numberOfJiraTicketsForEachSW):
-                        dateOfLog = value.fields.worklog.worklogs[i].updated
-                        dateOfLog = dateOfLog.split(" ")
-                        dateOfLog[-1] = dateOfLog[-1][:10]
-                        dateOfLog = " ".join(dateOfLog)
-                        extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-
-                        if extractedDateTime.month == desiredMonth:
+                        extractedDateTime = self.timeHelper.trimDate(value, i)
+                        if extractedDateTime.month == self.month:
                             if previousKey != value.key:
                                 previousKey = value.key
-
                                 totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                                totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
+                                totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
                                 dictionaryWorklog[previousKey] = totalTimeSpent
                             else:
                                 totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                                totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
+                                totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
                                 dictionaryWorklog[value.key] = totalTimeSpent
 
                 print (dictionaryWorklog)
@@ -88,12 +85,6 @@ class TimeSpentPerSoftware(object):
         else:
             print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
             exit()
-
-class TimeConverter(object):
-    # Converts the time to hours given the number in seconds
-    def convertToHours(self, timeInSeconds):
-        timeInHours = round(timeInSeconds / (60*60), 2)
-        return timeInHours
 
 class JIRAService(object):
     username = None
