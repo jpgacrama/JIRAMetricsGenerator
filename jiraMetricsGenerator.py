@@ -57,13 +57,7 @@ class TimeSpentPerSoftware(object):
         
         if (self.software != None):
             for sw in self.software:
-                
-                # TODO: Why am I not getting any data from self.software[sw]
-                # print((self.software[sw][0].raw)['fields'])
-                # print((self.software[sw][0].fields.worklog.worklogs))
-                # print(f"Number of items for {sw}: {len(self.software[sw])}")
-                print(self.software[sw])
-
+                dictionaryWorklog[sw] = {}
                 for value in self.software[sw]:
                     numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
                     
@@ -74,13 +68,13 @@ class TimeSpentPerSoftware(object):
                                 previousKey = value.key
                                 totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
                                 totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
-                                dictionaryWorklog[previousKey] = totalTimeSpent
+                                dictionaryWorklog[sw][previousKey] = totalTimeSpent
                             else:
                                 totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
                                 totalTimeSpent = self.timeHelper.convertToHours(totalTimeSpent)
-                                dictionaryWorklog[value.key] = totalTimeSpent
+                                dictionaryWorklog[sw][value.key] = totalTimeSpent
 
-                print (dictionaryWorklog)
+            return dictionaryWorklog
 
         else:
             print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
