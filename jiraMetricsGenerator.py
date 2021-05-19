@@ -18,6 +18,16 @@ MEMBERS = {
 SOFTWARE = ['Macrovue',
             'HALO']
 
+DESIRED_MONTH = None
+
+# Helper function to get the desired month
+def getDesiredMonth():
+    global DESIRED_MONTH
+    if DESIRED_MONTH == None:
+        DESIRED_MONTH = int(input("Enter the desired Month in number form: "))
+    
+    return DESIRED_MONTH
+
 # Generic plotter function
 def plotData(dictionaryWorklog, person):
     if dictionaryWorklog == None or len(dictionaryWorklog) == 0 or person == None:
@@ -135,7 +145,6 @@ class JIRAService(object):
 # PROJECT items belonging to the various SW
 class TimeSpentPerSoftware(object):
     software = {}
-    month = None
 
     def __init__(self) -> None:
         super().__init__()
@@ -144,16 +153,11 @@ class TimeSpentPerSoftware(object):
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
-    def getDesiredMonth(self):
-        self.month = int(input("Enter the desired Month in number form: "))
-        return self.month
-
     def getTimeSpentForEachSW(self):
-        return getWorkLogsForEachSW(self.getDesiredMonth(), self.software)
+        return getWorkLogsForEachSW(getDesiredMonth(), self.software)
         
 class TimeSpentPerWorkItemInASpecificSW(object):
     software = {}
-    month = None
     
     def __init__(self) -> None:
         super().__init__()
@@ -161,12 +165,8 @@ class TimeSpentPerWorkItemInASpecificSW(object):
     def extractJiraTickets(self, memberToQuery, softwareName, jIRAService):
         self.software = jIRAService.queryJIRA(memberToQuery, softwareName)
 
-    def getDesiredMonth(self):
-        self.month = int(input("Enter the desired Month in number form: "))
-        return self.month
-
     def getTimeSpentForAllItemsInASpecificSW(self):
-        return getTimeSpentPerJiraItem(self.getDesiredMonth(), self.software)
+        return getTimeSpentPerJiraItem(getDesiredMonth(), self.software)
 
 def main():
     jiraService = JIRAService()
