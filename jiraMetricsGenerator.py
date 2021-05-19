@@ -32,8 +32,38 @@ def plotData(dictionaryWorklog, person):
         pyplot.title(f"Hours distributon for {person} shown in percent")
         pyplot.show()
 
+def getTimeSpentPerJiraItem(self):
+    self.setDesiredMonth()
+    previousKey = None
+    totalTimeSpent = 0
+    dictionaryWorklog = {}
+
+    for value in self.software[sw]:
+        log_entry_count = len(value.fields.worklog.worklogs)
+
+        for i in range(log_entry_count):
+            dateOfLog = value.fields.worklog.worklogs[i].updated
+            dateOfLog = dateOfLog.split(" ")
+            dateOfLog[-1] = dateOfLog[-1][:10]
+            dateOfLog = " ".join(dateOfLog)
+            extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
+
+            if extractedDateTime.month == self.month:
+                if previousKey != value.key:
+                    previousKey = value.key
+
+                    totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
+                    totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
+                    dictionaryWorklog[previousKey] = totalTimeSpent
+                else:
+                    totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
+                    totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
+                    dictionaryWorklog[value.key] = totalTimeSpent
+
+    return dictionaryWorklog
+
 # Helper function to get Work Logs per SW
-def getWorkLogs(month, software):
+def getWorkLogsForEachSW(month, software):
     previousKey = None
     dictionaryWorklog = {}
     timeHelper = TimeHelper()
@@ -117,71 +147,42 @@ class TimeSpentPerSoftware(object):
         self.month = int(input("Enter the desired Month in number form: "))
         return self.month
 
-    def getWorklogForEachSW(self):
-        return getWorkLogs(self.getDesiredMonth(), self.software)
+    def getTimeSpentForEachSW(self):
+        return getWorkLogsForEachSW(self.getDesiredMonth(), self.software)
         
-
-# TODO: Time to refactor this class
-class TimeSpentPerWorkItem(object):
+class TimeSpentPerWorkItemInASpecificSW(object):
     software = {}
-    timeHelper = None
     month = None
     
     def __init__(self) -> None:
         super().__init__()
-        self.timeHelper = TimeHelper()
 
-    def extractJiraTickets(self, memberToQuery, jIRAService):
-        for sw in SOFTWARE:
-            self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
+    def extractJiraTickets(self, memberToQuery, softwareName, jIRAService):
+        self.software = jIRAService.queryJIRA(memberToQuery, softwareName)
+        print(self.software)
 
-    def setDesiredMonth(self):
-        self.month = input("Enter the desired Month in number form: ")
+    def getDesiredMonth(self):
+        self.month = int(input("Enter the desired Month in number form: "))
+        return self.month
 
-    def getTimeSpentPerJiraItem(self):
-        self.setDesiredMonth()
-        previousKey = None
-        totalTimeSpent = 0
-        dictionaryWorklog = {}
-
-        for value in self.software[sw]:
-            log_entry_count = len(value.fields.worklog.worklogs)
-
-            for i in range(log_entry_count):
-                dateOfLog = value.fields.worklog.worklogs[i].updated
-                dateOfLog = dateOfLog.split(" ")
-                dateOfLog[-1] = dateOfLog[-1][:10]
-                dateOfLog = " ".join(dateOfLog)
-                extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-
-                if extractedDateTime.month == self.month:
-                    if previousKey != value.key:
-                        previousKey = value.key
-
-                        totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                        totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
-                        dictionaryWorklog[previousKey] = totalTimeSpent
-                    else:
-                        totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                        totalTimeSpent = self.timeConverter.convertToHours(totalTimeSpent)
-                        dictionaryWorklog[value.key] = totalTimeSpent
-
-        return dictionaryWorklog
+    def getTimeSpentForAllItemsInASpecificSW(self):
+        return getWorkLogsForEachSW(self.getDesiredMonth(), self.software)
 
 def main():
     jiraService = JIRAService()
     jiraService.logInToJIRA()
     
     # AUSTIN
-    # timeSpentPerWorkItem = TimeSpentPerWorkItem()
-    # timeSpentPerWorkItem.extractJiraTickets("Austin", jiraService)
-    # worklog = timeSpentPerWorkItem.getTimeSpentPerJiraItem()
+    timeSpentPerWorkItemInASpecificSW = TimeSpentPerWorkItemInASpecificSW()
+    timeSpentPerWorkItemInASpecificSW.extractJiraTickets(
+        "Austin", "Macrovue", jiraService)
+    worklog = timeSpentPerWorkItemInASpecificSW.getTimeSpentForAllItemsInASpecificSW()
 
     # JERRED
-    timeSpentPerSoftware = TimeSpentPerSoftware()
-    timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
-    worklog = timeSpentPerSoftware.getWorklogForEachSW()
-    plotData(worklog, "Jerred")
+    # timeSpentPerSoftware = TimeSpentPerSoftware()
+    # timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
+    # worklog = timeSpentPerSoftware.getWorklogForEachSW()
+    # plotData(worklog, "Jerred")
     
 if __name__ == "__main__":
     main()
