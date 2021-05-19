@@ -182,7 +182,7 @@ def main():
     # JERRED
     timeSpentPerSoftware = TimeSpentPerSoftware()
     timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
-    worklog = timeSpentPerSoftware.getWorklogForEachSW()
+    worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
     plotData(worklog, "Jerred")
     
 if __name__ == "__main__":
