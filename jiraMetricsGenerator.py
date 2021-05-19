@@ -7,6 +7,7 @@ os.system('cls' if os.name == 'nt' else 'clear')
 from jira import JIRA
 from datetime import datetime
 import matplotlib.pyplot as pyplot
+import numpy as np
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -196,6 +197,8 @@ class TimeSpentPerWorkItemInASpecificSW(object):
 
 # This will be he "Caller" class
 class MatrixOfWorklogsPerSW(object):
+    result = []
+    
     def generateMatrix(self):
         jiraService = JIRAService()
         jiraService.logInToJIRA()
@@ -206,7 +209,25 @@ class MatrixOfWorklogsPerSW(object):
             timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
             worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
 
-        print(worklog)
+        tempData = list(worklog.values())
+        subset = set()
+        for element in tempData:
+            for index in element:
+                subset.add(index) 
+        tempResult = []
+        tempResult.append(subset)
+        for key, value in worklog.items():
+            tempData2 = []
+            for index in subset:
+                tempData2.append(value.get(index, 0))
+            tempResult.append(tempData2)
+        
+        self.result = [[index for index, value in worklog.items()]] + list(map(list, zip(*tempResult)))
+
+    def plotMatrix(self):
+        pyplot.imshow(self.result)
+        pyplot.colorbar()
+        pyplot.show()
 
 def main():
     # MARWIN
@@ -223,6 +244,7 @@ def main():
 
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.plotMatrix()
 
 if __name__ == "__main__":
     main()
