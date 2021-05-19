@@ -207,6 +207,7 @@ class MatrixOfWorklogsPerSW(object):
         for person in MEMBERS:
             timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
             worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
+            print(f"Getting data for: {person}")
 
         tempData = list(worklog.values())
         subset = set()
@@ -223,15 +224,15 @@ class MatrixOfWorklogsPerSW(object):
         
         self.result = [[index for index, value in worklog.items()]] + list(map(list, zip(*tempResult)))
 
+    # Plots the number of hours spent per person
     def plotMatrix(self):
         figure, axis = pyplot.subplots(1,1)
-        data = self.result[1:]
+        data = [i[1:] for i in self.result[1:]]
         column_labels = self.result[0]
-        row_labels = [i[0] for i in self.result]
+        row_labels = [i[0] for i in self.result[1:]]
         axis.axis('tight')
         axis.axis('off')
         axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
-        
         pyplot.show()
 
 def main():
