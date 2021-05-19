@@ -197,25 +197,6 @@ class TimeSpentPerWorkItemInASpecificSW(object):
 def main():
     jiraService = JIRAService()
     jiraService.logInToJIRA()
-    
-    # # AUSTIN
-    # timeSpentPerWorkItemInASpecificSW = TimeSpentPerWorkItemInASpecificSW()
-    # timeSpentPerWorkItemInASpecificSW.extractJiraTickets(
-    #     "Austin", "Macrovue", jiraService)
-    # worklog = timeSpentPerWorkItemInASpecificSW.getTimeSpentForAllItemsInASpecificSW()
-    # plotData(worklog, "Austin")
 
-    # # JERRED
-    # timeSpentPerSoftware = TimeSpentPerSoftware()
-    # timeSpentPerSoftware.extractItemsPerSW("Jerred", jiraService)
-    # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
-    # plotData(worklog, "Jerred")
-
-    # RANNIEL
-    timeSpentPerSoftware = TimeSpentPerSoftware()
-    timeSpentPerSoftware.extractItemsPerSW("Ranniel", jiraService)
-    worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
-    plotData(worklog, "Ranniel")
-    
 if __name__ == "__main__":
     main()
