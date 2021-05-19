@@ -194,9 +194,35 @@ class TimeSpentPerWorkItemInASpecificSW(object):
     def getTimeSpentForAllItemsInASpecificSW(self):
         return getTimeSpentPerJiraItem(getDesiredMonth(), self.software)
 
+# This will be he "Caller" class
+class MatrixOfWorklogsPerSW(object):
+    def generateMatrix(self):
+        jiraService = JIRAService()
+        jiraService.logInToJIRA()
+        timeSpentPerSoftware = TimeSpentPerSoftware()
+        worklog = {}
+        
+        for person in MEMBERS:
+            timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
+            worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
+
+        print(worklog)
+
 def main():
-    jiraService = JIRAService()
-    jiraService.logInToJIRA()
+    # MARWIN
+    # jiraService = JIRAService()
+    # jiraService.logInToJIRA()
+    # timeSpentPerSoftware = TimeSpentPerSoftware()
+    # timeSpentPerSoftware.extractItemsPerSW("Marwin", jiraService)
+    # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
+    
+    # worklogFromMarwin = {}
+    # worklogFromMarwin['Marwin'] = worklog
+    # print(worklogFromMarwin)
+    # # plotData(worklog, "Marwin")
+
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
+    matrixOfWorklogsPerSW.generateMatrix()
 
 if __name__ == "__main__":
     main()
