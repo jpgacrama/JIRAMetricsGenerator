@@ -240,20 +240,20 @@ class MatrixOfWorklogsPerSW(object):
 
 def main():
     # MARWIN
-    # jiraService = JIRAService()
-    # jiraService.logInToJIRA()
-    # timeSpentPerSoftware = TimeSpentPerSoftware()
-    # timeSpentPerSoftware.extractItemsPerSW("Marwin", jiraService)
-    # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
+    jiraService = JIRAService()
+    jiraService.logInToJIRA()
+    timeSpentPerSoftware = TimeSpentPerSoftware()
+    timeSpentPerSoftware.extractItemsPerSW('Austin', jiraService)
+    worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
     
-    # worklogFromMarwin = {}
-    # worklogFromMarwin['Marwin'] = worklog
-    # print(worklogFromMarwin)
-    # # plotData(worklog, "Marwin")
+    worklogFromMarwin = {}
+    worklogFromMarwin['Austin'] = worklog
+    print(worklogFromMarwin)
+    plotData(worklog, "Austin")
 
-    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
-    matrixOfWorklogsPerSW.generateMatrix()
-    matrixOfWorklogsPerSW.plotMatrix()
+    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
+    # matrixOfWorklogsPerSW.generateMatrix()
+    # matrixOfWorklogsPerSW.plotMatrix()
 
 if __name__ == "__main__":
     main()
