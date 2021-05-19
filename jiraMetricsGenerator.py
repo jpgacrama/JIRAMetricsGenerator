@@ -89,7 +89,6 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
             if extractedDateTime.month == desiredMonth:
                 if previousKey != value.key:
                     previousKey = value.key
-
                     totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
                     totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
                     dictionaryWorklog[previousKey] = totalTimeSpent
@@ -225,8 +224,14 @@ class MatrixOfWorklogsPerSW(object):
         self.result = [[index for index, value in worklog.items()]] + list(map(list, zip(*tempResult)))
 
     def plotMatrix(self):
-        pyplot.imshow(self.result)
-        pyplot.colorbar()
+        figure, axis = pyplot.subplots(1,1)
+        data = self.result[1:]
+        column_labels = self.result[0]
+        row_labels = [i[0] for i in self.result]
+        axis.axis('tight')
+        axis.axis('off')
+        axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
+        
         pyplot.show()
 
 def main():
