@@ -63,8 +63,9 @@ def plotData(dictionaryWorklog, person):
         pyplot.axis("equal")
         pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
                     labels = [str(k) for k in dictionaryWorklog],
-                    autopct = lambda p: '%.2f'.format(round(p)) if p > 0 else '')
+                    autopct = lambda p: '{:.2f}%'.format(round(p)) if p > 0 else '')
         pyplot.title(f"Hours distributon for {person} shown in percent")
+        pyplot.tight_layout()
         pyplot.show()
 
 # Another helper function to get all worklogs in a specific SW
