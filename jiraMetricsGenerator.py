@@ -203,11 +203,14 @@ class MatrixOfWorklogsPerSW(object):
         jiraService.logInToJIRA()
         timeSpentPerSoftware = TimeSpentPerSoftware()
         worklog = {}
+        numOfPersons = 0
         
         for person in MEMBERS:
             timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
             worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
-            print(f"Getting data for: {person}")
+            numOfPersons += 1
+            progress = round(100 * (numOfPersons / len(MEMBERS)))
+            print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
 
         tempData = list(worklog.values())
         subset = set()
