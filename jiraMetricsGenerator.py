@@ -61,8 +61,8 @@ def plotData(dictionaryWorklog, person):
     else:
         numerOfItems = len(dictionaryWorklog)
         pyplot.axis("equal")
-        pyplot.pie( [float(v) for v in dictionaryWorklog.values()], 
-                    labels = [str(k) for k in dictionaryWorklog],
+        pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0], 
+                    labels = [str(k) for k,v in dictionaryWorklog.items() if v != 0],
                     autopct = lambda p: '{:.2f}%'.format(round(p)) if p > 0 else '')
         pyplot.title(f"Hours distributon for {person} shown in percent")
         pyplot.tight_layout()
