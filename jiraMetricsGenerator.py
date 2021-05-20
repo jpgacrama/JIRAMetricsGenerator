@@ -70,28 +70,25 @@ def plotData(dictionaryWorklog, person):
         pyplot.show()
 
 def computeTotalTimeSpent(numberOfJiraTicketsForEachSW, jiraValue, dictionaryWorklog, sw, month):
-    if jiraValue == None or dictionaryWorklog == None or sw == None or month == None:
-        print("Check the inputs to computeTotalTimeSpent() since some or all of them are None.")
-    else:
+    timeHelper = TimeHelper()
+    previousKey = None
     
-        timeHelper = TimeHelper()
+    for i in range(numberOfJiraTicketsForEachSW):
+        extractedDateTime = timeHelper.trimDate(jiraValue, i)
+        if extractedDateTime.month == month:
+            if previousKey != jiraValue.key:
+                previousKey = jiraValue.key
+                totalTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
+                totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
+                dictionaryWorklog[sw][previousKey] = totalTimeSpent
+            else:
+                newTimeSpent = 0
+                newTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
+                newTimeSpent = timeHelper.convertToHours(newTimeSpent)
+                totalTimeSpent += newTimeSpent
+                dictionaryWorklog[sw][jiraValue.key] = totalTimeSpent
 
-        for i in range(numberOfJiraTicketsForEachSW):
-            extractedDateTime = timeHelper.trimDate(jiraValue, i)
-            if extractedDateTime.month == month:
-                if previousKey != jiraValue.key:
-                    previousKey = jiraValue.key
-                    totalTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
-                    totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
-                    dictionaryWorklog[sw][previousKey] = totalTimeSpent
-                else:
-                    newTimeSpent = 0
-                    newTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
-                    newTimeSpent = timeHelper.convertToHours(newTimeSpent)
-                    totalTimeSpent += newTimeSpent
-                    dictionaryWorklog[sw][jiraValue.key] = totalTimeSpent
-
-        return dictionaryWorklog
+    return dictionaryWorklog
 
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
@@ -128,7 +125,6 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
 # Helper function to get Work Logs per SW
 def getWorkLogsForEachSW(month, software):
-    previousKey = None
     dictionaryWorklog = {}
 
     if (software != None):
