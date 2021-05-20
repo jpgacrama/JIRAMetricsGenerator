@@ -30,18 +30,18 @@ MEMBERS = {
 }
 
 SOFTWARE = ['Infrastructure',
-            'AAIG CRM',
-            'ASR Reports',
-            'Wordpress CMS Websites',
-            'Hubspot CMS Websites',
+#             'AAIG CRM',
+#             'ASR Reports',
+#             'Wordpress CMS Websites',
+#             'Hubspot CMS Websites',
             'Macrovue',
-            'Macrovue Marketing',
-            'HALO',
-            'HALO Mobile',
-            'HALO Marketing',
-            'Notification',
-            'Ascot',
-            'CMA',
+            # 'Macrovue Marketing',
+            # 'HALO',
+            # 'HALO Mobile',
+            # 'HALO Marketing',
+            # 'Notification',
+            # 'Ascot',
+            # 'CMA',
             'R:Ed']
 
 DESIRED_MONTH = None
@@ -120,8 +120,10 @@ def getWorkLogsForEachSW(month, software):
                             totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
                             dictionaryWorklog[sw][previousKey] = totalTimeSpent
                         else:
-                            totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                            totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
+                            newTimeSpent = 0
+                            newTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
+                            newTimeSpent = timeHelper.convertToHours(newTimeSpent)
+                            totalTimeSpent += newTimeSpent
                             dictionaryWorklog[sw][value.key] = totalTimeSpent
                 
             dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
@@ -239,17 +241,17 @@ class MatrixOfWorklogsPerSW(object):
         pyplot.show()
 
 def main():
-    # MARWIN
-    jiraService = JIRAService()
-    jiraService.logInToJIRA()
-    timeSpentPerSoftware = TimeSpentPerSoftware()
-    timeSpentPerSoftware.extractItemsPerSW('Austin', jiraService)
-    worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
+    # AUSTIN
+    # jiraService = JIRAService()
+    # jiraService.logInToJIRA()
+    # timeSpentPerSoftware = TimeSpentPerSoftware()
+    # timeSpentPerSoftware.extractItemsPerSW('Austin', jiraService)
+    # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
     
-    worklogFromMarwin = {}
-    worklogFromMarwin['Austin'] = worklog
-    print(worklogFromMarwin)
-    plotData(worklog, "Austin")
+    # worklogFromPerson = {}
+    # worklogFromPerson['Austin'] = worklog
+    # print(worklogFromPerson)
+    # plotData(worklog, "Austin")
 
     # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     # matrixOfWorklogsPerSW.generateMatrix()
