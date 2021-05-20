@@ -30,18 +30,18 @@ MEMBERS = {
 }
 
 SOFTWARE = ['Infrastructure',
-            # 'AAIG CRM',
-            # 'ASR Reports',
-            # 'Wordpress CMS Websites',
-            # 'Hubspot CMS Websites',
+            'AAIG CRM',
+            'ASR Reports',
+            'Wordpress CMS Websites',
+            'Hubspot CMS Websites',
             'Macrovue',
-            # 'Macrovue Marketing',
+            'Macrovue Marketing',
             'HALO',
-            # 'HALO Mobile',
-            # 'HALO Marketing',
-            # 'Notification',
-            # 'Ascot',
-            # 'CMA',
+            'HALO Mobile',
+            'HALO Marketing',
+            'Notification',
+            'Ascot',
+            'CMA',
             'R:Ed']
 
 DESIRED_MONTH = None
@@ -64,7 +64,7 @@ def plotData(dictionaryWorklog, person):
         pyplot.axis("equal")
         pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0], 
                     labels = [str(k) for k,v in dictionaryWorklog.items() if v != 0],
-                    autopct = lambda p: '{:.2f}%'.format(round(p)) if p > 0 else '')
+                    autopct = lambda p: '{:.2f}%'.format(round(p, 2)) if p > 0 else '')
         pyplot.title(f"Hours distributon for person shown in percent")
         pyplot.tight_layout()
         pyplot.show()
@@ -72,7 +72,7 @@ def plotData(dictionaryWorklog, person):
 def computeTotalTimeSpent(numberOfJiraTicketsForEachSW, jiraValue, dictionaryWorklog, sw, month):
     timeHelper = TimeHelper()
     previousKey = None
-    
+
     for i in range(numberOfJiraTicketsForEachSW):
         extractedDateTime = timeHelper.trimDate(jiraValue, i)
         if extractedDateTime.month == month:
@@ -134,7 +134,7 @@ def getWorkLogsForEachSW(month, software):
                 numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
                 dictionaryWorklog = computeTotalTimeSpent(
                     numberOfJiraTicketsForEachSW, value, dictionaryWorklog, sw, month)
-            dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
+            dictionaryWorklog[sw] = round(sum(dictionaryWorklog[sw].values()), 2)
 
         return dictionaryWorklog
 
@@ -219,7 +219,7 @@ class MatrixOfWorklogsPerSW(object):
             timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
             worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
-            progress = round(100 * (numOfPersons / len(MEMBERS)))
+            progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
             print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
 
         tempData = list(worklog.values())
@@ -247,24 +247,11 @@ class MatrixOfWorklogsPerSW(object):
         axis.axis('off')
         table = axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
         table.auto_set_font_size(False)
-        table.set_fontsize(11)
-        table.scale(2, 2)
+        table.set_fontsize(8)
+        # table.scale(2, 2)
         pyplot.show()
 
 def main():
-    # AUSTIN
-    # jiraService = JIRAService()
-    # jiraService.logInToJIRA()
-    # person = 'Marwin'
-    # timeSpentPerSoftware = TimeSpentPerSoftware()
-    # timeSpentPerSoftware.extractItemsPerSW(person, jiraService)
-    # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
-    
-    # worklogFromPerson = {}
-    # worklogFromPerson[person] = worklog
-    # print(worklogFromPerson)
-    # plotData(worklog, person)
-
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     matrixOfWorklogsPerSW.generateMatrix()
     matrixOfWorklogsPerSW.plotMatrix()

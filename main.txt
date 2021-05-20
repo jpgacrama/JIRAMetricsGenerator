@@ -1,11 +1,17 @@
 Contains some of the test execution commands I used to know that my code is working 
 
-    # # AUSTIN
-    # timeSpentPerWorkItemInASpecificSW = TimeSpentPerWorkItemInASpecificSW()
-    # timeSpentPerWorkItemInASpecificSW.extractJiraTickets(
-    #     "Austin", "Macrovue", jiraService)
-    # worklog = timeSpentPerWorkItemInASpecificSW.getTimeSpentForAllItemsInASpecificSW()
-    # plotData(worklog, "Austin")
+    # AUSTIN
+    # jiraService = JIRAService()
+    # jiraService.logInToJIRA()
+    # person = 'Marwin'
+    # timeSpentPerSoftware = TimeSpentPerSoftware()
+    # timeSpentPerSoftware.extractItemsPerSW(person, jiraService)
+    # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
+    
+    # worklogFromPerson = {}
+    # worklogFromPerson[person] = worklog
+    # print(worklogFromPerson)
+    # plotData(worklog, person)
 
     # # JERRED
     # timeSpentPerSoftware = TimeSpentPerSoftware()
