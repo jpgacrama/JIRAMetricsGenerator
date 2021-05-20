@@ -30,18 +30,18 @@ MEMBERS = {
 }
 
 SOFTWARE = ['Infrastructure',
-            'AAIG CRM',
-            'ASR Reports',
-            'Wordpress CMS Websites',
-            'Hubspot CMS Websites',
+            # 'AAIG CRM',
+            # 'ASR Reports',
+            # 'Wordpress CMS Websites',
+            # 'Hubspot CMS Websites',
             'Macrovue',
-            'Macrovue Marketing',
+            # 'Macrovue Marketing',
             'HALO',
-            'HALO Mobile',
-            'HALO Marketing',
-            'Notification',
-            'Ascot',
-            'CMA',
+            # 'HALO Mobile',
+            # 'HALO Marketing',
+            # 'Notification',
+            # 'Ascot',
+            # 'CMA',
             'R:Ed']
 
 DESIRED_MONTH = None
@@ -69,6 +69,30 @@ def plotData(dictionaryWorklog, person):
         pyplot.tight_layout()
         pyplot.show()
 
+def computeTotalTimeSpent(numberOfJiraTicketsForEachSW, jiraValue, dictionaryWorklog, sw, month):
+    if jiraValue == None or dictionaryWorklog == None or sw == None or month == None:
+        print("Check the inputs to computeTotalTimeSpent() since some or all of them are None.")
+    else:
+    
+        timeHelper = TimeHelper()
+
+        for i in range(numberOfJiraTicketsForEachSW):
+            extractedDateTime = timeHelper.trimDate(jiraValue, i)
+            if extractedDateTime.month == month:
+                if previousKey != jiraValue.key:
+                    previousKey = jiraValue.key
+                    totalTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
+                    totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
+                    dictionaryWorklog[sw][previousKey] = totalTimeSpent
+                else:
+                    newTimeSpent = 0
+                    newTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
+                    newTimeSpent = timeHelper.convertToHours(newTimeSpent)
+                    totalTimeSpent += newTimeSpent
+                    dictionaryWorklog[sw][jiraValue.key] = totalTimeSpent
+
+        return dictionaryWorklog
+
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
     previousKey = None
@@ -93,8 +117,11 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
                     totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
                     dictionaryWorklog[previousKey] = totalTimeSpent
                 else:
-                    totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                    totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
+                    newTimeSpent = 0
+                    newTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
+                    newTimeSpent = timeHelper.convertToHours(newTimeSpent)
+                    totalTimeSpent += newTimeSpent
+
                     dictionaryWorklog[value.key] = totalTimeSpent
 
     return dictionaryWorklog             
@@ -103,29 +130,14 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 def getWorkLogsForEachSW(month, software):
     previousKey = None
     dictionaryWorklog = {}
-    timeHelper = TimeHelper()
-    
+
     if (software != None):
         for sw in software:
             dictionaryWorklog[sw] = {}
             for value in software[sw]:
                 numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
-                    
-                for i in range(numberOfJiraTicketsForEachSW):
-                    extractedDateTime = timeHelper.trimDate(value, i)
-                    if extractedDateTime.month == month:
-                        if previousKey != value.key:
-                            previousKey = value.key
-                            totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                            totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
-                            dictionaryWorklog[sw][previousKey] = totalTimeSpent
-                        else:
-                            newTimeSpent = 0
-                            newTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                            newTimeSpent = timeHelper.convertToHours(newTimeSpent)
-                            totalTimeSpent += newTimeSpent
-                            dictionaryWorklog[sw][value.key] = totalTimeSpent
-                
+                dictionaryWorklog = computeTotalTimeSpent(
+                    numberOfJiraTicketsForEachSW, value, dictionaryWorklog, sw, month)
             dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
 
         return dictionaryWorklog
@@ -237,7 +249,10 @@ class MatrixOfWorklogsPerSW(object):
         row_labels = [i[0] for i in self.result[1:]]
         axis.axis('tight')
         axis.axis('off')
-        axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
+        table = axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
+        table.auto_set_font_size(False)
+        table.set_fontsize(11)
+        table.scale(2, 2)
         pyplot.show()
 
 def main():
