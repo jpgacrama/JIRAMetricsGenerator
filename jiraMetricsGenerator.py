@@ -30,18 +30,18 @@ MEMBERS = {
 }
 
 SOFTWARE = ['Infrastructure',
-#             'AAIG CRM',
-#             'ASR Reports',
-#             'Wordpress CMS Websites',
-#             'Hubspot CMS Websites',
+            'AAIG CRM',
+            'ASR Reports',
+            'Wordpress CMS Websites',
+            'Hubspot CMS Websites',
             'Macrovue',
-            # 'Macrovue Marketing',
-            # 'HALO',
-            # 'HALO Mobile',
-            # 'HALO Marketing',
-            # 'Notification',
-            # 'Ascot',
-            # 'CMA',
+            'Macrovue Marketing',
+            'HALO',
+            'HALO Mobile',
+            'HALO Marketing',
+            'Notification',
+            'Ascot',
+            'CMA',
             'R:Ed']
 
 DESIRED_MONTH = None
@@ -65,7 +65,7 @@ def plotData(dictionaryWorklog, person):
         pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0], 
                     labels = [str(k) for k,v in dictionaryWorklog.items() if v != 0],
                     autopct = lambda p: '{:.2f}%'.format(round(p)) if p > 0 else '')
-        pyplot.title(f"Hours distributon for {person} shown in percent")
+        pyplot.title(f"Hours distributon for person shown in percent")
         pyplot.tight_layout()
         pyplot.show()
 
@@ -244,18 +244,19 @@ def main():
     # AUSTIN
     # jiraService = JIRAService()
     # jiraService.logInToJIRA()
+    # person = 'Marwin'
     # timeSpentPerSoftware = TimeSpentPerSoftware()
-    # timeSpentPerSoftware.extractItemsPerSW('Austin', jiraService)
+    # timeSpentPerSoftware.extractItemsPerSW(person, jiraService)
     # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
     
     # worklogFromPerson = {}
-    # worklogFromPerson['Austin'] = worklog
+    # worklogFromPerson[person] = worklog
     # print(worklogFromPerson)
-    # plotData(worklog, "Austin")
+    # plotData(worklog, person)
 
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
-    # matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.plotMatrix()
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
+    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.plotMatrix()
 
 if __name__ == "__main__":
     main()
