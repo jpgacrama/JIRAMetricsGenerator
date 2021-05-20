@@ -247,7 +247,7 @@ class MatrixOfWorklogsPerSW(object):
         axis.axis('off')
         table = axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
         table.auto_set_font_size(False)
-        table.set_fontsize(8)
+        table.set_fontsize(9)
         # table.scale(2, 2)
         pyplot.show()
 
