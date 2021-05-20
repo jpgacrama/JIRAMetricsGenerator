@@ -65,7 +65,7 @@ def plotData(dictionaryWorklog, person):
         pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0], 
                     labels = [str(k) for k,v in dictionaryWorklog.items() if v != 0],
                     autopct = lambda p: '{:.2f}%'.format(round(p)) if p > 0 else '')
-        pyplot.title(f"Hours distributon for {person} shown in percent")
+        pyplot.title(f"Hours distributon for person shown in percent")
         pyplot.tight_layout()
         pyplot.show()
 
@@ -120,8 +120,10 @@ def getWorkLogsForEachSW(month, software):
                             totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
                             dictionaryWorklog[sw][previousKey] = totalTimeSpent
                         else:
-                            totalTimeSpent += value.fields.worklog.worklogs[i].timeSpentSeconds
-                            totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
+                            newTimeSpent = 0
+                            newTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
+                            newTimeSpent = timeHelper.convertToHours(newTimeSpent)
+                            totalTimeSpent += newTimeSpent
                             dictionaryWorklog[sw][value.key] = totalTimeSpent
                 
             dictionaryWorklog[sw] = sum(dictionaryWorklog[sw].values())
@@ -239,17 +241,18 @@ class MatrixOfWorklogsPerSW(object):
         pyplot.show()
 
 def main():
-    # MARWIN
+    # AUSTIN
     # jiraService = JIRAService()
     # jiraService.logInToJIRA()
+    # person = 'Marwin'
     # timeSpentPerSoftware = TimeSpentPerSoftware()
-    # timeSpentPerSoftware.extractItemsPerSW("Marwin", jiraService)
+    # timeSpentPerSoftware.extractItemsPerSW(person, jiraService)
     # worklog = timeSpentPerSoftware.getTimeSpentForEachSW()
     
-    # worklogFromMarwin = {}
-    # worklogFromMarwin['Marwin'] = worklog
-    # print(worklogFromMarwin)
-    # # plotData(worklog, "Marwin")
+    # worklogFromPerson = {}
+    # worklogFromPerson[person] = worklog
+    # print(worklogFromPerson)
+    # plotData(worklog, person)
 
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     matrixOfWorklogsPerSW.generateMatrix()
