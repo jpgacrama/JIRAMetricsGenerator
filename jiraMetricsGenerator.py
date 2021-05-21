@@ -206,6 +206,17 @@ class MatrixOfWorklogsPerSW(object):
     result = []
     worklog = {}
 
+    # Function to get the total hours spent for every SW
+    def __getTotal__(self):
+        if len(self.result) == 0:
+            print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first")
+            exit(1)
+        else:
+            df = pd.DataFrame(self.result[1:])
+            df.loc['Column_Total']= df.sum(numeric_only=True, axis=0)
+            df.loc[:,'Row_Total'] = df.sum(numeric_only=True, axis=1)
+            self.result[1:] = df.values.tolist()
+
     def generateMatrix(self):
         jiraService = JIRAService()
         jiraService.logInToJIRA()
@@ -249,6 +260,7 @@ class MatrixOfWorklogsPerSW(object):
 
     def writeToCSVFile(self):
         if len(self.result) != 0:
+            self.__getTotal__()
             fileName = input("Please enter the fileame you wish to write the CSV values to: ")
             self.result[0].insert(0, 'SW Names')
             df = pd.DataFrame(self.result)
