@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
 import os
-import jira
-os.system('cls' if os.name == 'nt' else 'clear')
-
 from jira import JIRA
 from datetime import datetime
 import matplotlib.pyplot as pyplot
-import numpy as np
+import pandas as pd
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -51,7 +48,7 @@ def getDesiredMonth():
     global DESIRED_MONTH
     if DESIRED_MONTH == None:
         DESIRED_MONTH = int(input("Enter the desired Month in number form: "))
-    
+
     return DESIRED_MONTH
 
 # Generic plotter function
@@ -62,7 +59,7 @@ def plotData(dictionaryWorklog, person):
     else:
         numerOfItems = len(dictionaryWorklog)
         pyplot.axis("equal")
-        pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0], 
+        pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0],
                     labels = [str(k) for k,v in dictionaryWorklog.items() if v != 0],
                     autopct = lambda p: '{:.2f}%'.format(round(p, 2)) if p > 0 else '')
         pyplot.title(f"Hours distributon for person shown in percent")
@@ -121,7 +118,7 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
                     dictionaryWorklog[value.key] = totalTimeSpent
 
-    return dictionaryWorklog             
+    return dictionaryWorklog
 
 # Helper function to get Work Logs per SW
 def getWorkLogsForEachSW(month, software):
@@ -160,7 +157,7 @@ class JIRAService(object):
     username = None
     api_token = None
     jiraService = None
-    
+
     def __init__(self):
         pass
 
@@ -191,10 +188,10 @@ class TimeSpentPerSoftware(object):
 
     def getTimeSpentForEachSW(self):
         return getWorkLogsForEachSW(getDesiredMonth(), self.software)
-        
+
 class TimeSpentPerWorkItemInASpecificSW(object):
     software = {}
-    
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -204,38 +201,38 @@ class TimeSpentPerWorkItemInASpecificSW(object):
     def getTimeSpentForAllItemsInASpecificSW(self):
         return getTimeSpentPerJiraItem(getDesiredMonth(), self.software)
 
-# This will be he "Caller" class
+# This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
     result = []
-    
+    worklog = {}
+
     def generateMatrix(self):
         jiraService = JIRAService()
         jiraService.logInToJIRA()
         timeSpentPerSoftware = TimeSpentPerSoftware()
-        worklog = {}
         numOfPersons = 0
-        
+
         for person in MEMBERS:
             timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
-            worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
+            self.worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
             progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
             print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
 
-        tempData = list(worklog.values())
+        tempData = list(self.worklog.values())
         subset = set()
         for element in tempData:
             for index in element:
-                subset.add(index) 
+                subset.add(index)
         tempResult = []
         tempResult.append(subset)
-        for key, value in worklog.items():
+        for key, value in self.worklog.items():
             tempData2 = []
             for index in subset:
                 tempData2.append(value.get(index, 0))
             tempResult.append(tempData2)
-        
-        self.result = [[index for index, value in worklog.items()]] + list(map(list, zip(*tempResult)))
+
+        self.result = [[index for index, value in self.worklog.items()]] + list(map(list, zip(*tempResult)))
 
     # Plots the number of hours spent per person
     def plotMatrix(self):
@@ -248,13 +245,25 @@ class MatrixOfWorklogsPerSW(object):
         table = axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
         table.auto_set_font_size(False)
         table.set_fontsize(9)
-        # table.scale(2, 2)
         pyplot.show()
 
+    def writeToCSVFile(self):
+        if len(self.result) != 0:
+            fileName = input("Please enter the fileame you wish to write the CSV values to: ")
+            self.result[0].insert(0, 'SW Names')
+            df = pd.DataFrame(self.result)
+            df.to_csv(fileName, index=False, header=False)
+            print(f"Writing to {fileName} done.")
+        else:
+            print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first.")
+            exit(1)
+
 def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     matrixOfWorklogsPerSW.generateMatrix()
-    matrixOfWorklogsPerSW.plotMatrix()
+    # matrixOfWorklogsPerSW.plotMatrix()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
 if __name__ == "__main__":
     main()
