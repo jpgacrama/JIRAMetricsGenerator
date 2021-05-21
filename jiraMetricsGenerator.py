@@ -2,12 +2,12 @@
 
 import os
 import jira
-os.system('cls' if os.name == 'nt' else 'clear')
-
 from jira import JIRA
 from datetime import datetime
 import matplotlib.pyplot as pyplot
 import numpy as np
+import csv
+import itertools
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -252,6 +252,7 @@ class MatrixOfWorklogsPerSW(object):
         pyplot.show()
 
 def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     matrixOfWorklogsPerSW.generateMatrix()
     matrixOfWorklogsPerSW.plotMatrix()
