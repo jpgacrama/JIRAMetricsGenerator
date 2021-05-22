@@ -9,37 +9,38 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 MEMBERS = {
-    # 'Arman'     : '6057df8914a23b0069a65dc8',
-    # 'Austin'    : '5fbb3d037cc1030069500950',
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Arman'     : '6057df8914a23b0069a65dc8',
+    'Austin'    : '5fbb3d037cc1030069500950',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
     'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ranniel'   : '604fe79ce394c300699ce0ed',
     'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
-SOFTWARE = ['Infrastructure',
-            'AAIG CRM',
-            'ASR Reports',
-            'Wordpress CMS Websites',
-            'Hubspot CMS Websites',
-            'Macrovue',
-            'Macrovue Marketing',
-            'HALO',
-            'HALO Mobile',
-            'HALO Marketing',
-            'Notification',
-            'Ascot',
-            'CMA',
-            'R:Ed']
+SOFTWARE = [
+    'Infrastructure',
+    'AAIG CRM',
+    'ASR Reports',
+    'Wordpress CMS Websites',
+    'Hubspot CMS Websites',
+    'Macrovue',
+    'Macrovue Marketing',
+    'HALO',
+    'HALO Mobile',
+    'HALO Marketing',
+    'Notification',
+    'Ascot',
+    'CMA',
+    'R:Ed']
 
 DESIRED_MONTH = None
 
@@ -59,36 +60,13 @@ def plotData(dictionaryWorklog, person):
     else:
         numerOfItems = len(dictionaryWorklog)
         pyplot.axis("equal")
-        pyplot.pie( [float(v) for v in dictionaryWorklog.values() if v != 0],
-                    labels = [str(k) for k,v in dictionaryWorklog.items() if v != 0],
-                    autopct = lambda p: '{:.2f}%'.format(round(p, 2)) if p > 0 else '')
+        pyplot.pie([float(v) for v in dictionaryWorklog.values() if v != 0],
+                   labels=[str(k)
+                           for k, v in dictionaryWorklog.items() if v != 0],
+                   autopct=lambda p: '{:.2f}%'.format(round(p, 2)) if p > 0 else '')
         pyplot.title(f"Hours distributon for person shown in percent")
         pyplot.tight_layout()
         pyplot.show()
-
-def computeTotalTimeSpent(numberOfJiraTicketsForEachSW, jiraValue, dictionaryWorklog, sw, month):
-    timeHelper = TimeHelper()
-    previousKey = None
-    totalTimeSpent = 0
-    newTimeSpent = 0
-
-    for i in range(numberOfJiraTicketsForEachSW):
-        extractedDateTime = timeHelper.trimDate(jiraValue, i)
-        if extractedDateTime.month == month:
-            if previousKey != jiraValue.key:
-                totalTimeSpent = 0                
-                previousKey = jiraValue.key
-                totalTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
-                totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
-                dictionaryWorklog[sw][previousKey] = totalTimeSpent
-            else:
-                newTimeSpent = 0
-                newTimeSpent = jiraValue.fields.worklog.worklogs[i].timeSpentSeconds
-                newTimeSpent = timeHelper.convertToHours(newTimeSpent)
-                totalTimeSpent += newTimeSpent
-                dictionaryWorklog[sw][previousKey] = totalTimeSpent
-
-    return dictionaryWorklog
 
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
@@ -123,28 +101,9 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
     return dictionaryWorklog
 
-# Helper function to get Work Logs per SW
-def getWorkLogsForEachSW(month, software):
-    dictionaryWorklog = {}
-
-    if (software != None):
-        for sw in software:
-            dictionaryWorklog[sw] = {}
-            for value in software[sw]:
-                numberOfJiraTicketsForEachSW = len(value.fields.worklog.worklogs)
-                dictionaryWorklog = computeTotalTimeSpent(
-                    numberOfJiraTicketsForEachSW, value, dictionaryWorklog, sw, month)
-            dictionaryWorklog[sw] = round(sum(dictionaryWorklog[sw].values()), 2)
-
-        return dictionaryWorklog
-
-    else:
-        print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
-        exit()
-
 class TimeHelper(object):
-    def trimDate(self, jiraValue, index):
-        dateOfLog = jiraValue.fields.worklog.worklogs[index].updated
+    def trimDate(self, jiraValue):
+        dateOfLog = jiraValue.fields.worklog.worklogs[0].updated
         dateOfLog = dateOfLog.split(" ")
         dateOfLog[-1] = dateOfLog[-1][:10]
         dateOfLog = " ".join(dateOfLog)
@@ -154,6 +113,51 @@ class TimeHelper(object):
     def convertToHours(self, timeInSeconds):
         timeInHours = round(timeInSeconds / (60*60), 2)
         return timeInHours
+
+# Helper function to get Work Logs per SW
+# BUG: This is supposed to track the previous key from 30 items from Jaypea
+#      Consider transforming this to a class
+class WorkLogsForEachSW(object):
+    dictionaryWorklog = {}
+    timeHelper = TimeHelper()
+    previousKey = None
+    totalTimeSpent = 0
+    newTimeSpent = 0
+
+    # BUG: The state of this is not kept everytime this function is called
+    #      Consider making this into a class
+    def __computeTotalTimeSpent__(self, jiraValue, sw, month):
+        extractedDateTime = self.timeHelper.trimDate(jiraValue)
+        if extractedDateTime.month == month:
+            if self.previousKey != jiraValue.key:
+                self.totalTimeSpent = 0
+                self.previousKey = jiraValue.key
+                self.totalTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
+                self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
+                self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
+                # print(f"self.dictionaryWorklog[{sw}][{self.previousKey}]: {self.totalTimeSpent}")
+            else:
+                newTimeSpent = 0
+                newTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
+                newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
+                self.totalTimeSpent += newTimeSpent
+                self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
+
+    def getWorkLogsForEachSW(self, month, software):
+        if (software != None):
+            for sw in software:
+                self.dictionaryWorklog[sw] = {}
+                for value in software[sw]:
+                    # BUG - There are 30 items for Jaypea - all belonging to Macrovue
+                    self.__computeTotalTimeSpent__(value, sw, month)
+                
+                self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
+
+            return self.dictionaryWorklog
+
+        else:
+            print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
+            exit()
 
 # This Class is responsible for logging in to JIRA and performing Queries
 class JIRAService(object):
@@ -172,7 +176,7 @@ class JIRAService(object):
     def queryJIRA(self, memberToQuery, swToQuery):
         allWorklogs = self.jiraService.search_issues(
             f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
-                fields="worklog")
+            fields="worklog")
 
         # Returns a list of Worklogs
         return allWorklogs
@@ -181,6 +185,7 @@ class JIRAService(object):
 # PROJECT items belonging to the various SW
 class TimeSpentPerSoftware(object):
     software = {}
+    worklogsForEachSW = WorkLogsForEachSW()
 
     def __init__(self) -> None:
         super().__init__()
@@ -190,7 +195,8 @@ class TimeSpentPerSoftware(object):
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
     def getTimeSpentForEachSW(self):
-        return getWorkLogsForEachSW(getDesiredMonth(), self.software)
+        return self.worklogsForEachSW.getWorkLogsForEachSW(getDesiredMonth(), self.software)
+
 
 class TimeSpentPerWorkItemInASpecificSW(object):
     software = {}
@@ -216,8 +222,8 @@ class MatrixOfWorklogsPerSW(object):
             exit(1)
         else:
             df = pd.DataFrame(self.result[1:])
-            df.loc['Column_Total']= df.sum(numeric_only=True, axis=0)
-            df.loc[:,'Row_Total'] = df.sum(numeric_only=True, axis=1)
+            df.loc['Column_Total'] = df.sum(numeric_only=True, axis=0)
+            df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
     def generateMatrix(self):
@@ -231,7 +237,8 @@ class MatrixOfWorklogsPerSW(object):
             self.worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
             progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
-            print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
+            print(
+                f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
 
         tempData = list(self.worklog.values())
         subset = set()
@@ -246,17 +253,19 @@ class MatrixOfWorklogsPerSW(object):
                 tempData2.append(value.get(index, 0))
             tempResult.append(tempData2)
 
-        self.result = [[index for index, value in self.worklog.items()]] + list(map(list, zip(*tempResult)))
+        self.result = [[index for index, value in self.worklog.items()]] + \
+            list(map(list, zip(*tempResult)))
 
     # Plots the number of hours spent per person
     def plotMatrix(self):
-        figure, axis = pyplot.subplots(1,1)
+        figure, axis = pyplot.subplots(1, 1)
         data = [i[1:] for i in self.result[1:]]
         column_labels = self.result[0]
         row_labels = [i[0] for i in self.result[1:]]
         axis.axis('tight')
         axis.axis('off')
-        table = axis.table(cellText = data, colLabels = column_labels, rowLabels = row_labels, loc="center")
+        table = axis.table(cellText=data, colLabels=column_labels,
+                           rowLabels=row_labels, loc="center")
         table.auto_set_font_size(False)
         table.set_fontsize(9)
         pyplot.show()
@@ -264,7 +273,8 @@ class MatrixOfWorklogsPerSW(object):
     def writeToCSVFile(self):
         if len(self.result) != 0:
             self.__getTotal__()
-            fileName = input("Please enter the fileame you wish to write the CSV values to: ")
+            fileName = input(
+                "Please enter the fileame you wish to write the CSV values to: ")
             self.result[0].insert(0, 'SW Names')
             df = pd.DataFrame(self.result)
             df.to_csv(fileName, index=False, header=False)
@@ -273,12 +283,14 @@ class MatrixOfWorklogsPerSW(object):
             print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first.")
             exit(1)
 
+
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
     matrixOfWorklogsPerSW.generateMatrix()
     # matrixOfWorklogsPerSW.plotMatrix()
     matrixOfWorklogsPerSW.writeToCSVFile()
+
 
 if __name__ == "__main__":
     main()
