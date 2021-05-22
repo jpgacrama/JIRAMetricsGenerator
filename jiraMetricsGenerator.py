@@ -237,8 +237,8 @@ class MatrixOfWorklogsPerSW(object):
         numOfPersons = 0
 
         for person in MEMBERS:
-            timeSpentPerSoftware.extractItemsPerSW(str(person), jiraService)
-            self.worklog[str(person)] = timeSpentPerSoftware.getTimeSpentForEachSW()
+            timeSpentPerSoftware.extractItemsPerSW(person, jiraService)
+            self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
             progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
             print(
