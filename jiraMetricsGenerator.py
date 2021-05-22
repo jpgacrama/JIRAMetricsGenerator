@@ -9,38 +9,38 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 MEMBERS = {
-    'Arman'     : '6057df8914a23b0069a65dc8',
-    'Austin'    : '5fbb3d037cc1030069500950',
-    'Duane'     : '5efbf73454020e0ba82ac7a0',
-    'Eddzonne'  : '5f85328a53aaa400760d4944',
-    'Florante'  : '5fa0b7ad22f39900769a8242',
-    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    'Jaypea'    : '6073ef399361560068ad4b83',
-    'Jerred'    : '5ed4c8d844cc830c23027b31',
-    'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    'Marwin'    : '600e2429cd564b0068e7cca7',
-    'Mary'      : '6099e1699b362f006957e1ad',
-    'Maye'      : '6099d80c3fae6f006821f3f5',
-    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    'Ranniel'   : '604fe79ce394c300699ce0ed',
-    'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Arman'     : '6057df8914a23b0069a65dc8'
+    # 'Austin'    : '5fbb3d037cc1030069500950',
+    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
+    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
+    # 'Florante'  : '5fa0b7ad22f39900769a8242',
+    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    # 'Jaypea'    : '6073ef399361560068ad4b83',
+    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
+    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    # 'Marwin'    : '600e2429cd564b0068e7cca7',
+    # 'Mary'      : '6099e1699b362f006957e1ad',
+    # 'Maye'      : '6099d80c3fae6f006821f3f5',
+    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
+    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 SOFTWARE = [
-    'Infrastructure',
-    'AAIG CRM',
-    'ASR Reports',
-    'Wordpress CMS Websites',
-    'Hubspot CMS Websites',
-    'Macrovue',
-    'Macrovue Marketing',
-    'HALO',
-    'HALO Mobile',
-    'HALO Marketing',
-    'Notification',
-    'Ascot',
-    'CMA',
-    'R:Ed']
+    # 'Infrastructure',
+    # 'AAIG CRM',
+    # 'ASR Reports',
+    # 'Wordpress CMS Websites',
+    # 'Hubspot CMS Websites',
+    # 'Macrovue',
+    # 'Macrovue Marketing',
+    'HALO']
+    # 'HALO Mobile',
+    # 'HALO Marketing',
+    # 'Notification',
+    # 'Ascot',
+    # 'CMA',
+    # 'R:Ed']
 
 DESIRED_MONTH = None
 
@@ -103,58 +103,56 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
 class TimeHelper(object):
     def trimDate(self, jiraValue):
-        if len(jiraValue.fields.worklog.worklogs) > 0:
-            dateOfLog = jiraValue.fields.worklog.worklogs[0].updated
-            dateOfLog = dateOfLog.split(" ")
-            dateOfLog[-1] = dateOfLog[-1][:10]
-            dateOfLog = " ".join(dateOfLog)
-            extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-            return extractedDateTime
-        else:
-            return None
+        # BUG: I am only getting the FIRST worklog. Not all worklogs
+        dateOfLog = jiraValue.updated
+        dateOfLog = dateOfLog.split(" ")
+        dateOfLog[-1] = dateOfLog[-1][:10]
+        dateOfLog = " ".join(dateOfLog)
+        extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
+        return extractedDateTime
 
     def convertToHours(self, timeInSeconds):
         timeInHours = round(timeInSeconds / (60*60), 2)
         return timeInHours
 
 # Helper function to get Work Logs per SW
-# BUG: This is supposed to track the previous key from 30 items from Jaypea
-#      Consider transforming this to a class
 class WorkLogsForEachSW(object):
     dictionaryWorklog = {}
     timeHelper = TimeHelper()
-    previousKey = None
+    issueId = None
     totalTimeSpent = 0
     newTimeSpent = 0
 
-    # BUG: The state of this is not kept everytime this function is called
-    #      Consider making this into a class
+    # BUG: The output of this method is wrong
     def __computeTotalTimeSpent__(self, jiraValue, sw, month):
-        extractedDateTime = self.timeHelper.trimDate(jiraValue)
-        if extractedDateTime != None:
-            if extractedDateTime.month == month:
-                if self.previousKey != jiraValue.key:
-                    self.totalTimeSpent = 0
-                    self.previousKey = jiraValue.key
-                    self.totalTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
-                    self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
-                    self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
-                    print(f"self.dictionaryWorklog[{sw}][{self.previousKey}]: {self.totalTimeSpent}")
-                else:
-                    newTimeSpent = 0
-                    newTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
-                    newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
-                    self.totalTimeSpent += newTimeSpent
-                    self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
+        # nLogs means first log, second log, etc.
+        for nLogs in jiraValue.fields.worklog.worklogs:
+            extractedDateTime = self.timeHelper.trimDate(nLogs)
+            if extractedDateTime != None:
+                if extractedDateTime.month == month:
+                    if self.issueId != nLogs.issueId:
+                        self.totalTimeSpent = 0
+                        self.issueId = nLogs.issueId
+                        self.totalTimeSpent = nLogs.timeSpentSeconds
+                        self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
+                        self.dictionaryWorklog[sw][self.issueId] = self.totalTimeSpent
+                        print(f"Different from {self.issueId} self.dictionaryWorklog[{sw}][{nLogs.issueId}]: {self.totalTimeSpent}")
+                    else:
+                        newTimeSpent = 0
+                        newTimeSpent = nLogs.timeSpentSeconds
+                        newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
+                        self.totalTimeSpent += newTimeSpent
+                        self.dictionaryWorklog[sw][self.issueId] = self.totalTimeSpent
+                        print(f"Same as {self.issueId} self.dictionaryWorklog[{sw}][{nLogs.issueId}]: {self.totalTimeSpent}")
 
     def getWorkLogsForEachSW(self, month, software):
         if (software != None):
             for sw in software:
                 self.dictionaryWorklog[sw] = {}
                 for value in software[sw]:
-                    # BUG - There are 30 items for Jaypea - all belonging to Macrovue
                     self.__computeTotalTimeSpent__(value, sw, month)
-                
+
+                print(self.dictionaryWorklog[sw])
                 self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
 
             return self.dictionaryWorklog
@@ -197,6 +195,8 @@ class TimeSpentPerSoftware(object):
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
+            if len(self.software[sw]) > 0:
+                print(self.software[sw])
 
     def getTimeSpentForEachSW(self):
         return self.worklogsForEachSW.getWorkLogsForEachSW(getDesiredMonth(), self.software)
