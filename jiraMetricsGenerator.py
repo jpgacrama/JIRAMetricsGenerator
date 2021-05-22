@@ -103,12 +103,15 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
 class TimeHelper(object):
     def trimDate(self, jiraValue):
-        dateOfLog = jiraValue.fields.worklog.worklogs[0].updated
-        dateOfLog = dateOfLog.split(" ")
-        dateOfLog[-1] = dateOfLog[-1][:10]
-        dateOfLog = " ".join(dateOfLog)
-        extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-        return extractedDateTime
+        if len(jiraValue.fields.worklog.worklogs) > 0:
+            dateOfLog = jiraValue.fields.worklog.worklogs[0].updated
+            dateOfLog = dateOfLog.split(" ")
+            dateOfLog[-1] = dateOfLog[-1][:10]
+            dateOfLog = " ".join(dateOfLog)
+            extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
+            return extractedDateTime
+        else:
+            return None
 
     def convertToHours(self, timeInSeconds):
         timeInHours = round(timeInSeconds / (60*60), 2)
@@ -128,20 +131,21 @@ class WorkLogsForEachSW(object):
     #      Consider making this into a class
     def __computeTotalTimeSpent__(self, jiraValue, sw, month):
         extractedDateTime = self.timeHelper.trimDate(jiraValue)
-        if extractedDateTime.month == month:
-            if self.previousKey != jiraValue.key:
-                self.totalTimeSpent = 0
-                self.previousKey = jiraValue.key
-                self.totalTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
-                self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
-                self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
-                # print(f"self.dictionaryWorklog[{sw}][{self.previousKey}]: {self.totalTimeSpent}")
-            else:
-                newTimeSpent = 0
-                newTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
-                newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
-                self.totalTimeSpent += newTimeSpent
-                self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
+        if extractedDateTime != None:
+            if extractedDateTime.month == month:
+                if self.previousKey != jiraValue.key:
+                    self.totalTimeSpent = 0
+                    self.previousKey = jiraValue.key
+                    self.totalTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
+                    self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
+                    self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
+                    print(f"self.dictionaryWorklog[{sw}][{self.previousKey}]: {self.totalTimeSpent}")
+                else:
+                    newTimeSpent = 0
+                    newTimeSpent = jiraValue.fields.worklog.worklogs[0].timeSpentSeconds
+                    newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
+                    self.totalTimeSpent += newTimeSpent
+                    self.dictionaryWorklog[sw][self.previousKey] = self.totalTimeSpent
 
     def getWorkLogsForEachSW(self, month, software):
         if (software != None):
