@@ -9,8 +9,8 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 MEMBERS = {
-    'Arman'     : '6057df8914a23b0069a65dc8'
-    # 'Austin'    : '5fbb3d037cc1030069500950',
+    'Arman'     : '6057df8914a23b0069a65dc8',
+    'Austin'    : '5fbb3d037cc1030069500950'
     # 'Duane'     : '5efbf73454020e0ba82ac7a0',
     # 'Eddzonne'  : '5f85328a53aaa400760d4944',
     # 'Florante'  : '5fa0b7ad22f39900769a8242',
@@ -27,20 +27,20 @@ MEMBERS = {
 }
 
 SOFTWARE = [
-    # 'Infrastructure',
-    # 'AAIG CRM',
-    # 'ASR Reports',
-    # 'Wordpress CMS Websites',
-    # 'Hubspot CMS Websites',
-    # 'Macrovue',
-    # 'Macrovue Marketing',
-    'HALO']
-    # 'HALO Mobile',
-    # 'HALO Marketing',
-    # 'Notification',
-    # 'Ascot',
-    # 'CMA',
-    # 'R:Ed']
+    'Infrastructure',
+    'AAIG CRM',
+    'ASR Reports',
+    'Wordpress CMS Websites',
+    'Hubspot CMS Websites',
+    'Macrovue',
+    'Macrovue Marketing',
+    'HALO',
+    'HALO Mobile',
+    'HALO Marketing',
+    'Notification',
+    'Ascot',
+    'CMA',
+    'R:Ed']
 
 DESIRED_MONTH = None
 
