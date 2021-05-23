@@ -125,6 +125,10 @@ class WorkLogsForEachSW(object):
 
     # BUG: The output of this method is wrong
     def __computeTotalTimeSpent__(self, jiraValue, sw, month):
+        self.issueId = None
+        self.totalTimeSpent = 0
+        self.newTimeSpent = 0
+        
         # nLogs means first log, second log, etc.
         for nLogs in jiraValue.fields.worklog.worklogs:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
@@ -146,6 +150,9 @@ class WorkLogsForEachSW(object):
                         print(f"Same as {self.issueId} self.dictionaryWorklog[{sw}][{nLogs.issueId}]: {self.totalTimeSpent}")
 
     def getWorkLogsForEachSW(self, month, software):
+        self.dictionaryWorklog = {}
+        print(f"WorkLogsForEachSW.dictionaryWorklog: {self.dictionaryWorklog}")
+        
         if (software != None):
             for sw in software:
                 self.dictionaryWorklog[sw] = {}
@@ -193,10 +200,10 @@ class TimeSpentPerSoftware(object):
         super().__init__()
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
+        self.software = {}
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
-            if len(self.software[sw]) > 0:
-                print(self.software[sw])
+        print(f"self.software[{sw}]: {self.software[sw]}")
 
     def getTimeSpentForEachSW(self):
         return self.worklogsForEachSW.getWorkLogsForEachSW(getDesiredMonth(), self.software)
