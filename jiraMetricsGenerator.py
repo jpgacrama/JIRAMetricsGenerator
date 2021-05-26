@@ -178,9 +178,15 @@ class JIRAService(object):
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
     def queryJIRA(self, memberToQuery, swToQuery):
+        # allWorklogs = self.jiraService.search_issues(
+        #     f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+        #     fields="worklog")
+
+        # I will just query one issue. I want to test my hypothesis
+        # that maybe long-runner tasks causes my problems 
         allWorklogs = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
-            fields="worklog")
+            f'text~\"General Housekeeping\"',
+            fields="worklog", maxResults=1000)
 
         # Returns a list of Worklogs
         return allWorklogs
