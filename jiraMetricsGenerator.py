@@ -178,7 +178,7 @@ class JIRAService(object):
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
     def queryJIRA(self, memberToQuery, swToQuery):
-        # allWorklogs = self.jiraService.search_issues(
+        # allIssues = self.jiraService.search_issues(
         #     f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
         #     fields="worklog")
 
@@ -211,19 +211,6 @@ class TimeSpentPerSoftware(object):
 
     def getTimeSpentForEachSW(self):
         return self.worklogsForEachSW.getWorkLogsForEachSW(getDesiredMonth(), self.software)
-
-
-class TimeSpentPerWorkItemInASpecificSW(object):
-    software = {}
-
-    def __init__(self) -> None:
-        super().__init__()
-
-    def extractJiraTickets(self, memberToQuery, softwareName, jIRAService):
-        self.software = jIRAService.queryJIRA(memberToQuery, softwareName)
-
-    def getTimeSpentForAllItemsInASpecificSW(self):
-        return getTimeSpentPerJiraItem(getDesiredMonth(), self.software)
 
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
