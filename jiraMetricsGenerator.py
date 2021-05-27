@@ -130,7 +130,7 @@ class WorkLogsForEachSW(object):
         self.newTimeSpent = 0
         
         # nLogs means first log, second log, etc.
-        for nLogs in value.fields.worklog.worklogs:
+        for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
             if extractedDateTime != None:
                 if extractedDateTime.month == month:
@@ -152,8 +152,8 @@ class WorkLogsForEachSW(object):
         if (software != None):
             for sw in software:
                 self.dictionaryWorklog[sw] = {}
-                for items in software[sw].items():
-                    self.__computeTotalTimeSpent__(items, sw, month)
+                for value in software[sw].values():
+                    self.__computeTotalTimeSpent__(value, sw, month)
 
                 self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
 
@@ -188,10 +188,6 @@ class JIRAService(object):
             f'text~\"General Housekeeping\"',
             fields="worklog", maxResults=5)
         
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
-
         allWorklogs = {}
         for issue in allIssues:
             allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
