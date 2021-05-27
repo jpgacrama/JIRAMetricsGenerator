@@ -184,9 +184,13 @@ class JIRAService(object):
 
         # I will just query one issue. I want to test my hypothesis
         # that maybe long-runner tasks causes my problems 
-        allWorklogs = self.jiraService.search_issues(
+        allIssues = self.jiraService.search_issues(
             f'text~\"General Housekeeping\"',
-            fields="worklog", maxResults=1000)
+            fields="worklog", maxResults=5)
+        
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
