@@ -9,8 +9,8 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 MEMBERS = {
-    'Arman'     : '6057df8914a23b0069a65dc8'
-    # 'Austin'    : '5fbb3d037cc1030069500950',
+    # 'Arman'     : '6057df8914a23b0069a65dc8',
+    'Austin'    : '5fbb3d037cc1030069500950'
     # 'Duane'     : '5efbf73454020e0ba82ac7a0',
     # 'Eddzonne'  : '5f85328a53aaa400760d4944',
     # 'Florante'  : '5fa0b7ad22f39900769a8242',
@@ -308,28 +308,26 @@ class PlotTimeSpentPerPerson(object):
     timeHelper = TimeHelper()
     worklogPerPerson = {}
     issueId = None
-    totalTimeSpent = 0
+    personKey = None
 
     def __init__(self) -> None:
         super().__init__()
 
     def __extractTime__(self, logsPerValue, month, person):
+        if self.personKey != person:
+            self.worklogPerPerson[person] = 0
+            self.personKey = person
+
         for nLogs in logsPerValue:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
             if extractedDateTime != None:
                 if extractedDateTime.month == month:
-                    if self.issueId != nLogs.issueId:
-                        self.totalTimeSpent = 0
-                        self.issueId = nLogs.issueId
-                        self.totalTimeSpent = nLogs.timeSpentSeconds
-                        self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
-                        self.worklogPerPerson[person] = self.totalTimeSpent
-                    else:
-                        newTimeSpent = 0
-                        newTimeSpent = nLogs.timeSpentSeconds
-                        newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
-                        self.totalTimeSpent += newTimeSpent
-                        self.worklogPerPerson[person] = self.totalTimeSpent
+                    self.issueId = nLogs.issueId
+                    timeSpent = nLogs.timeSpentSeconds
+                    timeSpent = self.timeHelper.convertToHours(timeSpent)
+                    self.worklogPerPerson[person] += timeSpent
+        
+        print(self.worklogPerPerson)
 
     def plotTimeSpentPerPerson(self, allWorkLogs):
         for person in allWorkLogs.keys():
