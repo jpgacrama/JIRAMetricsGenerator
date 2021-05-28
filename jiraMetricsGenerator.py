@@ -9,7 +9,7 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 MEMBERS = {
-    # 'Arman'     : '6057df8914a23b0069a65dc8',
+    'Arman'     : '6057df8914a23b0069a65dc8',
     'Austin'    : '5fbb3d037cc1030069500950'
     # 'Duane'     : '5efbf73454020e0ba82ac7a0',
     # 'Eddzonne'  : '5f85328a53aaa400760d4944',
@@ -296,7 +296,11 @@ class TimeSpentPerPerson(object):
 
     def extractItemsPerPerson(self, jIRAService):
         self.software = {}
+        numOfPersons = 0
         for person in MEMBERS:
+            numOfPersons += 1
+            progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
+            print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
             self.software[person] = jIRAService.queryJIRAPerPerson(person)
 
         return self.software
@@ -326,7 +330,7 @@ class PlotTimeSpentPerPerson(object):
                     timeSpent = nLogs.timeSpentSeconds
                     timeSpent = self.timeHelper.convertToHours(timeSpent)
                     self.worklogPerPerson[person] += timeSpent
-        
+
         print(self.worklogPerPerson)
 
     def plotTimeSpentPerPerson(self, allWorkLogs):
