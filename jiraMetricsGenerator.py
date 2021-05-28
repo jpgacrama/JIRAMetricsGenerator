@@ -9,21 +9,21 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 MEMBERS = {
-    'Arman'     : '6057df8914a23b0069a65dc8',
-    'Austin'    : '5fbb3d037cc1030069500950',
-    'Duane'     : '5efbf73454020e0ba82ac7a0',
-    'Eddzonne'  : '5f85328a53aaa400760d4944',
-    'Florante'  : '5fa0b7ad22f39900769a8242',
-    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    'Jaypea'    : '6073ef399361560068ad4b83',
-    'Jerred'    : '5ed4c8d844cc830c23027b31',
-    'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    'Marwin'    : '600e2429cd564b0068e7cca7',
-    'Mary'      : '6099e1699b362f006957e1ad',
-    'Maye'      : '6099d80c3fae6f006821f3f5',
-    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    'Ranniel'   : '604fe79ce394c300699ce0ed',
-    'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Arman'     : '6057df8914a23b0069a65dc8'
+    # 'Austin'    : '5fbb3d037cc1030069500950',
+    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
+    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
+    # 'Florante'  : '5fa0b7ad22f39900769a8242',
+    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    # 'Jaypea'    : '6073ef399361560068ad4b83',
+    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
+    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    # 'Marwin'    : '600e2429cd564b0068e7cca7',
+    # 'Mary'      : '6099e1699b362f006957e1ad',
+    # 'Maye'      : '6099d80c3fae6f006821f3f5',
+    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
+    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 SOFTWARE = [
@@ -103,7 +103,6 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
 class TimeHelper(object):
     def trimDate(self, jiraValue):
-        # BUG: I am only getting the FIRST worklog. Not all worklogs
         dateOfLog = jiraValue.updated
         dateOfLog = dateOfLog.split(" ")
         dateOfLog[-1] = dateOfLog[-1][:10]
@@ -123,12 +122,11 @@ class WorkLogsForEachSW(object):
     totalTimeSpent = 0
     newTimeSpent = 0
 
-    # BUG: The output of this method is wrong
     def __computeTotalTimeSpent__(self, value, sw, month):
         self.issueId = None
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
-        
+
         # nLogs means first log, second log, etc.
         for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
@@ -177,17 +175,23 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
+    def queryJIRAPerPerson(self, person):
+        allIssues = self.jiraService.search_issues(
+            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT}',
+            fields="worklog")
+
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
+
+        # Returns a list of Worklogs
+        return allWorklogs
+
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
             f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
-        # I will just query one issue. I want to test my hypothesis
-        # that maybe long-runner tasks causes my problems 
-        # allIssues = self.jiraService.search_issues(
-        #     f'text~\"General Housekeeping\"',
-        #     fields="worklog", maxResults=5)
-        
         allWorklogs = {}
         for issue in allIssues:
             allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
@@ -284,14 +288,72 @@ class MatrixOfWorklogsPerSW(object):
             print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first.")
             exit(1)
 
+class TimeSpentPerPerson(object):
+    software = {}
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def extractItemsPerPerson(self, jIRAService):
+        self.software = {}
+        for person in MEMBERS:
+            self.software[person] = jIRAService.queryJIRAPerPerson(person)
+
+        return self.software
+
+    def getTimeSpentForEachPerson(self):
+        pass
+
+class PlotTimeSpentPerPerson(object):
+    timeHelper = TimeHelper()
+    worklogPerPerson = {}
+    issueId = None
+    totalTimeSpent = 0
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def __extractTime__(self, logsPerValue, month, person):
+        for nLogs in logsPerValue:
+            extractedDateTime = self.timeHelper.trimDate(nLogs)
+            if extractedDateTime != None:
+                if extractedDateTime.month == month:
+                    if self.issueId != nLogs.issueId:
+                        self.totalTimeSpent = 0
+                        self.issueId = nLogs.issueId
+                        self.totalTimeSpent = nLogs.timeSpentSeconds
+                        self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
+                        self.worklogPerPerson[person] = self.totalTimeSpent
+                    else:
+                        newTimeSpent = 0
+                        newTimeSpent = nLogs.timeSpentSeconds
+                        newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
+                        self.totalTimeSpent += newTimeSpent
+                        self.worklogPerPerson[person] = self.totalTimeSpent
+
+    def plotTimeSpentPerPerson(self, allWorkLogs):
+        for person in allWorkLogs.keys():
+            for value in allWorkLogs.values():
+                for logsPerValue in value.values():
+                    self.__extractTime__(logsPerValue, getDesiredMonth(), person)
+
+        print(self.worklogPerPerson)
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
-    matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.plotMatrix()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
+    # matrixOfWorklogsPerSW.generateMatrix()
+    # # matrixOfWorklogsPerSW.plotMatrix()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
+    jiraService = JIRAService()
+    jiraService.logInToJIRA()
+
+    timeSpentPerPerson = TimeSpentPerPerson()
+    plotTimeSpentPerPerson = PlotTimeSpentPerPerson()
+
+    allWorklogs = timeSpentPerPerson.extractItemsPerPerson(jiraService)
+    plotTimeSpentPerPerson.plotTimeSpentPerPerson(allWorklogs)
 
 if __name__ == "__main__":
     main()
