@@ -124,13 +124,13 @@ class WorkLogsForEachSW(object):
     newTimeSpent = 0
 
     # BUG: The output of this method is wrong
-    def __computeTotalTimeSpent__(self, jiraValue, sw, month):
+    def __computeTotalTimeSpent__(self, value, sw, month):
         self.issueId = None
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
         
         # nLogs means first log, second log, etc.
-        for nLogs in jiraValue.fields.worklog.worklogs:
+        for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
             if extractedDateTime != None:
                 if extractedDateTime.month == month:
@@ -152,7 +152,7 @@ class WorkLogsForEachSW(object):
         if (software != None):
             for sw in software:
                 self.dictionaryWorklog[sw] = {}
-                for value in software[sw]:
+                for value in software[sw].values():
                     self.__computeTotalTimeSpent__(value, sw, month)
 
                 self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
@@ -178,9 +178,19 @@ class JIRAService(object):
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
     def queryJIRA(self, memberToQuery, swToQuery):
-        allWorklogs = self.jiraService.search_issues(
+        allIssues = self.jiraService.search_issues(
             f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
+
+        # I will just query one issue. I want to test my hypothesis
+        # that maybe long-runner tasks causes my problems 
+        # allIssues = self.jiraService.search_issues(
+        #     f'text~\"General Housekeeping\"',
+        #     fields="worklog", maxResults=5)
+        
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
@@ -201,19 +211,6 @@ class TimeSpentPerSoftware(object):
 
     def getTimeSpentForEachSW(self):
         return self.worklogsForEachSW.getWorkLogsForEachSW(getDesiredMonth(), self.software)
-
-
-class TimeSpentPerWorkItemInASpecificSW(object):
-    software = {}
-
-    def __init__(self) -> None:
-        super().__init__()
-
-    def extractJiraTickets(self, memberToQuery, softwareName, jIRAService):
-        self.software = jIRAService.queryJIRA(memberToQuery, softwareName)
-
-    def getTimeSpentForAllItemsInASpecificSW(self):
-        return getTimeSpentPerJiraItem(getDesiredMonth(), self.software)
 
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
