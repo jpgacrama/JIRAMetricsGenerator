@@ -103,7 +103,6 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
 class TimeHelper(object):
     def trimDate(self, jiraValue):
-        # BUG: I am only getting the FIRST worklog. Not all worklogs
         dateOfLog = jiraValue.updated
         dateOfLog = dateOfLog.split(" ")
         dateOfLog[-1] = dateOfLog[-1][:10]
@@ -123,12 +122,11 @@ class WorkLogsForEachSW(object):
     totalTimeSpent = 0
     newTimeSpent = 0
 
-    # BUG: The output of this method is wrong
     def __computeTotalTimeSpent__(self, value, sw, month):
         self.issueId = None
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
-        
+
         # nLogs means first log, second log, etc.
         for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
@@ -154,9 +152,7 @@ class WorkLogsForEachSW(object):
                 self.dictionaryWorklog[sw] = {}
                 for value in software[sw].values():
                     self.__computeTotalTimeSpent__(value, sw, month)
-
                 self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
-
             return self.dictionaryWorklog
 
         else:
@@ -177,17 +173,23 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
+    def queryJIRAPerPerson(self, person):
+        allIssues = self.jiraService.search_issues(
+            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT}',
+            fields="worklog")
+
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
+
+        # Returns a list of Worklogs
+        return allWorklogs
+
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
             f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
-        # I will just query one issue. I want to test my hypothesis
-        # that maybe long-runner tasks causes my problems 
-        # allIssues = self.jiraService.search_issues(
-        #     f'text~\"General Housekeeping\"',
-        #     fields="worklog", maxResults=5)
-        
         allWorklogs = {}
         for issue in allIssues:
             allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
@@ -274,8 +276,7 @@ class MatrixOfWorklogsPerSW(object):
     def writeToCSVFile(self):
         if len(self.result) != 0:
             self.__getTotal__()
-            fileName = input(
-                "Please enter the fileame you wish to write the CSV values to: ")
+            fileName = input("Please enter the fileame you wish to write the CSV values to: ")
             self.result[0].insert(0, 'SW Names')
             df = pd.DataFrame(self.result)
             df.to_csv(fileName, index=False, header=False)
@@ -284,14 +285,69 @@ class MatrixOfWorklogsPerSW(object):
             print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first.")
             exit(1)
 
+class TimeSpentPerPerson(object):
+    worklogPerPerson = {}
+    jiraService = None
+    issueId = None
+    personKey = None
+    matrix = None
+    timeHelper = TimeHelper()
+
+    def __init__(self, jiraService) -> None:
+        super().__init__()
+        self.jIRAService = jiraService
+
+    def __extractItemsPerPerson__(self):
+        itemsPerPerson = {}
+        numOfPersons = 0
+        for person in MEMBERS:
+            numOfPersons += 1
+            progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
+            print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
+            itemsPerPerson[person] = self.jIRAService.queryJIRAPerPerson(person)
+
+        return itemsPerPerson
+
+    def __extractTime__(self, logsPerValue, month, person):
+        if self.personKey != person:
+            self.worklogPerPerson[person] = 0
+            self.personKey = person
+
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        if extractedDateTime != None:
+            if extractedDateTime.month == month:
+                self.issueId = logsPerValue.issueId
+                timeSpent = logsPerValue.timeSpentSeconds
+                timeSpent = self.timeHelper.convertToHours(timeSpent)
+                self.worklogPerPerson[person] += timeSpent
+
+    def extractTimeSpentPerPerson(self):
+        allWorklogs = self.__extractItemsPerPerson__()
+        for person in allWorklogs:
+            for jiraID in allWorklogs[person]:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]:
+                    self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person)
+
+    def genrateCSVFile(self):
+        df = pd.DataFrame(self.worklogPerPerson, index=[0])
+        fileName = input("Please enter the fileame you wish to write the CSV values to: ")
+        df.to_csv(fileName, index=False, header=MEMBERS.keys())
+        print(f"Writing to {fileName} done.")
+
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
-    matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.plotMatrix()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
+    # matrixOfWorklogsPerSW.generateMatrix()
+    # # matrixOfWorklogsPerSW.plotMatrix()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
+    jiraService = JIRAService()
+    jiraService.logInToJIRA()
+
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.genrateCSVFile()
 
 if __name__ == "__main__":
     main()
