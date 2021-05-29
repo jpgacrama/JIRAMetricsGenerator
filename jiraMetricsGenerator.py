@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from logging import NOTSET
 import os
 from jira import JIRA
 from datetime import datetime
@@ -49,6 +50,7 @@ def getDesiredMonth():
     global DESIRED_MONTH
     if DESIRED_MONTH == None:
         DESIRED_MONTH = int(input("Enter the desired Month in number form: "))
+        print("\n")
 
     return DESIRED_MONTH
 
@@ -165,10 +167,11 @@ class JIRAService(object):
     api_token = None
     jiraService = None
 
-    def __init__(self):
-        pass
+    def __init__(self) -> None:
+        super().__init__()
+        self.__logInToJIRA__()
 
-    def logInToJIRA(self):
+    def __logInToJIRA__(self):
         username = input("Please enter your username: ")
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
@@ -218,6 +221,11 @@ class TimeSpentPerSoftware(object):
 class MatrixOfWorklogsPerSW(object):
     result = []
     worklog = {}
+    jiraService = None
+
+    def __init__(self, jiraService) -> None:
+        super().__init__()
+        self.jiraService = jiraService
 
     # Function to get the total hours spent for every SW
     def __getTotal__(self):
@@ -231,13 +239,12 @@ class MatrixOfWorklogsPerSW(object):
             self.result[1:] = df.values.tolist()
 
     def generateMatrix(self):
-        jiraService = JIRAService()
-        jiraService.logInToJIRA()
         timeSpentPerSoftware = TimeSpentPerSoftware()
         numOfPersons = 0
 
+        print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
         for person in MEMBERS:
-            timeSpentPerSoftware.extractItemsPerSW(person, jiraService)
+            timeSpentPerSoftware.extractItemsPerSW(person, self.jiraService)
             self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
             progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
@@ -276,7 +283,7 @@ class MatrixOfWorklogsPerSW(object):
     def writeToCSVFile(self):
         if len(self.result) != 0:
             self.__getTotal__()
-            fileName = input("Please enter the fileame you wish to write the CSV values to: ")
+            fileName = input("Filename for Hours Spent per SW: ")
             self.result[0].insert(0, 'SW Names')
             df = pd.DataFrame(self.result)
             df.to_csv(fileName, index=False, header=False)
@@ -300,6 +307,8 @@ class TimeSpentPerPerson(object):
     def __extractItemsPerPerson__(self):
         itemsPerPerson = {}
         numOfPersons = 0
+        
+        print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
         for person in MEMBERS:
             numOfPersons += 1
             progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
@@ -328,26 +337,24 @@ class TimeSpentPerPerson(object):
                 for worklogPerJIRAId in allWorklogs[person][jiraID]:
                     self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person)
 
-    def genrateCSVFile(self):
+    def generateCSVFile(self):
         df = pd.DataFrame(self.worklogPerPerson, index=[0])
-        fileName = input("Please enter the fileame you wish to write the CSV values to: ")
+        fileName = input("Filename for Time Spent Per Person: ")
         df.to_csv(fileName, index=False, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW()
-    # matrixOfWorklogsPerSW.generateMatrix()
-    # # matrixOfWorklogsPerSW.plotMatrix()
-    # matrixOfWorklogsPerSW.writeToCSVFile()
-
     jiraService = JIRAService()
-    jiraService.logInToJIRA()
+
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.genrateCSVFile()
+    timeSpentPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
