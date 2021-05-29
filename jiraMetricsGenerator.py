@@ -152,9 +152,7 @@ class WorkLogsForEachSW(object):
                 self.dictionaryWorklog[sw] = {}
                 for value in software[sw].values():
                     self.__computeTotalTimeSpent__(value, sw, month)
-
                 self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
-
             return self.dictionaryWorklog
 
         else:
@@ -293,6 +291,7 @@ class TimeSpentPerPerson(object):
     jiraService = None
     issueId = None
     personKey = None
+    matrix = None
     timeHelper = TimeHelper()
 
     def __init__(self, jiraService) -> None:
@@ -323,6 +322,10 @@ class TimeSpentPerPerson(object):
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person] += timeSpent
 
+    def __generateMatrix__(self):
+        df = pd.DataFrame(self.worklogPerPerson, index=[0])
+        print(df)
+
     def extractTimeSpentPerPerson(self):
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
@@ -331,7 +334,7 @@ class TimeSpentPerPerson(object):
                     self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person)
 
     def genrateCSVFile(self):
-        print(self.worklogPerPerson)
+        self.__generateMatrix__()
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
