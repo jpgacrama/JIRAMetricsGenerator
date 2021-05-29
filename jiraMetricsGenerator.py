@@ -289,33 +289,26 @@ class MatrixOfWorklogsPerSW(object):
             exit(1)
 
 class TimeSpentPerPerson(object):
-    timeSpent = {}
+    worklogPerPerson = {}
+    jiraService = None
+    issueId = None
+    personKey = None
+    timeHelper = TimeHelper()
 
-    def __init__(self) -> None:
+    def __init__(self, jiraService) -> None:
         super().__init__()
+        self.jIRAService = jiraService
 
-    def extractItemsPerPerson(self, jIRAService):
-        self.timeSpent = {}
+    def __extractItemsPerPerson__(self):
+        itemsPerPerson = {}
         numOfPersons = 0
         for person in MEMBERS:
             numOfPersons += 1
             progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
             print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
-            self.timeSpent[person] = jIRAService.queryJIRAPerPerson(person)
+            itemsPerPerson[person] = self.jIRAService.queryJIRAPerPerson(person)
 
-        return self.timeSpent
-
-    def getTimeSpentForEachPerson(self):
-        pass
-
-class PlotTimeSpentPerPerson(object):
-    timeHelper = TimeHelper()
-    worklogPerPerson = {}
-    issueId = None
-    personKey = None
-
-    def __init__(self) -> None:
-        super().__init__()
+        return itemsPerPerson
 
     def __extractTime__(self, logsPerValue, month, person):
         if self.personKey != person:
@@ -330,13 +323,15 @@ class PlotTimeSpentPerPerson(object):
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person] += timeSpent
 
-    def plotTimeSpentPerPerson(self, allWorkLogs):
-        for person in allWorkLogs:
-            for jiraID in allWorkLogs[person]:
-                for worklogPerJIRAId in allWorkLogs[person][jiraID]:
+    def extractTimeSpentPerPerson(self):
+        allWorklogs = self.__extractItemsPerPerson__()
+        for person in allWorklogs:
+            for jiraID in allWorklogs[person]:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]:
                     self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person)
 
-            print(f"self.worklogPerPerson[{person}]: {self.worklogPerPerson[person]}")
+    def genrateCSVFile(self):
+        print(self.worklogPerPerson)
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -348,11 +343,9 @@ def main():
     jiraService = JIRAService()
     jiraService.logInToJIRA()
 
-    timeSpentPerPerson = TimeSpentPerPerson()
-    plotTimeSpentPerPerson = PlotTimeSpentPerPerson()
-
-    allWorklogs = timeSpentPerPerson.extractItemsPerPerson(jiraService)
-    plotTimeSpentPerPerson.plotTimeSpentPerPerson(allWorklogs)
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.genrateCSVFile()
 
 if __name__ == "__main__":
     main()
