@@ -19,7 +19,6 @@ Pre-requisites:
     - cd numpy
     - pip3 install . --no-binary :all: --no-use-pep517
 
-Some items you may be interested in the future:
-- value.fields.issuetype.description
-- value.fields.worklog.worklogs[i].updateAuthor
-- value.fields.worklog.worklogs[i].updated
+THINGS TO REMEMBER:
+1. Use JIRA query to find out the actual value for the current OMNI Sprint
+   and place its corresponding number under the SPRINT Global Variable

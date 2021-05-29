@@ -9,6 +9,10 @@ import pandas as pd
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
+
+# OMNI Sprint 44
+SPRINT = 187
+
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
     'Austin'    : '5fbb3d037cc1030069500950',
@@ -182,7 +186,7 @@ class JIRAService(object):
 
     def queryJIRAPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT}',
+            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND Sprint = {SPRINT}',
             fields="worklog")
 
         allWorklogs = {}
@@ -194,7 +198,7 @@ class JIRAService(object):
 
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Sprint = {SPRINT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
@@ -362,9 +366,9 @@ def main():
     matrixOfWorklogsPerSW.generateMatrix()
     matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
