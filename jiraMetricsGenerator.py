@@ -276,8 +276,7 @@ class MatrixOfWorklogsPerSW(object):
     def writeToCSVFile(self):
         if len(self.result) != 0:
             self.__getTotal__()
-            fileName = input(
-                "Please enter the fileame you wish to write the CSV values to: ")
+            fileName = input("Please enter the fileame you wish to write the CSV values to: ")
             self.result[0].insert(0, 'SW Names')
             df = pd.DataFrame(self.result)
             df.to_csv(fileName, index=False, header=False)
@@ -322,10 +321,6 @@ class TimeSpentPerPerson(object):
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person] += timeSpent
 
-    def __generateMatrix__(self):
-        df = pd.DataFrame(self.worklogPerPerson, index=[0])
-        print(df)
-
     def extractTimeSpentPerPerson(self):
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
@@ -334,7 +329,10 @@ class TimeSpentPerPerson(object):
                     self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person)
 
     def genrateCSVFile(self):
-        self.__generateMatrix__()
+        df = pd.DataFrame(self.worklogPerPerson, index=[0])
+        fileName = input("Please enter the fileame you wish to write the CSV values to: ")
+        df.to_csv(fileName, index=False, header=MEMBERS.keys())
+
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
