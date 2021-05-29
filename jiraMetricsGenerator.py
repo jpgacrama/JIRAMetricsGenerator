@@ -332,6 +332,7 @@ class TimeSpentPerPerson(object):
         df = pd.DataFrame(self.worklogPerPerson, index=[0])
         fileName = input("Please enter the fileame you wish to write the CSV values to: ")
         df.to_csv(fileName, index=False, header=MEMBERS.keys())
+        print(f"Writing to {fileName} done.")
 
 
 def main():
