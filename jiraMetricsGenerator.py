@@ -45,6 +45,10 @@ SOFTWARE = [
 
 DESIRED_MONTH = None
 
+def progressInfo(numOfPersons, person):
+    progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
+    print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
+
 # Helper function to get the desired month
 def getDesiredMonth():
     global DESIRED_MONTH
@@ -247,8 +251,7 @@ class MatrixOfWorklogsPerSW(object):
             timeSpentPerSoftware.extractItemsPerSW(person, self.jiraService)
             self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
-            progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
-            print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
+            progressInfo(numOfPersons, person)
 
         tempData = list(self.worklog.values())
         subset = set()
@@ -311,8 +314,7 @@ class TimeSpentPerPerson(object):
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
         for person in MEMBERS:
             numOfPersons += 1
-            progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
-            print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
+            progressInfo(numOfPersons, person)
             itemsPerPerson[person] = self.jIRAService.queryJIRAPerPerson(person)
 
         return itemsPerPerson
