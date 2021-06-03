@@ -31,6 +31,8 @@ MEMBERS = {
     # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
+ISSUE_TYPES = ['Project', 'Ad-hoc']
+
 SOFTWARE = [
     'Infrastructure',
     'AAIG CRM',
@@ -349,8 +351,11 @@ class TimeSpentPerPerson(object):
             self.itemsPerPerson[person] = {}
             numOfPersons += 1
             progressInfo(numOfPersons, person)
-            self.itemsPerPerson[person]['Project'] = self.jIRAService.queryProjectItemsPerPerson(person)
-            self.itemsPerPerson[person]['Ad-hoc'] = self.jIRAService.queryAdhocItemsPerPerson(person)
+            for issueType in ISSUE_TYPES:
+                if issueType == 'Project':
+                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryProjectItemsPerPerson(person)
+                elif issueType == 'Ad-hoc':
+                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryAdhocItemsPerPerson(person)
         
         return self.itemsPerPerson
 
