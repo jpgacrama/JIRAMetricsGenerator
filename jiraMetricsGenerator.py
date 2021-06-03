@@ -349,11 +349,9 @@ class TimeSpentPerPerson(object):
             self.worklogPerPerson[person] = {}
             self.personKey = person
 
-            if self.issueTypeKey != issueType
+        if self.issueTypeKey != issueType:
+            self.issueTypeKey = issueType
             self.worklogPerPerson[person][issueType] = 0
-
-        if issueType == 'Ad-hoc':
-            print('Ad-hoc already')
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime != None:
