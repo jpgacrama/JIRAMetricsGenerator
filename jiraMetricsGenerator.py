@@ -4,7 +4,6 @@ from logging import NOTSET
 import os
 from jira import JIRA
 from datetime import datetime
-import matplotlib.pyplot as pyplot
 import pandas as pd
 
 URL = 'https://macrovue.atlassian.net'
@@ -63,22 +62,6 @@ def getDesiredMonth():
         print("\n")
 
     return DESIRED_MONTH
-
-# Generic plotter function
-def plotData(dictionaryWorklog, person):
-    if dictionaryWorklog == None or len(dictionaryWorklog) == 0 or person == None:
-        print("You cannot plot data without any entries")
-        exit(1)
-    else:
-        numerOfItems = len(dictionaryWorklog)
-        pyplot.axis("equal")
-        pyplot.pie([float(v) for v in dictionaryWorklog.values() if v != 0],
-                   labels=[str(k)
-                           for k, v in dictionaryWorklog.items() if v != 0],
-                   autopct=lambda p: '{:.2f}%'.format(round(p, 2)) if p > 0 else '')
-        pyplot.title(f"Hours distributon for person shown in percent")
-        pyplot.tight_layout()
-        pyplot.show()
 
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
@@ -362,10 +345,12 @@ class TimeSpentPerPerson(object):
         return self.itemsPerPerson
 
     def __extractTime__(self, logsPerValue, month, person, issueType):
-        if self.personKey != person and self.issueTypeKey != issueType:
+        if self.personKey != person:
             self.worklogPerPerson[person] = {}
-            self.worklogPerPerson[person][issueType] = 0
             self.personKey = person
+
+            if self.issueTypeKey != issueType
+            self.worklogPerPerson[person][issueType] = 0
 
         if issueType == 'Ad-hoc':
             print('Ad-hoc already')
