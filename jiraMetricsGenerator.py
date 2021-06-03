@@ -319,6 +319,15 @@ class MatrixOfWorklogsPerSW(object):
             print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first.")
             exit(1)
 
+class AutoVivification(dict):
+    """Implementation of perl's autovivification feature."""
+    def __getitem__(self, item):
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            value = self[item] = type(self)()
+            return value
+
 class TimeSpentPerPerson(object):
     worklogPerPerson = {}
     jiraService = None
@@ -326,22 +335,24 @@ class TimeSpentPerPerson(object):
     personKey = None
     matrix = None
     timeHelper = TimeHelper()
+    itemsPerPerson = AutoVivification()
 
     def __init__(self, jiraService) -> None:
         super().__init__()
         self.jIRAService = jiraService
 
     def __extractItemsPerPerson__(self):
-        itemsPerPerson = {}
         numOfPersons = 0
-        
+
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
         for person in MEMBERS:
+            self.itemsPerPerson[person] = {}
             numOfPersons += 1
             progressInfo(numOfPersons, person)
-            itemsPerPerson[person] = self.jIRAService.queryProjectItemsPerPerson(person)
-
-        return itemsPerPerson
+            self.itemsPerPerson[person]['Project'] = self.jIRAService.queryProjectItemsPerPerson(person)
+            self.itemsPerPerson[person]['Ad-hoc'] = self.jIRAService.queryAdhocItemsPerPerson(person)
+        
+        return self.itemsPerPerson
 
     def __extractTime__(self, logsPerValue, month, person):
         if self.personKey != person:
