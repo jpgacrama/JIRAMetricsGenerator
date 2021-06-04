@@ -336,11 +336,10 @@ class TimeSpentPerPerson(object):
             numOfPersons += 1
             progressInfo(numOfPersons, person)
             for issueType in ISSUE_TYPES:
-                self.itemsPerPerson[person][issueType] = self.jIRAService.queryAdhocItemsPerPerson(person)
-                # if issueType == 'Project':
-                #     self.itemsPerPerson[person][issueType] = self.jIRAService.queryProjectItemsPerPerson(person)
-                # elif issueType == 'Ad-hoc':
-                #     self.itemsPerPerson[person][issueType] = self.jIRAService.queryAdhocItemsPerPerson(person)
+                if issueType == 'Project':
+                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryProjectItemsPerPerson(person)
+                elif issueType == 'Ad-hoc':
+                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryAdhocItemsPerPerson(person)
         
         return self.itemsPerPerson
 
@@ -356,7 +355,6 @@ class TimeSpentPerPerson(object):
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime != None:
             if extractedDateTime.month == month:
-                self.issueId = logsPerValue.issueId
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][issueType] += timeSpent
