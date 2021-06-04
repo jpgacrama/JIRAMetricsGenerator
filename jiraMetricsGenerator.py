@@ -50,19 +50,22 @@ SOFTWARE = [
     'R:Ed']
 
 DESIRED_MONTH = None
+DESIRED_YEAR = None
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
     print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
 
 # Helper function to get the desired month
-def getDesiredMonth():
-    global DESIRED_MONTH
+def getDesiredYearAndMonth():
+    global DESIRED_MONTH, DESIRED_YEAR
+
+    if DESIRED_YEAR == None:
+        DESIRED_YEAR = int(input("Enter the desired Year: "))
+    
     if DESIRED_MONTH == None:
         DESIRED_MONTH = int(input("Enter the desired Month in number form: "))
         print("\n")
-
-    return DESIRED_MONTH
 
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
@@ -118,7 +121,7 @@ class WorkLogsForEachSW(object):
     totalTimeSpent = 0
     newTimeSpent = 0
 
-    def __computeTotalTimeSpent__(self, value, sw, month):
+    def __computeTotalTimeSpent__(self, value, sw):
         self.issueId = None
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
@@ -127,7 +130,7 @@ class WorkLogsForEachSW(object):
         for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
             if extractedDateTime != None:
-                if extractedDateTime.month == month:
+                if extractedDateTime.month == DESIRED_MONTH:
                     if self.issueId != nLogs.issueId:
                         self.totalTimeSpent = 0
                         self.issueId = nLogs.issueId
@@ -141,13 +144,13 @@ class WorkLogsForEachSW(object):
                         self.totalTimeSpent += newTimeSpent
                         self.dictionaryWorklog[sw][self.issueId] = self.totalTimeSpent
 
-    def getWorkLogsForEachSW(self, month, software):
+    def getWorkLogsForEachSW(self, software):
         self.dictionaryWorklog = {}
         if (software != None):
             for sw in software:
                 self.dictionaryWorklog[sw] = {}
                 for value in software[sw].values():
-                    self.__computeTotalTimeSpent__(value, sw, month)
+                    self.__computeTotalTimeSpent__(value, sw)
                 self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
             return self.dictionaryWorklog
 
@@ -221,7 +224,8 @@ class TimeSpentPerSoftware(object):
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
     def getTimeSpentForEachSW(self):
-        return self.worklogsForEachSW.getWorkLogsForEachSW(getDesiredMonth(), self.software)
+        getDesiredYearAndMonth()
+        return self.worklogsForEachSW.getWorkLogsForEachSW(self.software)
 
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
@@ -353,7 +357,7 @@ class TimeSpentPerPerson(object):
             for issueType in ISSUE_TYPES:
                 for jiraID in allWorklogs[person][issueType]:
                     for worklogPerJIRAId in allWorklogs[person][issueType][jiraID]:
-                        self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person, issueType)
+                        self.__extractTime__(worklogPerJIRAId, getDesiredYearAndMonth(), person, issueType)
 
     def generateCSVFile(self):
         df = pd.DataFrame(self.worklogPerPerson)
@@ -369,9 +373,9 @@ def main():
     matrixOfWorklogsPerSW.generateMatrix()
     matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
