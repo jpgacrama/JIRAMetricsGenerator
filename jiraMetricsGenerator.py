@@ -18,6 +18,7 @@ MEMBERS = {
     'Duane'     : '5efbf73454020e0ba82ac7a0',
     'Eddzonne'  : '5f85328a53aaa400760d4944',
     'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Harold'    : '60aaff8d5dc18500701239c0',
     'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
     'Jaypea'    : '6073ef399361560068ad4b83',
     'Jerred'    : '5ed4c8d844cc830c23027b31',
@@ -354,8 +355,6 @@ class TimeSpentPerPerson(object):
                     for worklogPerJIRAId in allWorklogs[person][issueType][jiraID]:
                         self.__extractTime__(worklogPerJIRAId, getDesiredMonth(), person, issueType)
 
-        print(self.worklogPerPerson)
-
     def generateCSVFile(self):
         df = pd.DataFrame(self.worklogPerPerson)
         fileName = input("Filename for Time Spent Per Person: ")
@@ -367,9 +366,9 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    # matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.writeToCSVFile()
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     timeSpentPerPerson.extractTimeSpentPerPerson()
