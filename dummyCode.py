@@ -19,3 +19,18 @@ def plotData(dictionaryWorklog, person):
         pyplot.title(f"Hours distributon for person shown in percent")
         pyplot.tight_layout()
         pyplot.show()
+
+
+# Plots the number of hours spent per person
+def plotMatrix(self):
+    figure, axis = pyplot.subplots(1, 1)
+    data = [i[1:] for i in self.result[1:]]
+    column_labels = self.result[0]
+    row_labels = [i[0] for i in self.result[1:]]
+    axis.axis('tight')
+    axis.axis('off')
+    table = axis.table(cellText=data, colLabels=column_labels,
+                        rowLabels=row_labels, loc="center")
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    pyplot.show()

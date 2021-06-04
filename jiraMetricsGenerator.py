@@ -13,21 +13,21 @@ PROJECT = 'OMNI'
 SPRINT = 187
 
 MEMBERS = {
-    # 'Arman'     : '6057df8914a23b0069a65dc8',
-    'Austin'    : '5fbb3d037cc1030069500950'
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Arman'     : '6057df8914a23b0069a65dc8',
+    'Austin'    : '5fbb3d037cc1030069500950',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ranniel'   : '604fe79ce394c300699ce0ed',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -270,20 +270,6 @@ class MatrixOfWorklogsPerSW(object):
         self.result = [[index for index, value in self.worklog.items()]] + \
             list(map(list, zip(*tempResult)))
 
-    # Plots the number of hours spent per person
-    def plotMatrix(self):
-        figure, axis = pyplot.subplots(1, 1)
-        data = [i[1:] for i in self.result[1:]]
-        column_labels = self.result[0]
-        row_labels = [i[0] for i in self.result[1:]]
-        axis.axis('tight')
-        axis.axis('off')
-        table = axis.table(cellText=data, colLabels=column_labels,
-                           rowLabels=row_labels, loc="center")
-        table.auto_set_font_size(False)
-        table.set_fontsize(9)
-        pyplot.show()
-
     def writeToCSVFile(self):
         if len(self.result) != 0:
             self.__getTotal__()
@@ -362,6 +348,7 @@ class TimeSpentPerPerson(object):
     def extractTimeSpentPerPerson(self):
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
+            self.issueTypeKey = None
             for issueType in ISSUE_TYPES:
                 for jiraID in allWorklogs[person][issueType]:
                     for worklogPerJIRAId in allWorklogs[person][issueType][jiraID]:
