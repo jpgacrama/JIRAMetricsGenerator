@@ -361,7 +361,6 @@ class TimeSpentPerPerson(object):
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
