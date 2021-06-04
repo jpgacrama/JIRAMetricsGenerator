@@ -370,9 +370,9 @@ class TimeSpentPerPerson(object):
         print(self.worklogPerPerson)
 
     def generateCSVFile(self):
-        df = pd.DataFrame(self.worklogPerPerson, index=[0])
+        df = pd.DataFrame(self.worklogPerPerson)
         fileName = input("Filename for Time Spent Per Person: ")
-        df.to_csv(fileName, index=False, header=MEMBERS.keys())
+        df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
 
