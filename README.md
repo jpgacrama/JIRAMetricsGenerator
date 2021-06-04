@@ -6,12 +6,11 @@ Pre-requisites:
   
   FOR APPLE SILICON:
 
-    To install matplotlib
+    NOTE: 
+    - Apple Silicon does not support matplotlib yet.
+      I placed the plotter function in dummyCode.py for now.
 
-    - python3 -m pip install cython   
-    - python3 -m pip install --no-binary :all: --no-use-pep517 numpy
-    - brew install libjpeg
-    - python3 -m pip install matplotlib
+      I will only use it when matplotlib is supported in Apple Silicon
 
     To install pandas
     - pip3 install Cython
