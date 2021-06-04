@@ -130,7 +130,7 @@ class WorkLogsForEachSW(object):
         for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
             if extractedDateTime != None:
-                if extractedDateTime.month == DESIRED_MONTH:
+                if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                     if self.issueId != nLogs.issueId:
                         self.totalTimeSpent = 0
                         self.issueId = nLogs.issueId
@@ -334,7 +334,7 @@ class TimeSpentPerPerson(object):
         
         return self.itemsPerPerson
 
-    def __extractTime__(self, logsPerValue, month, person, issueType):
+    def __extractTime__(self, logsPerValue, person, issueType):
         if self.personKey != person:
             self.worklogPerPerson[person] = {}
             self.personKey = person
@@ -345,19 +345,20 @@ class TimeSpentPerPerson(object):
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime != None:
-            if extractedDateTime.month == month:
+            if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][issueType] += timeSpent
 
     def extractTimeSpentPerPerson(self):
+        getDesiredYearAndMonth()
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
             self.issueTypeKey = None
             for issueType in ISSUE_TYPES:
                 for jiraID in allWorklogs[person][issueType]:
                     for worklogPerJIRAId in allWorklogs[person][issueType][jiraID]:
-                        self.__extractTime__(worklogPerJIRAId, getDesiredYearAndMonth(), person, issueType)
+                        self.__extractTime__(worklogPerJIRAId, person, issueType)
 
     def generateCSVFile(self):
         df = pd.DataFrame(self.worklogPerPerson)
@@ -369,13 +370,13 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    matrixOfWorklogsPerSW.generateMatrix()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    # matrixOfWorklogsPerSW.generateMatrix()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
