@@ -184,7 +184,7 @@ class JIRAService(object):
     def queryNumberOfFinishedItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                updated >= 2021-05-01 AND updated <= 2021-05-31
+                updated >= 2021-06-01 AND updated <= 2021-06-30
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
                 AND Sprint = {SPRINT}
@@ -246,11 +246,11 @@ class TimeSpentPerSoftware(object):
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         self.software = {}
+        getDesiredSprintYearAndMonth()
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
     def getTimeSpentForEachSW(self):
-        getDesiredSprintYearAndMonth()
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software)
 
 # This will be the "Caller" class
@@ -449,13 +449,13 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    # matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.writeToCSVFile()
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     doneItemsPerPerson.extractDoneItemsPerPerson()
