@@ -370,9 +370,9 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    # matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.writeToCSVFile()
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     timeSpentPerPerson.extractTimeSpentPerPerson()
