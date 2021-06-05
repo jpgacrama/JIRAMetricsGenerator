@@ -10,4 +10,7 @@ Pre-requisites:
 
 THINGS TO REMEMBER:
 1. Use JIRA query to find out the actual value for the current OMNI Sprint
-   and place its corresponding number under the SPRINT Global Variable
+   and place its corresponding number under the SPRINT Global 
+   
+2. To get the correct Sprint Value, you need to extract the value from a JIRA query.
+   Please ask me how to do this.

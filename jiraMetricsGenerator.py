@@ -9,9 +9,6 @@ import pandas as pd
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 
-# OMNI Sprint 44
-SPRINT = 187
-
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
     'Austin'    : '5fbb3d037cc1030069500950',
@@ -51,14 +48,18 @@ SOFTWARE = [
 
 DESIRED_MONTH = None
 DESIRED_YEAR = None
+SPRINT = None
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
     print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
 
 # Helper function to get the desired month
-def getDesiredYearAndMonth():
-    global DESIRED_MONTH, DESIRED_YEAR
+def getDesiredSprintYearAndMonth():
+    global DESIRED_MONTH, DESIRED_YEAR, SPRINT
+
+    if SPRINT == None:
+        SPRINT = int(input("Enter the Sprint using the value from JIRA Query: "))
 
     if DESIRED_YEAR == None:
         DESIRED_YEAR = int(input("Enter the desired Year: "))
@@ -173,6 +174,20 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
+    def queryNumberOfFinishedItemsPerPerson(self, person):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc
+                AND Sprint = {SPRINT} AND status in (Closed, Done, "READY FOR PROD RELEASE", "READY FOR UAT", Resolved, UAT)
+            """, fields="worklog")
+
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
+
+        # Returns a list of Worklogs
+        return allWorklogs
+
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint = {SPRINT}',
@@ -224,7 +239,7 @@ class TimeSpentPerSoftware(object):
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
     def getTimeSpentForEachSW(self):
-        getDesiredYearAndMonth()
+        getDesiredSprintYearAndMonth()
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software)
 
 # This will be the "Caller" class
@@ -304,6 +319,68 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 
+class DoneItemsPerPerson(object):
+    jiraService = None
+    issueId = None
+    issueTypeKey = None
+    personKey = None
+    matrix = None
+    timeHelper = TimeHelper()
+    itemsPerPerson = AutoVivification()
+    worklogPerPerson = AutoVivification()
+
+    def __init__(self, jiraService) -> None:
+        super().__init__()
+        self.jIRAService = jiraService
+
+    def __extractItemsPerPerson__(self):
+        numOfPersons = 0
+
+        print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
+        for person in MEMBERS:
+            self.itemsPerPerson[person] = {}
+            numOfPersons += 1
+            progressInfo(numOfPersons, person)
+            for issueType in ISSUE_TYPES:
+                if issueType == 'Project':
+                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryProjectItemsPerPerson(person)
+                elif issueType == 'Ad-hoc':
+                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryAdhocItemsPerPerson(person)
+        
+        return self.itemsPerPerson
+
+    def __extractTime__(self, logsPerValue, person, issueType):
+        if self.personKey != person:
+            self.worklogPerPerson[person] = {}
+            self.personKey = person
+
+        if self.issueTypeKey != issueType:
+            self.issueTypeKey = issueType
+            self.worklogPerPerson[person][issueType] = 0
+
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        if extractedDateTime != None:
+            if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
+                timeSpent = logsPerValue.timeSpentSeconds
+                timeSpent = self.timeHelper.convertToHours(timeSpent)
+                self.worklogPerPerson[person][issueType] += timeSpent
+
+    def extractTimeSpentPerPerson(self):
+        getDesiredSprintYearAndMonth()
+        allWorklogs = self.__extractItemsPerPerson__()
+        for person in allWorklogs:
+            self.issueTypeKey = None
+            for issueType in ISSUE_TYPES:
+                for jiraID in allWorklogs[person][issueType]:
+                    for worklogPerJIRAId in allWorklogs[person][issueType][jiraID]:
+                        self.__extractTime__(worklogPerJIRAId, person, issueType)
+
+    def generateCSVFile(self):
+        df = pd.DataFrame(self.worklogPerPerson)
+        fileName = input("Filename for Time Spent Per Person: ")
+        df.to_csv(fileName, index=True, header=MEMBERS.keys())
+        print(f"Writing to {fileName} done.")
+
 class TimeSpentPerPerson(object):
     jiraService = None
     issueId = None
@@ -351,7 +428,7 @@ class TimeSpentPerPerson(object):
                 self.worklogPerPerson[person][issueType] += timeSpent
 
     def extractTimeSpentPerPerson(self):
-        getDesiredYearAndMonth()
+        getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
             self.issueTypeKey = None
