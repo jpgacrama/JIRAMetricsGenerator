@@ -199,7 +199,6 @@ class JIRAService(object):
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['description'] = {}
             allWorklogs[str(issue)]['timeSpent'] = {}
-            
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
 
@@ -362,28 +361,31 @@ class DoneItemsPerPerson(object):
         return self.itemsPerPerson
 
 
-    def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID):
+    def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID, description):
         if self.personKey != person:
             self.worklogPerPerson[person] = {}
             self.personKey = person
 
         if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[person][jiraID] = 0
+            self.worklogPerPerson[person][jiraID] = {}
+            self.worklogPerPerson[person][jiraID]['description'] = description
+            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime != None:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID] += timeSpent
+            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
 
     def extractDoneItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractDoneItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:
-                for worklogPerJIRAId in allWorklogs[person][jiraID]:
-                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID)
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                    description = allWorklogs[person][jiraID]['description']
+                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
         print (self.worklogPerPerson[person])
 
