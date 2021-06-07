@@ -194,6 +194,11 @@ class JIRAService(object):
 
         allWorklogs = {}
         for issue in allIssues:
+            allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['timeSpent'] = {}
+            
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
@@ -377,6 +382,8 @@ class DoneItemsPerPerson(object):
             for jiraID in allWorklogs[person]:
                 for worklogPerJIRAId in allWorklogs[person][jiraID]:
                     self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID)
+
+        print (self.worklogPerPerson[person])
 
     def generateCSVFile(self):
         df = pd.DataFrame(self.worklogPerPerson)
