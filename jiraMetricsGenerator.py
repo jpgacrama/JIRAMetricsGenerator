@@ -52,6 +52,13 @@ SPRINT = None
 
 DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Only JIRA Query can filter out DONE Items. Any class / methods which use
+# this function need not check for the month or year that it is finished.
+# 
+# You also need to MANUALLY EDIT THE START AND END DATES to your desired month
+UPDATE_RANGE = "updated >= 2021-06-01 AND updated <= 2021-06-30"
+
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
     print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
@@ -176,15 +183,10 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # Only JIRA Query can filter out DONE Items. Any class / methods which use
-    # this function need not check for the month or year that it is finished.
-    # 
-    # You also need to MANUALLY EDIT THE START AND EDND DATES to your desired month
     def queryNumberOfFinishedItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                updated >= 2021-06-01 AND updated <= 2021-06-30
+                {UPDATE_RANGE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
                 AND Sprint = {SPRINT}
@@ -199,7 +201,7 @@ class JIRAService(object):
             allWorklogs[str(issue)]['timeSpent'] = {}
             
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
