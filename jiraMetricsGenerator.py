@@ -5,6 +5,7 @@ import os
 from jira import JIRA
 from datetime import datetime
 import pandas as pd
+import csv
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -387,12 +388,19 @@ class DoneItemsPerPerson(object):
                     description = allWorklogs[person][jiraID]['description']
                     self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
-        print (self.worklogPerPerson[person])
-
     def generateCSVFile(self):
         df = pd.DataFrame(self.worklogPerPerson)
         fileName = input("Filename for Time Spent Per Person: ")
-        df.to_csv(fileName, index=True, header=MEMBERS.keys())
+        
+        with open(fileName, 'w') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+            for person in self.worklogPerPerson:
+                csvwriter.writerow([person])
+                for jiraID in self.worklogPerPerson[person]:
+                    csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
+                                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+        
+        # df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
 class TimeSpentPerPerson(object):
