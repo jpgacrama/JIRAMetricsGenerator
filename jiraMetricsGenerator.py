@@ -5,6 +5,7 @@ import os
 from jira import JIRA
 from datetime import datetime
 import pandas as pd
+import csv
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -51,6 +52,13 @@ DESIRED_YEAR = None
 SPRINT = None
 
 DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Only JIRA Query can filter out DONE Items. Any class / methods which use
+# this function need not check for the month or year that it is finished.
+# 
+# You also need to MANUALLY EDIT THE START AND END DATES to your desired month
+UPDATE_RANGE = "updated >= 2021-05-01 AND updated <= 2021-05-31"
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
@@ -176,15 +184,10 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # Only JIRA Query can filter out DONE Items. Any class / methods which use
-    # this function need not check for the month or year that it is finished.
-    # 
-    # You also need to MANUALLY EDIT THE START AND EDND DATES to your desired month
     def queryNumberOfFinishedItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                updated >= 2021-06-01 AND updated <= 2021-06-30
+                {UPDATE_RANGE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
                 AND Sprint = {SPRINT}
@@ -194,7 +197,11 @@ class JIRAService(object):
 
         allWorklogs = {}
         for issue in allIssues:
-            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['timeSpent'] = {}
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
@@ -355,33 +362,43 @@ class DoneItemsPerPerson(object):
         return self.itemsPerPerson
 
 
-    def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID):
+    def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID, description):
         if self.personKey != person:
             self.worklogPerPerson[person] = {}
             self.personKey = person
 
         if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[person][jiraID] = 0
+            self.worklogPerPerson[person][jiraID] = {}
+            self.worklogPerPerson[person][jiraID]['description'] = description
+            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime != None:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID] += timeSpent
+            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
 
     def extractDoneItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractDoneItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:
-                for worklogPerJIRAId in allWorklogs[person][jiraID]:
-                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID)
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                    description = allWorklogs[person][jiraID]['description']
+                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
     def generateCSVFile(self):
-        df = pd.DataFrame(self.worklogPerPerson)
         fileName = input("Filename for Time Spent Per Person: ")
-        df.to_csv(fileName, index=True, header=MEMBERS.keys())
+        
+        with open(fileName, 'w', newline='') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+            for person in self.worklogPerPerson:
+                csvwriter.writerow([person])
+                for jiraID in self.worklogPerPerson[person]:
+                    csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
+                                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+        
         print(f"Writing to {fileName} done.")
 
 class TimeSpentPerPerson(object):
@@ -449,13 +466,13 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    matrixOfWorklogsPerSW.generateMatrix()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    # matrixOfWorklogsPerSW.generateMatrix()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     doneItemsPerPerson.extractDoneItemsPerPerson()
