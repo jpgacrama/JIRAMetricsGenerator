@@ -54,10 +54,8 @@ SPRINT = None
 DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Only JIRA Query can filter out DONE Items. Any class / methods which use
-# this function need not check for the month or year that it is finished.
-# 
-# You also need to MANUALLY EDIT THE START AND END DATES to your desired month
+# Only JIRA Query can filter out DONE Items. 
+# You need to MANUALLY EDIT THE START AND END DATES to your desired month
 UPDATE_RANGE = "updated >= 2021-05-01 AND updated <= 2021-05-31"
 
 def progressInfo(numOfPersons, person):
@@ -68,13 +66,13 @@ def progressInfo(numOfPersons, person):
 def getDesiredSprintYearAndMonth():
     global DESIRED_MONTH, DESIRED_YEAR, SPRINT
 
-    if SPRINT == None:
+    if not SPRINT:
         SPRINT = int(input("Enter the Sprint using the value from JIRA Query: "))
 
-    if DESIRED_YEAR == None:
+    if not DESIRED_YEAR:
         DESIRED_YEAR = int(input("Enter the desired Year: "))
     
-    if DESIRED_MONTH == None:
+    if not DESIRED_MONTH:
         DESIRED_MONTH = int(input("Enter the desired Month in number form: "))
         print("\n")
 
@@ -126,11 +124,13 @@ class TimeHelper(object):
 
 # Helper Class to get Work Logs per SW
 class WorkLogsForEachSW(object):
-    dictionaryWorklog = {}
-    timeHelper = TimeHelper()
-    issueId = None
-    totalTimeSpent = 0
-    newTimeSpent = 0
+    def __init__(self) -> None:
+        super().__init__()
+        self.dictionaryWorklog = {}
+        self.timeHelper = TimeHelper()
+        self.issueId = None
+        self.totalTimeSpent = 0
+        self.newTimeSpent = 0
 
     def __computeTotalTimeSpent__(self, value, sw):
         self.issueId = None
@@ -140,7 +140,7 @@ class WorkLogsForEachSW(object):
         # nLogs means first log, second log, etc.
         for nLogs in value:
             extractedDateTime = self.timeHelper.trimDate(nLogs)
-            if extractedDateTime != None:
+            if extractedDateTime:
                 if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                     if self.issueId != nLogs.issueId:
                         self.totalTimeSpent = 0
@@ -157,7 +157,7 @@ class WorkLogsForEachSW(object):
 
     def getWorkLogsForEachSW(self, software):
         self.dictionaryWorklog = {}
-        if (software != None):
+        if software:
             for sw in software:
                 self.dictionaryWorklog[sw] = {}
                 for value in software[sw].values():
@@ -171,13 +171,11 @@ class WorkLogsForEachSW(object):
 
 # This Class is responsible for logging in to JIRA and performing Queries
 class JIRAService(object):
-    username = None
-    api_token = None
-    jiraService = None
-
     def __init__(self) -> None:
         super().__init__()
         self.__logInToJIRA__()
+        self.username = None
+        self.api_token = None
 
     def __logInToJIRA__(self):
         username = input("Please enter your username: ")
@@ -245,11 +243,10 @@ class JIRAService(object):
 # This class is responsible for querying each of the
 # PROJECT items belonging to the various SW
 class TimeSpentPerSoftware(object):
-    software = {}
-    worklogsForEachSW = WorkLogsForEachSW()
-
     def __init__(self) -> None:
         super().__init__()
+        self.software = {}
+        self.worklogsForEachSW = WorkLogsForEachSW()
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
         self.software = {}
@@ -262,13 +259,11 @@ class TimeSpentPerSoftware(object):
 
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
-    result = []
-    worklog = {}
-    jiraService = None
-
     def __init__(self, jiraService) -> None:
         super().__init__()
         self.jiraService = jiraService
+        self.result = []
+        self.worklog = {}
 
     # Function to get the total hours spent for every SW
     def __getTotal__(self):
@@ -338,17 +333,15 @@ class AutoVivification(dict):
             return value
 
 class DoneItemsPerPerson(object):
-    jiraService = None
-    jiraIDKey = None
-    personKey = None
-    timeHelper = TimeHelper()
-    itemsPerPerson = AutoVivification()
-    worklogPerPerson = AutoVivification()
-
     def __init__(self, jiraService) -> None:
         super().__init__()
         self.jiraService = jiraService
-
+        self.jiraIDKey = None
+        self.personKey = None
+        self.timeHelper = TimeHelper()
+        self.itemsPerPerson = AutoVivification()
+        self.worklogPerPerson = AutoVivification()
+    
     def __extractDoneItemsPerPerson__(self):
         numOfPersons = 0
 
@@ -374,7 +367,7 @@ class DoneItemsPerPerson(object):
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
-        if extractedDateTime != None:
+        if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
@@ -402,17 +395,15 @@ class DoneItemsPerPerson(object):
         print(f"Writing to {fileName} done.")
 
 class TimeSpentPerPerson(object):
-    jiraService = None
-    issueId = None
-    issueTypeKey = None
-    personKey = None
-    timeHelper = TimeHelper()
-    itemsPerPerson = AutoVivification()
-    worklogPerPerson = AutoVivification()
-
     def __init__(self, jiraService) -> None:
         super().__init__()
         self.jIRAService = jiraService
+        self.issueId = None
+        self.issueTypeKey = None
+        self.personKey = None
+        self.timeHelper = TimeHelper()
+        self.itemsPerPerson = AutoVivification()
+        self.worklogPerPerson = AutoVivification()
 
     def __extractItemsPerPerson__(self):
         numOfPersons = 0
@@ -440,7 +431,7 @@ class TimeSpentPerPerson(object):
             self.worklogPerPerson[person][issueType] = 0
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
-        if extractedDateTime != None:
+        if extractedDateTime:
             if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
@@ -466,13 +457,13 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    # matrixOfWorklogsPerSW.generateMatrix()
-    # matrixOfWorklogsPerSW.writeToCSVFile()
+    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     doneItemsPerPerson.extractDoneItemsPerPerson()
