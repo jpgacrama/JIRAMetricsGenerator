@@ -56,7 +56,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
-UPDATE_RANGE = "updated >= 2021-05-01 AND updated <= 2021-05-31"
+UPDATE_RANGE = "updated >= 2021-06-01 AND updated <= 2021-06-30"
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
