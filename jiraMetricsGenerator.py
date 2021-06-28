@@ -49,14 +49,16 @@ SOFTWARE = [
 
 DESIRED_MONTH = None
 DESIRED_YEAR = None
-SPRINT = None
-
 DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
 UPDATE_RANGE = "updated >= 2021-06-01 AND updated <= 2021-06-30"
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Update this for a RANGE of JIRA Items
+SPRINT = "(188, 189, 187)"
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
@@ -67,7 +69,7 @@ def getDesiredSprintYearAndMonth():
     global DESIRED_MONTH, DESIRED_YEAR, SPRINT
 
     if not SPRINT:
-        SPRINT = int(input("Enter the Sprint using the value from JIRA Query: "))
+        Sprint in int(input("Enter the Sprint using the value from JIRA Query: "))
 
     if not DESIRED_YEAR:
         DESIRED_YEAR = int(input("Enter the desired Year: "))
@@ -188,7 +190,7 @@ class JIRAService(object):
                 {UPDATE_RANGE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
-                AND Sprint = {SPRINT}
+                AND Sprint in {SPRINT}
                 AND status in ({DONE_LIST})
              """,
             fields="worklog")
@@ -206,7 +208,7 @@ class JIRAService(object):
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint = {SPRINT}',
+            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint in {SPRINT}',
             fields="worklog")
 
         allWorklogs = {}
@@ -218,7 +220,7 @@ class JIRAService(object):
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc AND Sprint = {SPRINT}',
+            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc AND Sprint in {SPRINT}',
             fields="worklog")
 
         allWorklogs = {}
@@ -230,7 +232,7 @@ class JIRAService(object):
 
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Sprint = {SPRINT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Sprint in {SPRINT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
