@@ -12,21 +12,21 @@ PROJECT = 'OMNI'
 
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
-    'Austin'    : '5fbb3d037cc1030069500950',
-    'Duane'     : '5efbf73454020e0ba82ac7a0',
-    'Eddzonne'  : '5f85328a53aaa400760d4944',
-    'Florante'  : '5fa0b7ad22f39900769a8242',
-    'Harold'    : '60aaff8d5dc18500701239c0',
-    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    'Jaypea'    : '6073ef399361560068ad4b83',
-    'Jerred'    : '5ed4c8d844cc830c23027b31',
-    'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    'Marwin'    : '600e2429cd564b0068e7cca7',
-    'Mary'      : '6099e1699b362f006957e1ad',
-    'Maye'      : '6099d80c3fae6f006821f3f5',
-    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    'Ranniel'   : '604fe79ce394c300699ce0ed',
-    'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    # 'Austin'    : '5fbb3d037cc1030069500950',
+    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
+    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
+    # 'Florante'  : '5fa0b7ad22f39900769a8242',
+    # 'Harold'    : '60aaff8d5dc18500701239c0',
+    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    # 'Jaypea'    : '6073ef399361560068ad4b83',
+    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
+    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    # 'Marwin'    : '600e2429cd564b0068e7cca7',
+    # 'Mary'      : '6099e1699b362f006957e1ad',
+    # 'Maye'      : '6099d80c3fae6f006821f3f5',
+    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
+    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -54,7 +54,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
-UPDATE_RANGE = "updated >= 2021-06-01 AND updated <= 2021-06-30"
+UPDATE_RANGE = "updated >= 2021-05-01 AND updated <= 2021-05-31"
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Update this for a RANGE of JIRA Items
@@ -69,7 +69,7 @@ def getDesiredSprintYearAndMonth():
     global DESIRED_MONTH, DESIRED_YEAR, SPRINT
 
     if not SPRINT:
-        Sprint in int(input("Enter the Sprint using the value from JIRA Query: "))
+        SPRINT in int(input("Enter the Sprint using the value from JIRA Query: "))
 
     if not DESIRED_YEAR:
         DESIRED_YEAR = int(input("Enter the desired Year: "))
