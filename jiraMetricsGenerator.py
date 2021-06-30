@@ -56,6 +56,8 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
 UPDATE_RANGE = "updated >= 2021-05-01 AND updated <= 2021-05-31"
 
+WORKLOG_DATE = "worklogDate >= \"2021-05-01\" AND worklogDate < \"2021-05-31\""
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Update this for a RANGE of JIRA Items
 SPRINT = "(188, 189, 187, 186)"
@@ -208,7 +210,7 @@ class JIRAService(object):
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint in {SPRINT}',
+            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint in {SPRINT}',
             fields="worklog")
 
         allWorklogs = {}
@@ -220,7 +222,7 @@ class JIRAService(object):
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc AND Sprint in {SPRINT}',
+            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc AND Sprint in {SPRINT}',
             fields="worklog")
 
         allWorklogs = {}
@@ -232,7 +234,7 @@ class JIRAService(object):
 
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Sprint in {SPRINT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Sprint in {SPRINT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
@@ -467,9 +469,9 @@ def main():
     timeSpentPerPerson.extractTimeSpentPerPerson()
     timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
