@@ -58,7 +58,7 @@ UPDATE_RANGE = "updated >= 2021-06-01 AND updated <= 2021-06-30"
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Update this for a RANGE of JIRA Items
-SPRINT = "(188, 189, 187)"
+SPRINT = "(188, 189, 187, 186)"
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
