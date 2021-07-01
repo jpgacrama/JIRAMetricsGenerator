@@ -278,7 +278,7 @@ class MatrixOfWorklogsPerSW(object):
             df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
-    def generateMatrix(self):
+    def extractTimeSpentPerSW(self):
         timeSpentPerSoftware = TimeSpentPerSoftware()
         numOfPersons = 0
 
@@ -384,7 +384,7 @@ class DoneItemsPerPerson(object):
                     self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
     def generateCSVFile(self):
-        fileName = input("Filename for Time Spent Per Person: ")
+        fileName = input("Filename for Done Items Per Person: ")
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -460,7 +460,7 @@ def main():
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    matrixOfWorklogsPerSW.generateMatrix()
+    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
     matrixOfWorklogsPerSW.writeToCSVFile()
 
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
