@@ -11,41 +11,41 @@ URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 
 MEMBERS = {
-    # 'Arman'     : '6057df8914a23b0069a65dc8',
-    # 'Austin'    : '5fbb3d037cc1030069500950',
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    'Harold'    : '60aaff8d5dc18500701239c0'
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Arman'     : '6057df8914a23b0069a65dc8',
+    'Austin'    : '5fbb3d037cc1030069500950',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Harold'    : '60aaff8d5dc18500701239c0',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ranniel'   : '604fe79ce394c300699ce0ed',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
 
 SOFTWARE = [
-    # 'Infrastructure',
-    # 'AAIG CRM',
-    # 'ASR Reports',
-    # 'Wordpress CMS Websites',
-    # 'Hubspot CMS Websites',
-    # 'Macrovue',
-    # 'Macrovue Marketing',
-    'HALO']
-    # 'HALO Mobile',
-    # 'HALO Marketing',
-    # 'Notification',
-    # 'Ascot',
-    # 'CMA',
-    # 'R:Ed']
+    'Infrastructure',
+    'AAIG CRM',
+    'ASR Reports',
+    'Wordpress CMS Websites',
+    'Hubspot CMS Websites',
+    'Macrovue',
+    'Macrovue Marketing',
+    'HALO',
+    'HALO Mobile',
+    'HALO Marketing',
+    'Notification',
+    'Ascot',
+    'CMA',
+    'R:Ed']
 
 DESIRED_MONTH = None
 DESIRED_YEAR = None
@@ -464,13 +464,13 @@ def main():
     matrixOfWorklogsPerSW.extractTimeSpentPerSW()
     matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # doneItemsPerPerson.extractDoneItemsPerPerson()
-    # doneItemsPerPerson.generateCSVFile()
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson.extractDoneItemsPerPerson()
+    doneItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
