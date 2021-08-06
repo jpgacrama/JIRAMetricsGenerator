@@ -14,3 +14,8 @@ THINGS TO REMEMBER:
    
 2. To get the correct Sprint Value, you need to extract the value from a JIRA query.
    Please ask me how to do this.
+
+CUSTOM FIELDS:
+- customfield_11428: SW
+- customfield_11414: Component
+- customfield_11410: Story Point

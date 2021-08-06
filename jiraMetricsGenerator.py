@@ -222,10 +222,23 @@ class JIRAService(object):
         for issue in allIssues:
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['Software'] = {}
+            allWorklogs[str(issue)]['Component'] = {}
+            allWorklogs[str(issue)]['Story Point'] = {}
             allWorklogs[str(issue)]['timeSpent'] = {}
+            
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
 
+            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
+                allWorklogs[str(issue)]['Software'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']['value']
+            
+            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
+                allWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
+            
+            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']:
+                allWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
+            
         # Returns a list of Worklogs
         return allWorklogs
 
@@ -393,9 +406,10 @@ class RawItemsPerPerson(object):
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime:
-            timeSpent = logsPerValue.timeSpentSeconds
-            timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
+            if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
+                timeSpent = logsPerValue.timeSpentSeconds
+                timeSpent = self.timeHelper.convertToHours(timeSpent)
+                self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
 
     def extractRawItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
@@ -414,8 +428,12 @@ class RawItemsPerPerson(object):
             for person in self.worklogPerPerson:
                 csvwriter.writerow([person])
                 for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
-                                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+                    csvwriter.writerow([jiraID, 
+                        self.worklogPerPerson[person][jiraID]['description'],
+                        self.worklogPerPerson[person][jiraID]['Software'],
+                        self.worklogPerPerson[person][jiraID]['Component'],
+                        self.worklogPerPerson[person][jiraID]['Story Point'],
+                        self.worklogPerPerson[person][jiraID]['timeSpent']])
         
         print(f"Writing to {fileName} done.")
 
