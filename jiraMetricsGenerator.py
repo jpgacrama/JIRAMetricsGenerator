@@ -393,7 +393,9 @@ class RawItemsPerPerson(object):
         return self.itemsPerPerson
 
 
-    def __computeRawItemsPerPerson__(self, logsPerValue, person, jiraID, description):
+    def __computeRawItemsPerPerson__(
+        self, logsPerValue, person, jiraID, description, software, component, storyPoint):
+        
         if self.personKey != person:
             self.worklogPerPerson[person] = {}
             self.personKey = person
@@ -401,6 +403,9 @@ class RawItemsPerPerson(object):
         if self.jiraIDKey != jiraID:
             self.worklogPerPerson[person][jiraID] = {}
             self.worklogPerPerson[person][jiraID]['description'] = description
+            self.worklogPerPerson[person][jiraID]['Software'] = software
+            self.worklogPerPerson[person][jiraID]['Component'] = component
+            self.worklogPerPerson[person][jiraID]['Story Point'] = storyPoint
             self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
             self.jiraIDKey = jiraID
 
@@ -418,7 +423,11 @@ class RawItemsPerPerson(object):
             for jiraID in allWorklogs[person]:
                 for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
                     description = allWorklogs[person][jiraID]['description']
-                    self.__computeRawItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
+                    software = allWorklogs[person][jiraID]['Software']
+                    component = allWorklogs[person][jiraID]['Component']
+                    storyPoint = allWorklogs[person][jiraID]['Story Point']
+                    self.__computeRawItemsPerPerson__(
+                        worklogPerJIRAId, person, jiraID, description, software, component, storyPoint)
 
     def generateCSVFile(self):
         fileName = input("Filename for Raw Items Per Person: ")
