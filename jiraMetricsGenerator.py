@@ -207,6 +207,29 @@ class JIRAService(object):
         # Returns a list of Worklogs
         return allWorklogs
 
+    # WARNING!! 
+    # I did not use any SPRINT values here
+    def queryRawItemsPerPerson(self, person):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                {WORKLOG_DATE}
+                AND assignee in ({MEMBERS[person]})
+                AND project = {PROJECT}
+                AND status in ({DONE_LIST})
+             """,
+            fields="worklog")
+
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['timeSpent'] = {}
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
+
+        # Returns a list of Worklogs
+        return allWorklogs
+
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint in {SPRINT}',
