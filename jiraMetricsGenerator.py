@@ -358,6 +358,68 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 
+class RawItemsPerPerson(object):
+    def __init__(self, jiraService) -> None:
+        super().__init__()
+        self.jiraService = jiraService
+        self.jiraIDKey = None
+        self.personKey = None
+        self.timeHelper = TimeHelper()
+        self.itemsPerPerson = AutoVivification()
+        self.worklogPerPerson = AutoVivification()
+    
+    def __extractRawItemsPerPerson__(self):
+        numOfPersons = 0
+
+        print("\n-------- GENERATING MATRIX OF RAW ITEMS PER PERSON --------\n")
+        for person in MEMBERS:
+            self.itemsPerPerson[person] = {}
+            numOfPersons += 1
+            progressInfo(numOfPersons, person)
+            self.itemsPerPerson[person] = self.jiraService.queryRawItemsPerPerson(person)
+        
+        return self.itemsPerPerson
+
+
+    def __computeRawItemsPerPerson__(self, logsPerValue, person, jiraID, description):
+        if self.personKey != person:
+            self.worklogPerPerson[person] = {}
+            self.personKey = person
+
+        if self.jiraIDKey != jiraID:
+            self.worklogPerPerson[person][jiraID] = {}
+            self.worklogPerPerson[person][jiraID]['description'] = description
+            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+            self.jiraIDKey = jiraID
+
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        if extractedDateTime:
+            timeSpent = logsPerValue.timeSpentSeconds
+            timeSpent = self.timeHelper.convertToHours(timeSpent)
+            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
+
+    def extractRawItemsPerPerson(self):
+        getDesiredSprintYearAndMonth()
+        allWorklogs = self.__extractRawItemsPerPerson__()
+        for person in allWorklogs:
+            for jiraID in allWorklogs[person]:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                    description = allWorklogs[person][jiraID]['description']
+                    self.__computeRawItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
+
+    def generateCSVFile(self):
+        fileName = input("Filename for Raw Items Per Person: ")
+        
+        with open(fileName, 'w', newline='') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+            for person in self.worklogPerPerson:
+                csvwriter.writerow([person])
+                for jiraID in self.worklogPerPerson[person]:
+                    csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
+                                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+        
+        print(f"Writing to {fileName} done.")
+
 class DoneItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
         super().__init__()
