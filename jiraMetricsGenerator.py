@@ -59,7 +59,7 @@ WORKLOG_DATE = "worklogDate >= \"2021-07-01\" AND worklogDate < \"2021-07-31\""
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Update this for a RANGE of JIRA Items
-SPRINT = "(186, 187, 188, 189, 190)"
+SPRINT = "(186, 187, 188, 189, 190, 191)"
 
 def progressInfo(numOfPersons, person):
     progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
