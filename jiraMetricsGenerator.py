@@ -225,6 +225,8 @@ class JIRAService(object):
             allWorklogs[str(issue)]['Software'] = {}
             allWorklogs[str(issue)]['Component'] = {}
             allWorklogs[str(issue)]['Story Point'] = {}
+            allWorklogs[str(issue)]['Date Started'] = {}
+            allWorklogs[str(issue)]['Date Finished'] = {}
             allWorklogs[str(issue)]['timeSpent'] = {}
             
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
@@ -238,6 +240,12 @@ class JIRAService(object):
             
             if self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']:
                 allWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
+
+            if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'In Progress':
+                allWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
+
+            if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
+                allWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
             
         # Returns a list of Worklogs
         return allWorklogs

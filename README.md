@@ -19,3 +19,4 @@ CUSTOM FIELDS:
 - customfield_11428: SW
 - customfield_11414: Component
 - customfield_11410: Story Point
+- self.jiraService.issue(str(issue)).raw['fields']['status']['name'] - for Checking current status
