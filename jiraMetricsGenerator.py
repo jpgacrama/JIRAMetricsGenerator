@@ -6,6 +6,7 @@ from jira import JIRA
 from datetime import datetime
 import pandas as pd
 import csv
+import threading
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -303,6 +304,17 @@ class TimeSpentPerSoftware(object):
     def getTimeSpentForEachSW(self):
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software)
 
+# Multithreaded Class for MatrixOfWorklogsPerSW
+
+class ThreadMatrixOfWorklogsPerSW(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.worklog = {}
+        self.timeSpentPerSoftware = None
+
+    def run(self, person):
+        self.worklog[person] = self.timeSpentPerSoftware.getTimeSpentForEachSW()
+
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
     def __init__(self, jiraService) -> None:
@@ -329,6 +341,8 @@ class MatrixOfWorklogsPerSW(object):
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
         for person in MEMBERS:
             timeSpentPerSoftware.extractItemsPerSW(person, self.jiraService)
+            
+            # Make this multithreaded
             self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
             numOfPersons += 1
             progressInfo(numOfPersons, person)
