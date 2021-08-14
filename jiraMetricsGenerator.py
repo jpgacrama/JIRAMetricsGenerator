@@ -307,13 +307,16 @@ class TimeSpentPerSoftware(object):
 # Multithreaded Class for MatrixOfWorklogsPerSW
 
 class ThreadMatrixOfWorklogsPerSW(threading.Thread):
-    def __init__(self):
+    def __init__(self, person, jiraService, worklog, timeSpentPerSoftware):
         threading.Thread.__init__(self)
-        self.worklog = {}
-        self.timeSpentPerSoftware = None
+        self.person = person
+        self.jiraService = jiraService
+        self.worklog = worklog
+        self.timeSpentPerSoftware = timeSpentPerSoftware
 
-    def run(self, person):
-        self.worklog[person] = self.timeSpentPerSoftware.getTimeSpentForEachSW()
+    def run(self):
+        self.timeSpentPerSoftware.extractItemsPerSW(self.person, self.jiraService)
+        self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW()
 
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
@@ -339,13 +342,25 @@ class MatrixOfWorklogsPerSW(object):
         numOfPersons = 0
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
+
+        threads = [ThreadMatrixOfWorklogsPerSW(
+                person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
         for person in MEMBERS:
-            timeSpentPerSoftware.extractItemsPerSW(person, self.jiraService)
-            
-            # Make this multithreaded
-            self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
-            numOfPersons += 1
-            progressInfo(numOfPersons, person)
+            for thread in threads:
+                self.worklog[person] = thread.worklog
+
+        # for person in MEMBERS:
+        #     timeSpentPerSoftware.extractItemsPerSW(person, self.jiraService)
+        #     self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
+        #     numOfPersons += 1
+        #     progressInfo(numOfPersons, person)
 
         tempData = list(self.worklog.values())
         subset = set()
@@ -606,17 +621,17 @@ def main():
     matrixOfWorklogsPerSW.extractTimeSpentPerSW()
     matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    rawItemsPerPerson.extractRawItemsPerPerson()
-    rawItemsPerPerson.generateCSVFile()
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    # rawItemsPerPerson.extractRawItemsPerPerson()
+    # rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
