@@ -64,10 +64,6 @@ UPDATED_DATE = "updated >= 2021-07-01 AND updated <= 2021-07-31"
 # Update this for a RANGE of JIRA Items
 SPRINT = "(186, 187, 188, 189, 190, 191)"
 
-def progressInfo(numOfPersons, person):
-    progress = round(100 * (numOfPersons / len(MEMBERS)), 2)
-    print(f"Getting data for: {person:<10} Progress in percent: {progress:^5}")
-
 # Helper function to get the desired month
 def getDesiredSprintYearAndMonth():
     global DESIRED_MONTH, DESIRED_YEAR, SPRINT
@@ -306,7 +302,7 @@ class TimeSpentPerSoftware(object):
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
-class ThreadMatrixOfWorklogsPerSW(threading.Thread):
+class ThreadHoursSpentPerSW(threading.Thread):
     def __init__(self, person, jiraService, worklog, timeSpentPerSoftware):
         threading.Thread.__init__(self)
         self.person = person
@@ -315,12 +311,12 @@ class ThreadMatrixOfWorklogsPerSW(threading.Thread):
         self.timeSpentPerSoftware = timeSpentPerSoftware
 
     def run(self):
-        print(f'Getting data for: {self.person}')
         self.timeSpentPerSoftware.extractItemsPerSW(self.person, self.jiraService)
         self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW(self.person)
+        print(f'Finished Getting Hours Spent for Each SW for: {self.person}')
 
 # This will be the "Caller" class
-class MatrixOfWorklogsPerSW(object):
+class HoursSpentPerSW(object):
     def __init__(self, jiraService) -> None:
         super().__init__()
         self.jiraService = jiraService
@@ -346,7 +342,7 @@ class MatrixOfWorklogsPerSW(object):
         for person in MEMBERS:
             self.worklog[person] = {}
 
-        threads = [ThreadMatrixOfWorklogsPerSW(
+        threads = [ThreadHoursSpentPerSW(
                 person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
 
         for thread in threads:
@@ -409,6 +405,18 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 
+# Multithreaded Class for ThreadRawItemsPerPerson
+class ThreadRawItemsPerPerson(threading.Thread):
+    def __init__(self, person, jiraService, itemsPerPerson):
+        threading.Thread.__init__(self)
+        self.person = person
+        self.jiraService = jiraService
+        self.itemsPerPerson = itemsPerPerson
+
+    def run(self):
+        self.itemsPerPerson[self.person] = self.jiraService.queryRawItemsPerPerson(self.person)
+        print(f'Finished Getting Raw Items for: {self.person}')
+
 class RawItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
         super().__init__()
@@ -420,15 +428,21 @@ class RawItemsPerPerson(object):
         self.worklogPerPerson = AutoVivification()
     
     def __extractRawItemsPerPerson__(self):
-        numOfPersons = 0
-
         print("\n-------- GENERATING MATRIX OF RAW ITEMS PER PERSON --------\n")
+        
         for person in MEMBERS:
             self.itemsPerPerson[person] = {}
-            numOfPersons += 1
-            progressInfo(numOfPersons, person)
-            self.itemsPerPerson[person] = self.jiraService.queryRawItemsPerPerson(person)
-        
+
+        threads = [ThreadRawItemsPerPerson(
+                person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
+
+        for thread in threads:
+            thread.setDaemon(True)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
         return self.itemsPerPerson
 
 
@@ -494,7 +508,7 @@ class RawItemsPerPerson(object):
         
         print(f"Writing to {fileName} done.")
 
-# Multithreaded Class for ThreaditemsPerPerson
+# Multithreaded Class for ThreadDoneItemsPerPerson
 class ThreadDoneItemsPerPerson(threading.Thread):
     def __init__(self, person, jiraService, itemsPerPerson):
         threading.Thread.__init__(self)
@@ -503,8 +517,8 @@ class ThreadDoneItemsPerPerson(threading.Thread):
         self.itemsPerPerson = itemsPerPerson
 
     def run(self):
-        print(f'Getting data for: {self.person}')
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
+        print(f'Finished Getting Done Items for: {self.person}')
 
 class DoneItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -517,8 +531,6 @@ class DoneItemsPerPerson(object):
         self.worklogPerPerson = AutoVivification()
     
     def __extractDoneItemsPerPerson__(self):
-        numOfPersons = 0
-
         print("\n-------- GENERATING MATRIX OF DONE ITEMS PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -605,8 +617,6 @@ class TimeSpentPerPerson(object):
         self.worklogPerPerson = AutoVivification()
 
     def __extractItemsPerPerson__(self):
-        numOfPersons = 0
-
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -668,13 +678,13 @@ def main():
     # timeSpentPerPerson.extractTimeSpentPerPerson()
     # timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
-    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    # rawItemsPerPerson.extractRawItemsPerPerson()
-    # rawItemsPerPerson.generateCSVFile()
+    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    rawItemsPerPerson.extractRawItemsPerPerson()
+    rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
