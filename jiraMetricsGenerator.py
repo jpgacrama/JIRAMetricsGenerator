@@ -294,10 +294,9 @@ class TimeSpentPerSoftware(object):
         super().__init__()
         self.software = {}
         self.worklogsForEachSW = WorkLogsForEachSW()
+        getDesiredSprintYearAndMonth()
 
     def extractItemsPerSW(self, memberToQuery, jIRAService):
-        self.software = {}
-        getDesiredSprintYearAndMonth()
         for sw in SOFTWARE:
             self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
 
@@ -347,6 +346,7 @@ class MatrixOfWorklogsPerSW(object):
                 person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
 
         for thread in threads:
+            thread.setDaemon(True)
             thread.start()
 
         for thread in threads:
