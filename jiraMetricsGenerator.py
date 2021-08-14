@@ -190,7 +190,6 @@ class JIRAService(object):
                 {UPDATED_DATE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
-                AND Sprint in {SPRINT}
                 AND status in ({DONE_LIST})
              """,
             fields="worklog")
@@ -415,7 +414,7 @@ class ThreadRawItemsPerPerson(threading.Thread):
 
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryRawItemsPerPerson(self.person)
-        print(f'Finished Getting Raw Items for: {self.person}')
+        print(f'Finished Getting Raw Items For: {self.person}')
 
 class RawItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -444,7 +443,6 @@ class RawItemsPerPerson(object):
             thread.join()
 
         return self.itemsPerPerson
-
 
     def __computeRawItemsPerPerson__(
         self, logsPerValue, person, jiraID, description, software,
@@ -518,7 +516,7 @@ class ThreadDoneItemsPerPerson(threading.Thread):
 
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
-        print(f'Finished Getting Done Items for: {self.person}')
+        print(f'Finished Getting Done Items For: {self.person}')
 
 class DoneItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -547,7 +545,6 @@ class DoneItemsPerPerson(object):
             thread.join()
         
         return self.itemsPerPerson
-
 
     def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID, description):
         if self.personKey != person:
@@ -589,7 +586,7 @@ class DoneItemsPerPerson(object):
         print(f"Writing to {fileName} done.")
 
 # Multithreaded Class for ThreaditemsPerPerson
-class ThreaditemsPerPerson(threading.Thread):
+class ThreadItemsPerPerson(threading.Thread):
     def __init__(self, person, jiraService, itemsPerPerson):
         threading.Thread.__init__(self)
         self.person = person
@@ -597,13 +594,13 @@ class ThreaditemsPerPerson(threading.Thread):
         self.itemsPerPerson = itemsPerPerson
 
     def run(self):
-        print(f'Getting data for: {self.person}')
-
         for issueType in ISSUE_TYPES:
             if issueType == 'Project':
                 self.itemsPerPerson[self.person][issueType] = self.jiraService.queryProjectItemsPerPerson(self.person)
             elif issueType == 'Ad-hoc':
                 self.itemsPerPerson[self.person][issueType] = self.jiraService.queryAdhocItemsPerPerson(self.person)
+        
+        print(f'Finished Getting Time Spent For: {self.person}')
 
 class TimeSpentPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -622,7 +619,7 @@ class TimeSpentPerPerson(object):
         for person in MEMBERS:
             self.itemsPerPerson[person] = {}
 
-        threads = [ThreaditemsPerPerson(
+        threads = [ThreadItemsPerPerson(
                 person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
 
         for thread in threads:
@@ -670,17 +667,17 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    # matrixOfWorklogsPerSW.extractTimeSpentPerSW()
-    # matrixOfWorklogsPerSW.writeToCSVFile()
+    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
+    matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # doneItemsPerPerson.extractDoneItemsPerPerson()
-    # doneItemsPerPerson.generateCSVFile()
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson.extractDoneItemsPerPerson()
+    doneItemsPerPerson.generateCSVFile()
 
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
     rawItemsPerPerson.extractRawItemsPerPerson()
