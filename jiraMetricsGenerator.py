@@ -16,19 +16,19 @@ MEMBERS = {
     'Austin'    : '5fbb3d037cc1030069500950',
     # 'Daniel'    : '61076053fc68c10069c80eba'
     'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Harold'    : '60aaff8d5dc18500701239c0',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Harold'    : '60aaff8d5dc18500701239c0',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ranniel'   : '604fe79ce394c300699ce0ed',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -357,30 +357,24 @@ class MatrixOfWorklogsPerSW(object):
         for thread in threads:
             thread.join()
 
-        # for person in MEMBERS:
-        #     for thread in threads:
-        #         self.worklog[person] = thread.worklog
+        # Removing additional layer of dictionary
+        for person in MEMBERS:
+            tempWorklog = self.worklog[person]
 
-        # for person in MEMBERS:
-        #     timeSpentPerSoftware.extractItemsPerSW(person, self.jiraService)
-        #     self.worklog[person] = timeSpentPerSoftware.getTimeSpentForEachSW()
-        #     numOfPersons += 1
-        #     progressInfo(numOfPersons, person)
-
-        tempData = list(self.worklog.values())
+        tempData = list(tempWorklog.values())
         subset = set()
         for element in tempData:
             for index in element:
                 subset.add(index)
         tempResult = []
         tempResult.append(subset)
-        for key, value in self.worklog.items():
+        for key, value in tempWorklog.items():
             tempData2 = []
             for index in subset:
                 tempData2.append(value.get(index, 0))
             tempResult.append(tempData2)
 
-        self.result = [[index for index, value in self.worklog.items()]] + \
+        self.result = [[index for index, value in tempWorklog.items()]] + \
             list(map(list, zip(*tempResult)))
 
     def writeToCSVFile(self):
