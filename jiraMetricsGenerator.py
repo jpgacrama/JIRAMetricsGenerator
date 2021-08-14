@@ -340,7 +340,6 @@ class MatrixOfWorklogsPerSW(object):
 
     def extractTimeSpentPerSW(self):
         timeSpentPerSoftware = TimeSpentPerSoftware()
-        numOfPersons = 0
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
 
@@ -358,8 +357,9 @@ class MatrixOfWorklogsPerSW(object):
             thread.join()
 
         # Removing additional layer of dictionary
+        tempWorklog = {}
         for person in MEMBERS:
-            tempWorklog = self.worklog[person]
+            tempWorklog[person] = self.worklog[person][person]
 
         tempData = list(tempWorklog.values())
         subset = set()
