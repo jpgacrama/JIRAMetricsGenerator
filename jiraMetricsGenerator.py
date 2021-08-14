@@ -305,7 +305,6 @@ class TimeSpentPerSoftware(object):
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
-
 class ThreadMatrixOfWorklogsPerSW(threading.Thread):
     def __init__(self, person, jiraService, worklog, timeSpentPerSoftware):
         threading.Thread.__init__(self)
@@ -361,6 +360,7 @@ class MatrixOfWorklogsPerSW(object):
         for person in MEMBERS:
             tempWorklog[person] = self.worklog[person][person]
 
+        # Formatting the data before writing to CSV
         tempData = list(tempWorklog.values())
         subset = set()
         for element in tempData:
@@ -620,17 +620,17 @@ def main():
     matrixOfWorklogsPerSW.extractTimeSpentPerSW()
     matrixOfWorklogsPerSW.writeToCSVFile()
 
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # timeSpentPerPerson.extractTimeSpentPerPerson()
-    # timeSpentPerPerson.generateCSVFile()
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson.extractTimeSpentPerPerson()
+    timeSpentPerPerson.generateCSVFile()
 
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # doneItemsPerPerson.extractDoneItemsPerPerson()
-    # doneItemsPerPerson.generateCSVFile()
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson.extractDoneItemsPerPerson()
+    doneItemsPerPerson.generateCSVFile()
 
-    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    # rawItemsPerPerson.extractRawItemsPerPerson()
-    # rawItemsPerPerson.generateCSVFile()
+    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    rawItemsPerPerson.extractRawItemsPerPerson()
+    rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
