@@ -15,7 +15,7 @@ MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
     'Austin'    : '5fbb3d037cc1030069500950',
     # 'Daniel'    : '61076053fc68c10069c80eba'
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
     # 'Eddzonne'  : '5f85328a53aaa400760d4944',
     # 'Florante'  : '5fa0b7ad22f39900769a8242',
     # 'Harold'    : '60aaff8d5dc18500701239c0',
@@ -137,7 +137,7 @@ class WorkLogsForEachSW(object):
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
 
-    def __computeTotalTimeSpent__(self, value, sw):
+    def __computeTotalTimeSpent__(self, value, person, sw):
         self.issueId = None
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
@@ -152,22 +152,22 @@ class WorkLogsForEachSW(object):
                         self.issueId = nLogs.issueId
                         self.totalTimeSpent = nLogs.timeSpentSeconds
                         self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
-                        self.dictionaryWorklog[sw][self.issueId] = self.totalTimeSpent
+                        self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
                     else:
                         newTimeSpent = 0
                         newTimeSpent = nLogs.timeSpentSeconds
                         newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
                         self.totalTimeSpent += newTimeSpent
-                        self.dictionaryWorklog[sw][self.issueId] = self.totalTimeSpent
+                        self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
 
-    def getWorkLogsForEachSW(self, software):
-        self.dictionaryWorklog = {}
+    def getWorkLogsForEachSW(self, software, person):
+        self.dictionaryWorklog[person] = {}
         if software:
             for sw in software:
-                self.dictionaryWorklog[sw] = {}
+                self.dictionaryWorklog[person][sw] = {}
                 for value in software[sw].values():
-                    self.__computeTotalTimeSpent__(value, sw)
-                self.dictionaryWorklog[sw] = round(sum(self.dictionaryWorklog[sw].values()), 2)
+                    self.__computeTotalTimeSpent__(value, person, sw)
+                self.dictionaryWorklog[person][sw] = round(sum(self.dictionaryWorklog[person][sw].values()), 2)
             return self.dictionaryWorklog
 
         else:
@@ -296,12 +296,13 @@ class TimeSpentPerSoftware(object):
         self.worklogsForEachSW = WorkLogsForEachSW()
         getDesiredSprintYearAndMonth()
 
-    def extractItemsPerSW(self, memberToQuery, jIRAService):
+    def extractItemsPerSW(self, person, jIRAService):
+        self.software[person] = {}
         for sw in SOFTWARE:
-            self.software[sw] = jIRAService.queryJIRA(memberToQuery, sw)
+            self.software[person][sw] = jIRAService.queryJIRA(person, sw)
 
-    def getTimeSpentForEachSW(self):
-        return self.worklogsForEachSW.getWorkLogsForEachSW(self.software)
+    def getTimeSpentForEachSW(self, person):
+        return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
 
@@ -316,8 +317,7 @@ class ThreadMatrixOfWorklogsPerSW(threading.Thread):
     def run(self):
         print(f'Getting data for: {self.person}')
         self.timeSpentPerSoftware.extractItemsPerSW(self.person, self.jiraService)
-        self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW()
-        print(self.worklog)
+        self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW(self.person)
 
 # This will be the "Caller" class
 class MatrixOfWorklogsPerSW(object):
