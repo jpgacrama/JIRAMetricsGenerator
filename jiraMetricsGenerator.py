@@ -58,6 +58,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
 
 WORKLOG_DATE = "worklogDate >= \"2021-07-01\" AND worklogDate < \"2021-07-31\""
+UPDATED_DATE = "updated >= 2021-07-01 AND updated <= 2021-07-31"
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Update this for a RANGE of JIRA Items
@@ -187,10 +188,10 @@ class JIRAService(object):
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
-    def queryNumberOfFinishedItemsPerPerson(self, person):
+    def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {WORKLOG_DATE}
+                {UPDATED_DATE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
                 AND Sprint in {SPRINT}
@@ -493,6 +494,18 @@ class RawItemsPerPerson(object):
         
         print(f"Writing to {fileName} done.")
 
+# Multithreaded Class for ThreaditemsPerPerson
+class ThreadDoneItemsPerPerson(threading.Thread):
+    def __init__(self, person, jiraService, itemsPerPerson):
+        threading.Thread.__init__(self)
+        self.person = person
+        self.jiraService = jiraService
+        self.itemsPerPerson = itemsPerPerson
+
+    def run(self):
+        print(f'Getting data for: {self.person}')
+        self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
+
 class DoneItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
         super().__init__()
@@ -507,11 +520,19 @@ class DoneItemsPerPerson(object):
         numOfPersons = 0
 
         print("\n-------- GENERATING MATRIX OF DONE ITEMS PER PERSON --------\n")
+
         for person in MEMBERS:
             self.itemsPerPerson[person] = {}
-            numOfPersons += 1
-            progressInfo(numOfPersons, person)
-            self.itemsPerPerson[person] = self.jiraService.queryNumberOfFinishedItemsPerPerson(person)
+
+        threads = [ThreadDoneItemsPerPerson(
+                person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
+
+        for thread in threads:
+            thread.setDaemon(True)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
         
         return self.itemsPerPerson
 
@@ -555,7 +576,7 @@ class DoneItemsPerPerson(object):
         
         print(f"Writing to {fileName} done.")
 
-# Multithreaded Class for MatrixOfWorklogsPerSW
+# Multithreaded Class for ThreaditemsPerPerson
 class ThreaditemsPerPerson(threading.Thread):
     def __init__(self, person, jiraService, itemsPerPerson):
         threading.Thread.__init__(self)
@@ -639,21 +660,21 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
-    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = MatrixOfWorklogsPerSW(jiraService)
+    # matrixOfWorklogsPerSW.extractTimeSpentPerSW()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     doneItemsPerPerson.extractDoneItemsPerPerson()
     doneItemsPerPerson.generateCSVFile()
 
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    rawItemsPerPerson.extractRawItemsPerPerson()
-    rawItemsPerPerson.generateCSVFile()
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    # rawItemsPerPerson.extractRawItemsPerPerson()
+    # rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
