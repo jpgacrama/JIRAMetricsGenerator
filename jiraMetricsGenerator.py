@@ -355,7 +355,9 @@ class MatrixOfWorklogsPerSW(object):
         for thread in threads:
             thread.join()
 
-        # Removing additional layer of dictionary
+        self.__cleanWorklogs__()
+
+    def __cleanWorklogs__(self):
         tempWorklog = {}
         for person in MEMBERS:
             tempWorklog[person] = self.worklog[person][person]
@@ -553,10 +555,27 @@ class DoneItemsPerPerson(object):
         
         print(f"Writing to {fileName} done.")
 
+# Multithreaded Class for MatrixOfWorklogsPerSW
+class ThreaditemsPerPerson(threading.Thread):
+    def __init__(self, person, jiraService, itemsPerPerson):
+        threading.Thread.__init__(self)
+        self.person = person
+        self.jiraService = jiraService
+        self.itemsPerPerson = itemsPerPerson
+
+    def run(self):
+        print(f'Getting data for: {self.person}')
+
+        for issueType in ISSUE_TYPES:
+            if issueType == 'Project':
+                self.itemsPerPerson[self.person][issueType] = self.jiraService.queryProjectItemsPerPerson(self.person)
+            elif issueType == 'Ad-hoc':
+                self.itemsPerPerson[self.person][issueType] = self.jiraService.queryAdhocItemsPerPerson(self.person)
+
 class TimeSpentPerPerson(object):
     def __init__(self, jiraService) -> None:
         super().__init__()
-        self.jIRAService = jiraService
+        self.jiraService = jiraService
         self.issueId = None
         self.issueTypeKey = None
         self.personKey = None
@@ -568,15 +587,19 @@ class TimeSpentPerPerson(object):
         numOfPersons = 0
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
+
         for person in MEMBERS:
             self.itemsPerPerson[person] = {}
-            numOfPersons += 1
-            progressInfo(numOfPersons, person)
-            for issueType in ISSUE_TYPES:
-                if issueType == 'Project':
-                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryProjectItemsPerPerson(person)
-                elif issueType == 'Ad-hoc':
-                    self.itemsPerPerson[person][issueType] = self.jIRAService.queryAdhocItemsPerPerson(person)
+
+        threads = [ThreaditemsPerPerson(
+                person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
+
+        for thread in threads:
+            thread.setDaemon(True)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
         
         return self.itemsPerPerson
 
