@@ -60,16 +60,9 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 WORKLOG_DATE = "worklogDate >= \"2021-07-01\" AND worklogDate < \"2021-07-31\""
 UPDATED_DATE = "updated >= 2021-07-01 AND updated <= 2021-07-31"
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Update this for a RANGE of JIRA Items
-SPRINT = "(186, 187, 188, 189, 190, 191)"
-
 # Helper function to get the desired month
 def getDesiredSprintYearAndMonth():
-    global DESIRED_MONTH, DESIRED_YEAR, SPRINT
-
-    if not SPRINT:
-        SPRINT in int(input("Enter the Sprint using the value from JIRA Query: "))
+    global DESIRED_MONTH, DESIRED_YEAR
 
     if not DESIRED_YEAR:
         DESIRED_YEAR = int(input("Enter the desired Year: "))
@@ -205,8 +198,6 @@ class JIRAService(object):
         # Returns a list of Worklogs
         return allWorklogs
 
-    # WARNING!! 
-    # I did not use any SPRINT values here
     def queryRawItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
@@ -249,7 +240,7 @@ class JIRAService(object):
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc AND Sprint in {SPRINT}',
+            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -261,7 +252,7 @@ class JIRAService(object):
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc AND Sprint in {SPRINT}',
+            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -273,7 +264,7 @@ class JIRAService(object):
 
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND Sprint in {SPRINT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
@@ -667,17 +658,17 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    # matrixOfWorklogsPerSW.extractTimeSpentPerSW()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
     rawItemsPerPerson.extractRawItemsPerPerson()
