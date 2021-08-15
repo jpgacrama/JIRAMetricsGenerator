@@ -662,13 +662,13 @@ def main():
     # matrixOfWorklogsPerSW.extractTimeSpentPerSW()
     # matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # doneItemsPerPerson.extractDoneItemsPerPerson()
-    # doneItemsPerPerson.generateCSVFile()
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson.extractDoneItemsPerPerson()
+    doneItemsPerPerson.generateCSVFile()
 
     # rawItemsPerPerson = RawItemsPerPerson(jiraService)
     # rawItemsPerPerson.extractRawItemsPerPerson()
