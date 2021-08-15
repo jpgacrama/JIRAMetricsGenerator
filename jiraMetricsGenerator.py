@@ -666,13 +666,13 @@ def main():
     # timeSpentPerPerson.extractTimeSpentPerPerson()
     # timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
-    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    # rawItemsPerPerson.extractRawItemsPerPerson()
-    # rawItemsPerPerson.generateCSVFile()
+    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    rawItemsPerPerson.extractRawItemsPerPerson()
+    rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
