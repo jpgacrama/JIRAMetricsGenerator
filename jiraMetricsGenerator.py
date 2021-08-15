@@ -336,7 +336,6 @@ class HoursSpentPerSW(object):
                 person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
 
         for thread in threads:
-            thread.setDaemon(True)
             thread.start()
 
         for thread in threads:
@@ -427,7 +426,6 @@ class RawItemsPerPerson(object):
                 person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
 
         for thread in threads:
-            thread.setDaemon(True)
             thread.start()
 
         for thread in threads:
@@ -528,7 +526,6 @@ class DoneItemsPerPerson(object):
                 person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
 
         for thread in threads:
-            thread.setDaemon(True)
             thread.start()
 
         for thread in threads:
@@ -614,7 +611,6 @@ class TimeSpentPerPerson(object):
                 person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
 
         for thread in threads:
-            thread.setDaemon(True)
             thread.start()
 
         for thread in threads:
