@@ -487,12 +487,15 @@ class RawItemsPerPerson(object):
             csvwriter = csv.writer(csv_file, delimiter=',')
             
             # Initialize all columns
-            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Software', 'Component', 'Issue Type', 'Story Point',
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description',
+                'Software', 'Component', 'Issue Type', 'Story Point',
                 'Date Started', 'Date Finished', 'Hours Spent'])
 
             for person in self.worklogPerPerson:
                 for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([person, jiraID, 
+                    csvwriter.writerow([
+                        person, 
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',
                         self.worklogPerPerson[person][jiraID]['description'],
                         self.worklogPerPerson[person][jiraID]['Software'],
                         self.worklogPerPerson[person][jiraID]['Component'],
