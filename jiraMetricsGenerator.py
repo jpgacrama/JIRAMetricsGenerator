@@ -13,22 +13,22 @@ PROJECT = 'OMNI'
 
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
-    'Austin'    : '5fbb3d037cc1030069500950',
-    # 'Daniel'    : '61076053fc68c10069c80eba',
-    'Duane'     : '5efbf73454020e0ba82ac7a0',
-    'Eddzonne'  : '5f85328a53aaa400760d4944',
-    'Florante'  : '5fa0b7ad22f39900769a8242',
-    'Harold'    : '60aaff8d5dc18500701239c0',
-    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    'Jaypea'    : '6073ef399361560068ad4b83',
-    'Jerred'    : '5ed4c8d844cc830c23027b31',
-    'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    'Marwin'    : '600e2429cd564b0068e7cca7',
-    'Mary'      : '6099e1699b362f006957e1ad',
-    'Maye'      : '6099d80c3fae6f006821f3f5',
-    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    'Ranniel'   : '604fe79ce394c300699ce0ed',
-    'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    # 'Austin'    : '5fbb3d037cc1030069500950',
+    # # 'Daniel'    : '61076053fc68c10069c80eba',
+    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
+    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
+    # 'Florante'  : '5fa0b7ad22f39900769a8242',
+    # 'Harold'    : '60aaff8d5dc18500701239c0',
+    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    # 'Jaypea'    : '6073ef399361560068ad4b83',
+    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
+    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    # 'Marwin'    : '600e2429cd564b0068e7cca7',
+    # 'Mary'      : '6099e1699b362f006957e1ad',
+    # 'Maye'      : '6099d80c3fae6f006821f3f5',
+    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
+    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -198,6 +198,27 @@ class JIRAService(object):
         # Returns a list of Worklogs
         return allWorklogs
 
+    def queryNumberOfUnfinishedItemsPerPerson(self, person):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                {UPDATED_DATE}
+                AND assignee in ({MEMBERS[person]})
+                AND project = {PROJECT}
+                AND NOT status in ({DONE_LIST})
+             """,
+            fields="worklog")
+
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['timeSpent'] = {}
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
+
+        # Returns a list of Worklogs
+        return allWorklogs
+    
     def queryRawItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
@@ -215,6 +236,7 @@ class JIRAService(object):
             allWorklogs[str(issue)]['Component'] = {}
             allWorklogs[str(issue)]['Issue Type'] = {}
             allWorklogs[str(issue)]['Story Point'] = {}
+            allWorklogs[str(issue)]['Status'] = {}
             allWorklogs[str(issue)]['Date Started'] = {}
             allWorklogs[str(issue)]['Date Finished'] = {}
             allWorklogs[str(issue)]['timeSpent'] = {}
@@ -230,6 +252,7 @@ class JIRAService(object):
             
             allWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
             allWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
+            allWorklogs[str(issue)]['Status'] = self.jiraService.issue(str(issue)).raw['fields']['status']['name']
 
             if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
                 allWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
@@ -436,7 +459,7 @@ class RawItemsPerPerson(object):
 
     def __computeRawItemsPerPerson__(
         self, logsPerValue, person, jiraID, description, software,
-        component, issueType, storyPoint, dateStarted, dateFinished):
+        component, issueType, storyPoint, status, dateStarted, dateFinished):
         
         if self.personKey != person:
             self.worklogPerPerson[person] = {}
@@ -449,6 +472,7 @@ class RawItemsPerPerson(object):
             self.worklogPerPerson[person][jiraID]['Component'] = component
             self.worklogPerPerson[person][jiraID]['Issue Type'] = issueType
             self.worklogPerPerson[person][jiraID]['Story Point'] = storyPoint
+            self.worklogPerPerson[person][jiraID]['Status'] = status
             self.worklogPerPerson[person][jiraID]['Date Started'] = dateStarted
             self.worklogPerPerson[person][jiraID]['Date Finished'] = dateFinished
             self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
@@ -472,13 +496,14 @@ class RawItemsPerPerson(object):
                     component = allWorklogs[person][jiraID]['Component']
                     issueType = allWorklogs[person][jiraID]['Issue Type']
                     storyPoint = allWorklogs[person][jiraID]['Story Point']
+                    status = allWorklogs[person][jiraID]['Status']
                     dateStarted = allWorklogs[person][jiraID]['Date Started']
                     dateFinished = allWorklogs[person][jiraID]['Date Finished']
                     
                     self.__computeRawItemsPerPerson__(
                         worklogPerJIRAId, person, jiraID,
                         description, software, component, issueType,
-                        storyPoint, dateStarted, dateFinished)
+                        storyPoint, status, dateStarted, dateFinished)
 
     def generateCSVFile(self):
         fileName = input("Filename for Raw Items Per Person: ")
@@ -489,7 +514,7 @@ class RawItemsPerPerson(object):
             # Initialize all columns
             csvwriter.writerow(['Name', 'JIRA ID', 'Description',
                 'Software', 'Component', 'Issue Type', 'Story Point',
-                'Date Started', 'Date Finished', 'Hours Spent'])
+                'Status', 'Date Started', 'Date Finished', 'Hours Spent'])
 
             for person in self.worklogPerPerson:
                 for jiraID in self.worklogPerPerson[person]:
@@ -501,6 +526,7 @@ class RawItemsPerPerson(object):
                         self.worklogPerPerson[person][jiraID]['Component'],
                         self.worklogPerPerson[person][jiraID]['Issue Type'],
                         self.worklogPerPerson[person][jiraID]['Story Point'],
+                        self.worklogPerPerson[person][jiraID]['Status'],
                         self.worklogPerPerson[person][jiraID]['Date Started'],
                         self.worklogPerPerson[person][jiraID]['Date Finished'],
                         self.worklogPerPerson[person][jiraID]['timeSpent']])
@@ -582,6 +608,90 @@ class DoneItemsPerPerson(object):
                 for jiraID in self.worklogPerPerson[person]:
                     csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
                                         self.worklogPerPerson[person][jiraID]['timeSpent']])
+        
+        print(f"Writing to {fileName} done.")
+
+# Multithreaded Class for ThreadUnfinishedItemsPerPerson
+class ThreadUnfinishedItemsPerPerson(threading.Thread):
+    def __init__(self, person, jiraService, itemsPerPerson):
+        threading.Thread.__init__(self)
+        self.person = person
+        self.jiraService = jiraService
+        self.itemsPerPerson = itemsPerPerson
+
+    def run(self):
+        self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfUnfinishedItemsPerPerson(self.person)
+        print(f'Finished Getting Unfinished Items For: {self.person}')
+
+class UnfinishedItemsPerPerson(object):
+    def __init__(self, jiraService) -> None:
+        super().__init__()
+        self.jiraService = jiraService
+        self.jiraIDKey = None
+        self.timeHelper = TimeHelper()
+        self.itemsPerPerson = AutoVivification()
+        self.worklogPerPerson = AutoVivification()
+    
+    def __extractUnfinishedItemsPerPerson__(self):
+        print("\n-------- GENERATING MATRIX OF UNFINISHED ITEMS PER PERSON --------\n")
+
+        for person in MEMBERS:
+            self.itemsPerPerson[person] = {}
+
+        threads = [ThreadUnfinishedItemsPerPerson(
+                person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+        
+        return self.itemsPerPerson
+
+    def __computeUnfinishedItemsPerPerson__(self, logsPerValue, person, jiraID, description):
+        if self.jiraIDKey != jiraID:
+            self.worklogPerPerson[person][jiraID] = {}
+            self.worklogPerPerson[person][jiraID]['description'] = description
+            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+            self.jiraIDKey = jiraID
+
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        if extractedDateTime:
+            timeSpent = logsPerValue.timeSpentSeconds
+            timeSpent = self.timeHelper.convertToHours(timeSpent)
+            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
+
+    def extractUnfinishedItemsPerPerson(self):
+        getDesiredSprintYearAndMonth()
+        allWorklogs = self.__extractUnfinishedItemsPerPerson__()
+        for person in allWorklogs:
+            for jiraID in allWorklogs[person]:                
+                if not allWorklogs[person][jiraID]['timeSpent']:
+                    self.worklogPerPerson[person][jiraID] = {}
+                    self.worklogPerPerson[person][jiraID]['description'] = allWorklogs[person][jiraID]['description']
+                    self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+                
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                    description = allWorklogs[person][jiraID]['description']
+                    self.__computeUnfinishedItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
+
+    def generateCSVFile(self):
+        fileName = input("Filename for Unfinished Items Per Person: ")
+        
+        with open(fileName, 'w', newline='') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+            
+            # Initialize all columns
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Hours Spent'])
+
+            for person in self.worklogPerPerson:
+                for jiraID in self.worklogPerPerson[person]:
+                    csvwriter.writerow([
+                        person,
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
+                        self.worklogPerPerson[person][jiraID]['description'],
+                        self.worklogPerPerson[person][jiraID]['timeSpent']])
         
         print(f"Writing to {fileName} done.")
 
@@ -677,6 +787,10 @@ def main():
     # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     # doneItemsPerPerson.extractDoneItemsPerPerson()
     # doneItemsPerPerson.generateCSVFile()
+
+    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    # unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
+    # unfinishedItemsPerPerson.generateCSVFile()
 
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
     rawItemsPerPerson.extractRawItemsPerPerson()
