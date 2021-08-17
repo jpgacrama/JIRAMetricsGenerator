@@ -213,6 +213,7 @@ class JIRAService(object):
             allWorklogs[str(issue)]['description'] = {}
             allWorklogs[str(issue)]['Software'] = {}
             allWorklogs[str(issue)]['Component'] = {}
+            allWorklogs[str(issue)]['Issue Type'] = {}
             allWorklogs[str(issue)]['Story Point'] = {}
             allWorklogs[str(issue)]['Date Started'] = {}
             allWorklogs[str(issue)]['Date Finished'] = {}
@@ -227,8 +228,8 @@ class JIRAService(object):
             if self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
                 allWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
             
-            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']:
-                allWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
+            allWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
+            allWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
 
             if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
                 allWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
@@ -435,7 +436,7 @@ class RawItemsPerPerson(object):
 
     def __computeRawItemsPerPerson__(
         self, logsPerValue, person, jiraID, description, software,
-        component, storyPoint, dateStarted, dateFinished):
+        component, issueType, storyPoint, dateStarted, dateFinished):
         
         if self.personKey != person:
             self.worklogPerPerson[person] = {}
@@ -446,6 +447,7 @@ class RawItemsPerPerson(object):
             self.worklogPerPerson[person][jiraID]['description'] = description
             self.worklogPerPerson[person][jiraID]['Software'] = software
             self.worklogPerPerson[person][jiraID]['Component'] = component
+            self.worklogPerPerson[person][jiraID]['Issue Type'] = issueType
             self.worklogPerPerson[person][jiraID]['Story Point'] = storyPoint
             self.worklogPerPerson[person][jiraID]['Date Started'] = dateStarted
             self.worklogPerPerson[person][jiraID]['Date Finished'] = dateFinished
@@ -468,26 +470,36 @@ class RawItemsPerPerson(object):
                     description = allWorklogs[person][jiraID]['description']
                     software = allWorklogs[person][jiraID]['Software']
                     component = allWorklogs[person][jiraID]['Component']
+                    issueType = allWorklogs[person][jiraID]['Issue Type']
                     storyPoint = allWorklogs[person][jiraID]['Story Point']
                     dateStarted = allWorklogs[person][jiraID]['Date Started']
                     dateFinished = allWorklogs[person][jiraID]['Date Finished']
                     
                     self.__computeRawItemsPerPerson__(
-                        worklogPerJIRAId, person, jiraID, description, software, component, storyPoint,
-                        dateStarted, dateFinished)
+                        worklogPerJIRAId, person, jiraID,
+                        description, software, component, issueType,
+                        storyPoint, dateStarted, dateFinished)
 
     def generateCSVFile(self):
         fileName = input("Filename for Raw Items Per Person: ")
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
+            
+            # Initialize all columns
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description',
+                'Software', 'Component', 'Issue Type', 'Story Point',
+                'Date Started', 'Date Finished', 'Hours Spent'])
+
             for person in self.worklogPerPerson:
-                csvwriter.writerow([person])
                 for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([jiraID, 
+                    csvwriter.writerow([
+                        person, 
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',
                         self.worklogPerPerson[person][jiraID]['description'],
                         self.worklogPerPerson[person][jiraID]['Software'],
                         self.worklogPerPerson[person][jiraID]['Component'],
+                        self.worklogPerPerson[person][jiraID]['Issue Type'],
                         self.worklogPerPerson[person][jiraID]['Story Point'],
                         self.worklogPerPerson[person][jiraID]['Date Started'],
                         self.worklogPerPerson[person][jiraID]['Date Finished'],
@@ -654,17 +666,17 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    # matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    # matrixOfWorklogsPerSW.extractTimeSpentPerSW()
+    # matrixOfWorklogsPerSW.writeToCSVFile()
 
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # timeSpentPerPerson.extractTimeSpentPerPerson()
+    # timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
     rawItemsPerPerson.extractRawItemsPerPerson()
