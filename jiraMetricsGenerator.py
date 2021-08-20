@@ -209,9 +209,9 @@ class JIRAService(object):
         for issue in allIssues:
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['description'] = {}
-            allWorklogs[str(issue)]['Hours Spent for the Month'] = {}
+            allWorklogs[str(issue)]['Total Hours Spent'] = {}
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
@@ -666,26 +666,26 @@ class UnfinishedItemsPerPerson(object):
         if self.jiraIDKey != jiraID:
             self.worklogPerPerson[person][jiraID] = {}
             self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
+            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
+            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
     def extractUnfinishedItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractUnfinishedItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
-                if not allWorklogs[person][jiraID]['Hours Spent for the Month']:
+                if not allWorklogs[person][jiraID]['Total Hours Spent']:
                     self.worklogPerPerson[person][jiraID] = {}
                     self.worklogPerPerson[person][jiraID]['description'] = allWorklogs[person][jiraID]['description']
-                    self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
+                    self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
                 
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['Hours Spent for the Month']:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['Total Hours Spent']:
                     description = allWorklogs[person][jiraID]['description']
                     self.__computeUnfinishedItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
@@ -704,7 +704,7 @@ class UnfinishedItemsPerPerson(object):
                         person,
                         f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
                         self.worklogPerPerson[person][jiraID]['description'],
-                        self.worklogPerPerson[person][jiraID]['Hours Spent for the Month']])
+                        self.worklogPerPerson[person][jiraID]['Total Hours Spent']])
         
         print(f"Writing to {fileName} done.")
 
@@ -797,13 +797,13 @@ def main():
     # timeSpentPerPerson.extractTimeSpentPerPerson()
     # timeSpentPerPerson.generateCSVFile()
 
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # doneItemsPerPerson.extractDoneItemsPerPerson()
+    # doneItemsPerPerson.generateCSVFile()
 
-    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    # unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
-    # unfinishedItemsPerPerson.generateCSVFile()
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
+    unfinishedItemsPerPerson.generateCSVFile()
 
     # rawItemsPerPerson = RawItemsPerPerson(jiraService)
     # rawItemsPerPerson.extractRawItemsPerPerson()
