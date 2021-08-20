@@ -13,22 +13,21 @@ PROJECT = 'OMNI'
 
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
-    # 'Austin'    : '5fbb3d037cc1030069500950',
-    # # 'Daniel'    : '61076053fc68c10069c80eba',
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Harold'    : '60aaff8d5dc18500701239c0',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Austin'    : '5fbb3d037cc1030069500950',
+    'Daniel'    : '61076053fc68c10069c80eba',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Harold'    : '60aaff8d5dc18500701239c0',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -56,9 +55,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
-
-WORKLOG_DATE = "worklogDate >= \"2021-07-01\" AND worklogDate < \"2021-07-31\""
-UPDATED_DATE = "updated >= 2021-07-01 AND updated <= 2021-07-31"
+UPDATED_DATE = "updated >= 2021-08-01 AND updated <= 2021-08-31"
 
 # Helper function to get the desired month
 def getDesiredSprintYearAndMonth():
@@ -191,9 +188,9 @@ class JIRAService(object):
         for issue in allIssues:
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['description'] = {}
-            allWorklogs[str(issue)]['timeSpent'] = {}
+            allWorklogs[str(issue)]['Hours Spent for the Month'] = {}
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
@@ -212,9 +209,9 @@ class JIRAService(object):
         for issue in allIssues:
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['description'] = {}
-            allWorklogs[str(issue)]['timeSpent'] = {}
+            allWorklogs[str(issue)]['Total Hours Spent'] = {}
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
 
         # Returns a list of Worklogs
         return allWorklogs
@@ -222,7 +219,7 @@ class JIRAService(object):
     def queryRawItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {WORKLOG_DATE}
+                {UPDATED_DATE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
              """,
@@ -239,15 +236,17 @@ class JIRAService(object):
             allWorklogs[str(issue)]['Status'] = {}
             allWorklogs[str(issue)]['Date Started'] = {}
             allWorklogs[str(issue)]['Date Finished'] = {}
-            allWorklogs[str(issue)]['timeSpent'] = {}
+            allWorklogs[str(issue)]['Hours Spent for the Month'] = {}
+            allWorklogs[str(issue)]['Total Hours Spent'] = {}
             
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
 
-            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
+            if 'customfield_11428' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
                 allWorklogs[str(issue)]['Software'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']['value']
-            
-            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
+
+            if 'customfield_11414' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
                 allWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
             
             allWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
@@ -257,14 +256,15 @@ class JIRAService(object):
             if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
                 allWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
 
-            allWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
+            if len(self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs']) > 0:
+                allWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
             
         # Returns a list of Worklogs
         return allWorklogs
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
+            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -276,7 +276,7 @@ class JIRAService(object):
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
+            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -288,7 +288,7 @@ class JIRAService(object):
 
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{UPDATED_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
@@ -475,22 +475,30 @@ class RawItemsPerPerson(object):
             self.worklogPerPerson[person][jiraID]['Status'] = status
             self.worklogPerPerson[person][jiraID]['Date Started'] = dateStarted
             self.worklogPerPerson[person][jiraID]['Date Finished'] = dateFinished
-            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
+            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime:
+            
+            # For Hours Spent for the Current Month
             if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
-                self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
+                self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
+            
+            # For Total Hours Spent
+            timeSpent = logsPerValue.timeSpentSeconds
+            timeSpent = self.timeHelper.convertToHours(timeSpent)
+            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
     def extractRawItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractRawItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['Hours Spent for the Month']:
                     description = allWorklogs[person][jiraID]['description']
                     software = allWorklogs[person][jiraID]['Software']
                     component = allWorklogs[person][jiraID]['Component']
@@ -514,7 +522,8 @@ class RawItemsPerPerson(object):
             # Initialize all columns
             csvwriter.writerow(['Name', 'JIRA ID', 'Description',
                 'Software', 'Component', 'Issue Type', 'Story Point',
-                'Status', 'Date Started', 'Date Finished', 'Hours Spent'])
+                'Status', 'Date Started', 'Date Finished',
+                'Hours Spent for the Month', 'Total Hours Spent'])
 
             for person in self.worklogPerPerson:
                 for jiraID in self.worklogPerPerson[person]:
@@ -529,7 +538,8 @@ class RawItemsPerPerson(object):
                         self.worklogPerPerson[person][jiraID]['Status'],
                         self.worklogPerPerson[person][jiraID]['Date Started'],
                         self.worklogPerPerson[person][jiraID]['Date Finished'],
-                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+                        self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'],
+                        self.worklogPerPerson[person][jiraID]['Total Hours Spent']])
         
         print(f"Writing to {fileName} done.")
 
@@ -575,39 +585,42 @@ class DoneItemsPerPerson(object):
         if self.jiraIDKey != jiraID:
             self.worklogPerPerson[person][jiraID] = {}
             self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
+            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
 
     def extractDoneItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractDoneItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
-                if not allWorklogs[person][jiraID]['timeSpent']:
+                if not allWorklogs[person][jiraID]['Hours Spent for the Month']:
                     self.worklogPerPerson[person][jiraID] = {}
                     self.worklogPerPerson[person][jiraID]['description'] = allWorklogs[person][jiraID]['description']
-                    self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+                    self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
                 
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['Hours Spent for the Month']:
                     description = allWorklogs[person][jiraID]['description']
                     self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
     def generateCSVFile(self):
         fileName = input("Filename for Done Items Per Person: ")
-        
+
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
+            
+            # Initialize all columns
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Hours Spent for the Month'])   
+
             for person in self.worklogPerPerson:
-                csvwriter.writerow([person])
                 for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
-                                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+                    csvwriter.writerow([person, jiraID, self.worklogPerPerson[person][jiraID]['description'],
+                                        self.worklogPerPerson[person][jiraID]['Hours Spent for the Month']])
         
         print(f"Writing to {fileName} done.")
 
@@ -653,26 +666,26 @@ class UnfinishedItemsPerPerson(object):
         if self.jiraIDKey != jiraID:
             self.worklogPerPerson[person][jiraID] = {}
             self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['timeSpent'] += timeSpent
+            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
     def extractUnfinishedItemsPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractUnfinishedItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
-                if not allWorklogs[person][jiraID]['timeSpent']:
+                if not allWorklogs[person][jiraID]['Total Hours Spent']:
                     self.worklogPerPerson[person][jiraID] = {}
                     self.worklogPerPerson[person][jiraID]['description'] = allWorklogs[person][jiraID]['description']
-                    self.worklogPerPerson[person][jiraID]['timeSpent'] = 0
+                    self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
                 
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['timeSpent']:
+                for worklogPerJIRAId in allWorklogs[person][jiraID]['Total Hours Spent']:
                     description = allWorklogs[person][jiraID]['description']
                     self.__computeUnfinishedItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
@@ -691,7 +704,7 @@ class UnfinishedItemsPerPerson(object):
                         person,
                         f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
                         self.worklogPerPerson[person][jiraID]['description'],
-                        self.worklogPerPerson[person][jiraID]['timeSpent']])
+                        self.worklogPerPerson[person][jiraID]['Total Hours Spent']])
         
         print(f"Writing to {fileName} done.")
 
@@ -788,13 +801,13 @@ def main():
     # doneItemsPerPerson.extractDoneItemsPerPerson()
     # doneItemsPerPerson.generateCSVFile()
 
-    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    # unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
-    # unfinishedItemsPerPerson.generateCSVFile()
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
+    unfinishedItemsPerPerson.generateCSVFile()
 
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    rawItemsPerPerson.extractRawItemsPerPerson()
-    rawItemsPerPerson.generateCSVFile()
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    # rawItemsPerPerson.extractRawItemsPerPerson()
+    # rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
