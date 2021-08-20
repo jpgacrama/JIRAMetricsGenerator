@@ -610,13 +610,16 @@ class DoneItemsPerPerson(object):
 
     def generateCSVFile(self):
         fileName = input("Filename for Done Items Per Person: ")
-        
+
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
+            
+            # Initialize all columns
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Hours Spent for the Month'])   
+
             for person in self.worklogPerPerson:
-                csvwriter.writerow([person])
                 for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([jiraID, self.worklogPerPerson[person][jiraID]['description'],
+                    csvwriter.writerow([person, jiraID, self.worklogPerPerson[person][jiraID]['description'],
                                         self.worklogPerPerson[person][jiraID]['Hours Spent for the Month']])
         
         print(f"Writing to {fileName} done.")
@@ -794,17 +797,17 @@ def main():
     # timeSpentPerPerson.extractTimeSpentPerPerson()
     # timeSpentPerPerson.generateCSVFile()
 
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # doneItemsPerPerson.extractDoneItemsPerPerson()
-    # doneItemsPerPerson.generateCSVFile()
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson.extractDoneItemsPerPerson()
+    doneItemsPerPerson.generateCSVFile()
 
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
     # unfinishedItemsPerPerson.generateCSVFile()
 
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    rawItemsPerPerson.extractRawItemsPerPerson()
-    rawItemsPerPerson.generateCSVFile()
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    # rawItemsPerPerson.extractRawItemsPerPerson()
+    # rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
     main()
