@@ -13,22 +13,22 @@ PROJECT = 'OMNI'
 
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
-    # 'Austin'    : '5fbb3d037cc1030069500950',
-    # # 'Daniel'    : '61076053fc68c10069c80eba',
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Harold'    : '60aaff8d5dc18500701239c0',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ranniel'   : '604fe79ce394c300699ce0ed',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Austin'    : '5fbb3d037cc1030069500950',
+    'Daniel'    : '61076053fc68c10069c80eba',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Harold'    : '60aaff8d5dc18500701239c0',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ranniel'   : '604fe79ce394c300699ce0ed',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -56,9 +56,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
-
-WORKLOG_DATE = "worklogDate >= \"2021-07-01\" AND worklogDate < \"2021-07-31\""
-UPDATED_DATE = "updated >= 2021-07-01 AND updated <= 2021-07-31"
+UPDATED_DATE = "updated >= 2021-08-01 AND updated <= 2021-08-31"
 
 # Helper function to get the desired month
 def getDesiredSprintYearAndMonth():
@@ -222,7 +220,7 @@ class JIRAService(object):
     def queryRawItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {WORKLOG_DATE}
+                {UPDATED_DATE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
              """,
@@ -244,10 +242,10 @@ class JIRAService(object):
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allWorklogs[str(issue)]['timeSpent'] = self.jiraService.worklogs(issue)
 
-            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
+            if 'customfield_11428' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
                 allWorklogs[str(issue)]['Software'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']['value']
-            
-            if self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
+
+            if 'customfield_11414' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
                 allWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
             
             allWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
@@ -257,14 +255,15 @@ class JIRAService(object):
             if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
                 allWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
 
-            allWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
+            if len(self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs']) > 0:
+                allWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
             
         # Returns a list of Worklogs
         return allWorklogs
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
+            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -276,7 +275,7 @@ class JIRAService(object):
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
+            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -288,7 +287,7 @@ class JIRAService(object):
 
     def queryJIRA(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'{WORKLOG_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{UPDATED_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
