@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 import csv
 import threading
+import asyncio
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -348,7 +349,7 @@ class HoursSpentPerSW(object):
             df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
-    def extractTimeSpentPerSW(self):
+    async def extractTimeSpentPerSW(self):
         timeSpentPerSoftware = TimeSpentPerSoftware()
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
@@ -769,7 +770,7 @@ class TimeSpentPerPerson(object):
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][issueType] += timeSpent
 
-    def extractTimeSpentPerPerson(self):
+    async def extractTimeSpentPerPerson(self):
         getDesiredSprintYearAndMonth()
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
@@ -785,29 +786,36 @@ class TimeSpentPerPerson(object):
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def main():
+async def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
+    task1 = loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW())
     matrixOfWorklogsPerSW.writeToCSVFile()
 
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
+    task2 = loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson())
     timeSpentPerPerson.generateCSVFile()
 
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
+    task3 = loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson())
     doneItemsPerPerson.generateCSVFile()
 
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
+    task4 = loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson())
     unfinishedItemsPerPerson.generateCSVFile()
 
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    rawItemsPerPerson.extractRawItemsPerPerson()
+    task5 = loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson())
     rawItemsPerPerson.generateCSVFile()
 
 if __name__ == "__main__":
-    main()
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
+    except Exception as e:
+        print('There was a problem:')
+        print(str(e))
+    finally:
+        loop.close()
