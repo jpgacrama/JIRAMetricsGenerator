@@ -16,19 +16,19 @@ MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
     'Austin'    : '5fbb3d037cc1030069500950',
     'Daniel'    : '61076053fc68c10069c80eba',
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Harold'    : '60aaff8d5dc18500701239c0',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618'
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Harold'    : '60aaff8d5dc18500701239c0',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618'
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -287,7 +287,7 @@ class JIRAService(object):
         # Returns a list of Worklogs
         return allWorklogs
 
-    def queryJIRA(self, memberToQuery, swToQuery):
+    def queryJIRAPerSW(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
             f'{UPDATED_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
@@ -311,7 +311,7 @@ class TimeSpentPerSoftware(object):
     def extractItemsPerSW(self, person, jIRAService):
         self.software[person] = {}
         for sw in SOFTWARE:
-            self.software[person][sw] = jIRAService.queryJIRA(person, sw)
+            self.software[person][sw] = jIRAService.queryJIRAPerSW(person, sw)
 
     def getTimeSpentForEachSW(self, person):
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
