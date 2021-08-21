@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-from logging import NOTSET
 import os
 from jira import JIRA
 from datetime import datetime
+from timeit import default_timer as timer
 import pandas as pd
 import csv
 import threading
+import asyncio
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -348,7 +349,7 @@ class HoursSpentPerSW(object):
             df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
-    def extractTimeSpentPerSW(self):
+    async def extractTimeSpentPerSW(self):
         timeSpentPerSoftware = TimeSpentPerSoftware()
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
@@ -366,6 +367,7 @@ class HoursSpentPerSW(object):
             thread.join()
 
         self.__cleanWorklogs__()
+        self.__writeToCSVFile__()
 
     def __cleanWorklogs__(self):
         tempWorklog = {}
@@ -389,10 +391,10 @@ class HoursSpentPerSW(object):
         self.result = [[index for index, value in tempWorklog.items()]] + \
             list(map(list, zip(*tempResult)))
 
-    def writeToCSVFile(self):
+    def __writeToCSVFile__(self):
         if len(self.result) != 0:
             self.__getTotal__()
-            fileName = input("Filename for Hours Spent per SW: ")
+            fileName = 'HoursDistributionPerSW.csv'
             self.result[0].insert(0, 'SW Names')
 
             # Putting "Total" at the last column
@@ -406,7 +408,7 @@ class HoursSpentPerSW(object):
             df.to_csv(fileName, index=False, header=False)
             print(f"Writing to {fileName} done.")
         else:
-            print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first.")
+            print("Data to write to CSV file is not yet available")
             exit(1)
 
 class AutoVivification(dict):
@@ -493,8 +495,7 @@ class RawItemsPerPerson(object):
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
-    def extractRawItemsPerPerson(self):
-        getDesiredSprintYearAndMonth()
+    async def extractRawItemsPerPerson(self):
         allWorklogs = self.__extractRawItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:
@@ -513,8 +514,10 @@ class RawItemsPerPerson(object):
                         description, software, component, issueType,
                         storyPoint, status, dateStarted, dateFinished)
 
-    def generateCSVFile(self):
-        fileName = input("Filename for Raw Items Per Person: ")
+        self.__generateCSVFile__()
+
+    def __generateCSVFile__(self):
+        fileName = 'RawItemsPerPerson.csv'
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -594,8 +597,7 @@ class DoneItemsPerPerson(object):
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
 
-    def extractDoneItemsPerPerson(self):
-        getDesiredSprintYearAndMonth()
+    async def extractDoneItemsPerPerson(self):
         allWorklogs = self.__extractDoneItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
@@ -608,8 +610,10 @@ class DoneItemsPerPerson(object):
                     description = allWorklogs[person][jiraID]['description']
                     self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
-    def generateCSVFile(self):
-        fileName = input("Filename for Done Items Per Person: ")
+        self.__generateCSVFile__()
+
+    def __generateCSVFile__(self):
+        fileName = 'DoneItemsPerPerson.csv'
 
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -675,8 +679,7 @@ class UnfinishedItemsPerPerson(object):
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
-    def extractUnfinishedItemsPerPerson(self):
-        getDesiredSprintYearAndMonth()
+    async def extractUnfinishedItemsPerPerson(self):
         allWorklogs = self.__extractUnfinishedItemsPerPerson__()
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
@@ -689,8 +692,10 @@ class UnfinishedItemsPerPerson(object):
                     description = allWorklogs[person][jiraID]['description']
                     self.__computeUnfinishedItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
-    def generateCSVFile(self):
-        fileName = input("Filename for Unfinished Items Per Person: ")
+        self.__generateCSVFile__()
+
+    def __generateCSVFile__(self):
+        fileName = 'UnfinishedItemsPerPerson.csv'
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -769,8 +774,7 @@ class TimeSpentPerPerson(object):
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][issueType] += timeSpent
 
-    def extractTimeSpentPerPerson(self):
-        getDesiredSprintYearAndMonth()
+    async def extractTimeSpentPerPerson(self):
         allWorklogs = self.__extractItemsPerPerson__()
         for person in allWorklogs:
             self.issueTypeKey = None
@@ -779,35 +783,45 @@ class TimeSpentPerPerson(object):
                     for worklogPerJIRAId in allWorklogs[person][issueType][jiraID]:
                         self.__extractTime__(worklogPerJIRAId, person, issueType)
 
-    def generateCSVFile(self):
+        self.__generateCSVFile__()
+
+    def __generateCSVFile__(self):
         df = pd.DataFrame(self.worklogPerPerson)
-        fileName = input("Filename for Time Spent Per Person: ")
+        fileName = 'TimeSpentPerPerson.csv'
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def main():
+async def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
+    getDesiredSprintYearAndMonth()
+
+    start = timer()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    matrixOfWorklogsPerSW.extractTimeSpentPerSW()
-    matrixOfWorklogsPerSW.writeToCSVFile()
+    task1 = loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW())
 
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    timeSpentPerPerson.extractTimeSpentPerPerson()
-    timeSpentPerPerson.generateCSVFile()
-
+    task2 = loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson())
+    
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    doneItemsPerPerson.extractDoneItemsPerPerson()
-    doneItemsPerPerson.generateCSVFile()
-
+    task3 = loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson())
+    
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()
-    unfinishedItemsPerPerson.generateCSVFile()
+    task4 = loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson())
 
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    rawItemsPerPerson.extractRawItemsPerPerson()
-    rawItemsPerPerson.generateCSVFile()
+    task5 = loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson())
+
+    await asyncio.wait([task1, task2, task3, task4, task5])
+    print(f'Took: {(timer() - start) / 60} minutes.')
 
 if __name__ == "__main__":
-    main()
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
+    except Exception as e:
+        print('There was a problem:')
+        print(str(e))
+    finally:
+        loop.close()
