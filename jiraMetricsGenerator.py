@@ -3,7 +3,7 @@
 import os
 from jira import JIRA
 from datetime import datetime
-from timeit import default_timer as timer
+import time
 import pandas as pd
 import csv
 import threading
@@ -287,7 +287,7 @@ class JIRAService(object):
         # Returns a list of Worklogs
         return allWorklogs
 
-    def queryJIRA(self, memberToQuery, swToQuery):
+    def queryJIRAPerSW(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
             f'{UPDATED_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
@@ -311,7 +311,7 @@ class TimeSpentPerSoftware(object):
     def extractItemsPerSW(self, person, jIRAService):
         self.software[person] = {}
         for sw in SOFTWARE:
-            self.software[person][sw] = jIRAService.queryJIRA(person, sw)
+            self.software[person][sw] = jIRAService.queryJIRAPerSW(person, sw)
 
     def getTimeSpentForEachSW(self, person):
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
@@ -791,37 +791,35 @@ class TimeSpentPerPerson(object):
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-async def main():
+def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
     getDesiredSprintYearAndMonth()
 
-    start = timer()
-
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    task1 = loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW())
-
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    task2 = loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson())
-    
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    task3 = loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson())
-    
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    task4 = loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson())
-
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    task5 = loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson())
 
-    await asyncio.wait([task1, task2, task3, task4, task5])
-    print(f'Took: {(timer() - start) / 60} minutes.')
-
-if __name__ == "__main__":
     try:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+        tasks = [
+            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson())
+        ]
+        start = time.perf_counter()
+        loop.run_until_complete(asyncio.wait(tasks))
     except Exception as e:
         print('There was a problem:')
         print(str(e))
     finally:
         loop.close()
+    
+    print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+
+if __name__ == "__main__":
+    main()
