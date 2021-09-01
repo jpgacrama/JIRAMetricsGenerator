@@ -56,7 +56,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
-UPDATED_DATE = "updated >= 2021-08-01 AND updated <= 2021-08-31"
+UPDATED_DATE = "worklogDate >= \"2021-08-01\" AND worklogDate < \"2021-08-31\""
 
 # Helper function to get the desired month
 def getDesiredSprintYearAndMonth():
