@@ -56,7 +56,7 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT THE START AND END DATES to your desired month
-UPDATED_DATE = "updated >= 2021-08-01 AND updated <= 2021-08-31"
+UPDATED_DATE = "worklogDate >= \"2021-08-01\" AND worklogDate < \"2021-08-31\""
 
 # Helper function to get the desired month
 def getDesiredSprintYearAndMonth():
@@ -80,7 +80,7 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
         log_entry_count = len(value.fields.worklog.worklogs)
 
         for i in range(log_entry_count):
-            dateOfLog = value.fields.worklog.worklogs[i].updated
+            dateOfLog = value.fields.worklog.worklogs[i].started
             dateOfLog = dateOfLog.split(" ")
             dateOfLog[-1] = dateOfLog[-1][:10]
             dateOfLog = " ".join(dateOfLog)
@@ -104,7 +104,7 @@ def getTimeSpentPerJiraItem(desiredMonth, software):
 
 class TimeHelper(object):
     def trimDate(self, jiraValue):
-        dateOfLog = jiraValue.updated
+        dateOfLog = jiraValue
         dateOfLog = dateOfLog.split(" ")
         dateOfLog[-1] = dateOfLog[-1][:10]
         dateOfLog = " ".join(dateOfLog)
@@ -130,20 +130,20 @@ class WorkLogsForEachSW(object):
         self.totalTimeSpent = 0
         self.newTimeSpent = 0
 
-        # nLogs means first log, second log, etc.
-        for nLogs in value:
-            extractedDateTime = self.timeHelper.trimDate(nLogs)
+        # logsPerValue means first log, second log, etc.
+        for logsPerValue in value:
+            extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
             if extractedDateTime:
                 if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
-                    if self.issueId != nLogs.issueId:
+                    if self.issueId != logsPerValue.issueId:
                         self.totalTimeSpent = 0
-                        self.issueId = nLogs.issueId
-                        self.totalTimeSpent = nLogs.timeSpentSeconds
+                        self.issueId = logsPerValue.issueId
+                        self.totalTimeSpent = logsPerValue.timeSpentSeconds
                         self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
                         self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
                     else:
                         newTimeSpent = 0
-                        newTimeSpent = nLogs.timeSpentSeconds
+                        newTimeSpent = logsPerValue.timeSpentSeconds
                         newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
                         self.totalTimeSpent += newTimeSpent
                         self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
@@ -481,7 +481,7 @@ class RawItemsPerPerson(object):
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
             
             # For Hours Spent for the Current Month
@@ -591,7 +591,7 @@ class DoneItemsPerPerson(object):
             self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
             self.jiraIDKey = jiraID
 
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
@@ -673,7 +673,7 @@ class UnfinishedItemsPerPerson(object):
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
@@ -767,7 +767,7 @@ class TimeSpentPerPerson(object):
             self.issueTypeKey = issueType
             self.worklogPerPerson[person][issueType] = 0
 
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue)
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
             if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                 timeSpent = logsPerValue.timeSpentSeconds
