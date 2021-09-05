@@ -623,8 +623,11 @@ class DoneItemsPerPerson(object):
 
             for person in self.worklogPerPerson:
                 for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([person, jiraID, self.worklogPerPerson[person][jiraID]['description'],
-                                        self.worklogPerPerson[person][jiraID]['Hours Spent for the Month']])
+                    csvwriter.writerow([
+                        person,
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
+                        self.worklogPerPerson[person][jiraID]['description'],
+                        self.worklogPerPerson[person][jiraID]['Hours Spent for the Month']])
         
         print(f"Writing to {fileName} done.")
 
