@@ -55,19 +55,10 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
-# You need to MANUALLY EDIT THE START AND END DATES to your desired month
+# You need to MANUALLY the following values before running this script
 UPDATED_DATE = "worklogDate >= \"2021-08-01\" AND worklogDate < \"2021-08-31\""
-
-# Helper function to get the desired month
-def getDesiredSprintYearAndMonth():
-    global DESIRED_MONTH, DESIRED_YEAR
-
-    if not DESIRED_YEAR:
-        DESIRED_YEAR = int(input("Enter the desired Year: "))
-    
-    if not DESIRED_MONTH:
-        DESIRED_MONTH = int(input("Enter the desired Month in number form: "))
-        print("\n")
+DESIRED_YEAR = 2021
+DESIRED_MONTH = 8
 
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
@@ -306,7 +297,6 @@ class TimeSpentPerSoftware(object):
         super().__init__()
         self.software = {}
         self.worklogsForEachSW = WorkLogsForEachSW()
-        getDesiredSprintYearAndMonth()
 
     def extractItemsPerSW(self, person, jIRAService):
         self.software[person] = {}
@@ -797,7 +787,6 @@ class TimeSpentPerPerson(object):
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
-    getDesiredSprintYearAndMonth()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
