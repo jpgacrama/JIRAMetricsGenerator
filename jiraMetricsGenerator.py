@@ -56,9 +56,9 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2021-08-01\" AND worklogDate < \"2021-08-31\""
+UPDATED_DATE = "worklogDate >= \"2021-09-01\" AND worklogDate < \"2021-09-30\""
 DESIRED_YEAR = 2021
-DESIRED_MONTH = 8
+DESIRED_MONTH = 9
 
 # Another helper function to get all worklogs in a specific SW
 def getTimeSpentPerJiraItem(desiredMonth, software):
