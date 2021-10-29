@@ -8,6 +8,7 @@ import pandas as pd
 import csv
 import threading
 import asyncio
+from tqdm import tqdm
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -318,7 +319,6 @@ class ThreadHoursSpentPerSW(threading.Thread):
     def run(self):
         self.timeSpentPerSoftware.extractItemsPerSW(self.person, self.jiraService)
         self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW(self.person)
-        print(f'Finished Getting Hours Spent for Each SW for: {self.person}')
 
 # This will be the "Caller" class
 class HoursSpentPerSW(object):
@@ -353,7 +353,9 @@ class HoursSpentPerSW(object):
         for thread in threads:
             thread.start()
 
+        pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
+            pbar.update(n=1) # Increments counter
             thread.join()
 
         self.__cleanWorklogs__()
@@ -396,10 +398,11 @@ class HoursSpentPerSW(object):
             
             df = pd.DataFrame(self.result)
             df.to_csv(fileName, index=False, header=False)
-            print(f"Writing to {fileName} done.")
         else:
             print("Data to write to CSV file is not yet available")
             exit(1)
+
+        print(f'Writing to {fileName} done.')
 
 class AutoVivification(dict):
     """Implementation of perl's autovivification feature."""
@@ -798,10 +801,10 @@ def main():
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
