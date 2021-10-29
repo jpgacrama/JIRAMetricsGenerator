@@ -355,8 +355,8 @@ class HoursSpentPerSW(object):
 
         pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
-            pbar.update(n=1) # Increments counter
             thread.join()
+            pbar.update(n=1) # Increments counter
 
         self.__cleanWorklogs__()
         self.__writeToCSVFile__()
@@ -423,7 +423,6 @@ class ThreadRawItemsPerPerson(threading.Thread):
 
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryRawItemsPerPerson(self.person)
-        print(f'Finished Getting Raw Items For: {self.person}')
 
 class RawItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -447,8 +446,10 @@ class RawItemsPerPerson(object):
         for thread in threads:
             thread.start()
 
+        pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
             thread.join()
+            pbar.update(n=1) # Increments counter
 
         return self.itemsPerPerson
 
@@ -549,7 +550,6 @@ class ThreadDoneItemsPerPerson(threading.Thread):
 
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
-        print(f'Finished Getting Done Items For: {self.person}')
 
 class DoneItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -572,9 +572,11 @@ class DoneItemsPerPerson(object):
         for thread in threads:
             thread.start()
 
+        pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
             thread.join()
-        
+            pbar.update(n=1) # Increments counter
+
         return self.itemsPerPerson
 
     def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID, description):
@@ -634,7 +636,6 @@ class ThreadUnfinishedItemsPerPerson(threading.Thread):
 
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfUnfinishedItemsPerPerson(self.person)
-        print(f'Finished Getting Unfinished Items For: {self.person}')
 
 class UnfinishedItemsPerPerson(object):
     def __init__(self, jiraService) -> None:
@@ -657,8 +658,10 @@ class UnfinishedItemsPerPerson(object):
         for thread in threads:
             thread.start()
 
+        pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
             thread.join()
+            pbar.update(n=1) # Increments counter
         
         return self.itemsPerPerson
 
@@ -749,8 +752,8 @@ class TimeSpentPerPerson(object):
 
         pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
-            pbar.update(n=1) # Increments counter
             thread.join()
+            pbar.update(n=1) # Increments counter
         
         return self.itemsPerPerson
 
@@ -802,9 +805,9 @@ def main():
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
             loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
