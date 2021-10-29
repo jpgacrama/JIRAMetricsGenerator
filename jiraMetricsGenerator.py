@@ -401,7 +401,7 @@ class HoursSpentPerSW(object):
         else:
             print("Data to write to CSV file is not yet available")
             exit(1)
-
+        
         print(f'Writing to {fileName} done.')
 
 class AutoVivification(dict):
@@ -722,10 +722,8 @@ class ThreadItemsPerPerson(threading.Thread):
             if issueType == 'Project':
                 self.itemsPerPerson[self.person][issueType] = self.jiraService.queryProjectItemsPerPerson(self.person)
             elif issueType == 'Ad-hoc':
-                self.itemsPerPerson[self.person][issueType] = self.jiraService.queryAdhocItemsPerPerson(self.person)
+                self.itemsPerPerson[self.person][issueType] = self.jiraService.queryAdhocItemsPerPerson(self.person)    
         
-        print(f'Finished Getting Time Spent For: {self.person}')
-
 class TimeSpentPerPerson(object):
     def __init__(self, jiraService) -> None:
         super().__init__()
@@ -749,7 +747,9 @@ class TimeSpentPerPerson(object):
         for thread in threads:
             thread.start()
 
+        pbar = tqdm(total=len(threads)) # Init pbar
         for thread in threads:
+            pbar.update(n=1) # Increments counter
             thread.join()
         
         return self.itemsPerPerson
@@ -801,7 +801,7 @@ def main():
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
             # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
             # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
