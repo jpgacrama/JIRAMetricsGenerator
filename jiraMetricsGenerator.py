@@ -50,9 +50,12 @@ SOFTWARE = [
     'CMA',
     'R:Ed']
 
-DESIRED_MONTH = None
-DESIRED_YEAR = None
-DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
+# Filenames for the output files
+TIME_SPENT_PER_SW = 'HoursDistributionPerSW.csv'
+TIME_SPENT_PER_PERSON = 'TimeSpentPerPerson.csv'
+FINISHED_ITEMS_PER_PERSON = 'FinishedItemsPerPerson.csv'
+UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItemsPerPerson.csv'
+RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
@@ -60,8 +63,9 @@ DONE_LIST = "Closed, Done, \"READY FOR PROD RELEASE\""
 UPDATED_DATE = "worklogDate >= \"2021-10-01\" AND worklogDate < \"2021-10-31\""
 DESIRED_YEAR = 2021
 DESIRED_MONTH = 10
+DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
-# Another helper function to get all worklogs in a specific SW
+# Another helper function to get all worklogs in a specific SW©
 def getTimeSpentPerJiraItem(desiredMonth, software):
     previousKey = None
     totalTimeSpent = 0
@@ -173,7 +177,7 @@ class JIRAService(object):
                 {UPDATED_DATE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
-                AND status in ({DONE_LIST})
+                AND status in ({DONE_STATUSES})
              """,
             fields="worklog")
 
@@ -194,7 +198,7 @@ class JIRAService(object):
                 {UPDATED_DATE}
                 AND assignee in ({MEMBERS[person]})
                 AND project = {PROJECT}
-                AND NOT status in ({DONE_LIST})
+                AND NOT status in ({DONE_STATUSES})
              """,
             fields="worklog")
 
@@ -386,7 +390,7 @@ class HoursSpentPerSW(object):
     def __writeToCSVFile__(self):
         if len(self.result) != 0:
             self.__getTotal__()
-            fileName = 'HoursDistributionPerSW.csv'
+            fileName = TIME_SPENT_PER_SW
             self.result[0].insert(0, 'SW Names')
 
             # Putting "Total" at the last column
@@ -511,7 +515,7 @@ class RawItemsPerPerson(object):
         self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
-        fileName = 'RawItemsPerPerson.csv'
+        fileName = RAW_ITEMS_PER_PERSON
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -608,7 +612,7 @@ class DoneItemsPerPerson(object):
         self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
-        fileName = 'DoneItemsPerPerson.csv'
+        fileName = FINISHED_ITEMS_PER_PERSON
 
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -694,7 +698,7 @@ class UnfinishedItemsPerPerson(object):
         self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
-        fileName = 'UnfinishedItemsPerPerson.csv'
+        fileName = UNFINISHED_ITEMS_PER_PERSON
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -786,7 +790,7 @@ class TimeSpentPerPerson(object):
 
     def __generateCSVFile__(self):
         df = pd.DataFrame(self.worklogPerPerson)
-        fileName = 'TimeSpentPerPerson.csv'
+        fileName = TIME_SPENT_PER_PERSON
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
