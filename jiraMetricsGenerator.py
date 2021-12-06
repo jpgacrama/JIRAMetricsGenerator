@@ -24,6 +24,7 @@ MEMBERS = {
     'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
     'Jaypea'    : '6073ef399361560068ad4b83',
     'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Joppet'    : '618a332c137a51006a46ea0a',
     'Juliet'    : '5fa89a11ecdae600684d1dc8',
     'Marwin'    : '600e2429cd564b0068e7cca7',
     'Mary'      : '6099e1699b362f006957e1ad',
@@ -60,9 +61,9 @@ RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2021-10-01\" AND worklogDate < \"2021-10-31\""
+UPDATED_DATE = "worklogDate >= \"2021-11-01\" AND worklogDate < \"2021-11-30\""
 DESIRED_YEAR = 2021
-DESIRED_MONTH = 10
+DESIRED_MONTH = 11
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 # Another helper function to get all worklogs in a specific SW©
