@@ -64,9 +64,9 @@ RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2021-11-01\" AND worklogDate < \"2021-11-30\""
+UPDATED_DATE = "worklogDate >= \"2021-12-01\" AND worklogDate < \"2021-12-31\""
 DESIRED_YEAR = 2021
-DESIRED_MONTH = 11
+DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 # Another helper function to get all worklogs in a specific SW©
