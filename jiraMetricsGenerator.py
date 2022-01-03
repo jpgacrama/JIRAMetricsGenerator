@@ -64,9 +64,9 @@ RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2021-12-01\" AND worklogDate < \"2021-12-31\""
+UPDATED_DATE = "worklogDate >= \"2021-01-01\" AND worklogDate < \"2021-12-31\""
 DESIRED_YEAR = 2021
-DESIRED_MONTH = 12
+# DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 # Another helper function to get all worklogs in a specific SW©
@@ -487,7 +487,7 @@ class RawItemsPerPerson(object):
         if extractedDateTime:
             
             # For Hours Spent for the Current Month
-            if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
+            if extractedDateTime.year == DESIRED_YEAR:
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
@@ -811,10 +811,10 @@ def main():
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            # loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
             loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
         ]
         start = time.perf_counter()
