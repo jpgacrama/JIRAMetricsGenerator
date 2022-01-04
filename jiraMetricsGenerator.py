@@ -68,7 +68,7 @@ RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
 # You need to MANUALLY EDIT the following values before running this script
 UPDATED_DATE = "worklogDate >= \"2021-01-01\" AND worklogDate < \"2021-12-31\""
 DESIRED_YEAR = 2021
-# DESIRED_MONTH = 12
+DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
@@ -84,15 +84,41 @@ class TimeHelper:
         timeInHours = round(timeInSeconds / (60*60), 2)
         return timeInHours
 
+# Multithreaded Class for StoryPointCorrelation
+class ThreadStoryPointCorrelation(threading.Thread):
+    def __init__(self, person, jiraService, worklog):
+        threading.Thread.__init__(self)
+        self.person = person
+        self.jiraService = jiraService
+        self.worklog = worklog
+
+    def run(self):
+        pass
+
 # Helper class for getting Story Point Correlations
 class StoryPointCorrelation:
     def __init__(self, jiraService) -> None:
         self.jiraService = jiraService
-        self.jiraIDKey = None
-        self.personKey = None
-        self.timeHelper = TimeHelper()
-        self.itemsPerPerson = AutoVivification()
-        self.worklogPerPerson = AutoVivification()
+
+    async def computeStoryPointCorrelation(self):
+        print("\n-------- GENERATING MATRIX OF STORY POINT CORRELATION --------\n")
+
+        for person in MEMBERS:
+            self.worklog[person] = {}
+
+        threads = [ThreadHoursSpentPerSW(
+                person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
+
+        for thread in threads:
+            thread.start()
+
+        pbar = tqdm(total=len(threads)) # Init pbar
+        for thread in threads:
+            thread.join()
+            pbar.update(n=1) # Increments counter
+
+        self.__cleanWorklogs__()
+        self.__writeToCSVFile__()
 
 # Helper Class to get Work Logs per SW
 class WorkLogsForEachSW:
@@ -788,25 +814,27 @@ def main():
     # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    storyPointCorrelation = StoryPointCorrelation(jiraService)
 
-    # try:
-    #     loop = asyncio.get_event_loop()
-    #     tasks = [
-    #         loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-    #         loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-    #         loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-    #         loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-    #         loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
-    #     ]
-    #     start = time.perf_counter()
-    #     loop.run_until_complete(asyncio.wait(tasks))
-    # except Exception as e:
-    #     print('There was a problem:')
-    #     print(str(e))
-    # finally:
-    #     loop.close()
+    try:
+        loop = asyncio.get_event_loop()
+        tasks = [
+            # loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
+        ]
+        start = time.perf_counter()
+        loop.run_until_complete(asyncio.wait(tasks))
+    except Exception as e:
+        print('There was a problem:')
+        print(str(e))
+    finally:
+        loop.close()
     
-    # print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+    print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
 
 if __name__ == "__main__":
     main()
