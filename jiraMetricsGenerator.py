@@ -71,7 +71,7 @@ DESIRED_YEAR = 2021
 # DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
-class TimeHelper(object):
+class TimeHelper:
     def trimDate(self, jiraValue):
         dateOfLog = jiraValue
         dateOfLog = dateOfLog.split(" ")
@@ -84,10 +84,19 @@ class TimeHelper(object):
         timeInHours = round(timeInSeconds / (60*60), 2)
         return timeInHours
 
+# Helper class for getting Story Point Correlations
+class StoryPointCorrelation:
+    def __init__(self, jiraService) -> None:
+        self.jiraService = jiraService
+        self.jiraIDKey = None
+        self.personKey = None
+        self.timeHelper = TimeHelper()
+        self.itemsPerPerson = AutoVivification()
+        self.worklogPerPerson = AutoVivification()
+
 # Helper Class to get Work Logs per SW
-class WorkLogsForEachSW(object):
+class WorkLogsForEachSW:
     def __init__(self) -> None:
-        super().__init__()
         self.dictionaryWorklog = {}
         self.timeHelper = TimeHelper()
         self.issueId = None
@@ -132,9 +141,8 @@ class WorkLogsForEachSW(object):
             exit()
 
 # This Class is responsible for logging in to JIRA and performing Queries
-class JIRAService(object):
+class JIRAService:
     def __init__(self) -> None:
-        super().__init__()
         self.__logInToJIRA__()
         self.username = None
         self.api_token = None
@@ -280,9 +288,8 @@ class JIRAService(object):
 
 # This class is responsible for querying each of the
 # PROJECT items belonging to the various SW
-class TimeSpentPerSoftware(object):
+class TimeSpentPerSoftware:
     def __init__(self) -> None:
-        super().__init__()
         self.software = {}
         self.worklogsForEachSW = WorkLogsForEachSW()
 
@@ -308,9 +315,8 @@ class ThreadHoursSpentPerSW(threading.Thread):
         self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW(self.person)
 
 # This will be the "Caller" class
-class HoursSpentPerSW(object):
+class HoursSpentPerSW:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.result = []
         self.worklog = {}
@@ -411,9 +417,8 @@ class ThreadRawItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryRawItemsPerPerson(self.person)
 
-class RawItemsPerPerson(object):
+class RawItemsPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.personKey = None
@@ -538,9 +543,8 @@ class ThreadDoneItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
 
-class DoneItemsPerPerson(object):
+class DoneItemsPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.timeHelper = TimeHelper()
@@ -624,9 +628,8 @@ class ThreadUnfinishedItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfUnfinishedItemsPerPerson(self.person)
 
-class UnfinishedItemsPerPerson(object):
+class UnfinishedItemsPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.timeHelper = TimeHelper()
@@ -714,9 +717,8 @@ class ThreadItemsPerPerson(threading.Thread):
             elif issueType == 'Ad-hoc':
                 self.itemsPerPerson[self.person][issueType] = self.jiraService.queryAdhocItemsPerPerson(self.person)    
         
-class TimeSpentPerPerson(object):
+class TimeSpentPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.issueId = None
         self.issueTypeKey = None
