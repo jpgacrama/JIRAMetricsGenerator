@@ -100,7 +100,7 @@ class ThreadStoryPointCorrelation(threading.Thread):
         self.worklog = worklog
 
     def run(self):
-        pass
+        self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
 
 # Helper class for getting Story Point Correlations
 class StoryPointCorrelation:
@@ -186,10 +186,13 @@ class JIRAService:
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
-    def queryStoryPoint(self):
+    def queryStoryPoint(self, person):
+        
+        # TODO: Query is only Hard-coded to 1
         allIssues = self.jiraService.search_issues(
             f"""
                 AND project = {PROJECT}
+                AND assignee in ({MEMBERS[person]})
                 AND {STORY_POINT_ESTIMATE} = '1'
              """,
             fields="worklog")
@@ -336,7 +339,7 @@ class TimeSpentPerSoftware:
         return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
-class ThreadStoryPointCorrelation(threading.Thread):
+class ThreadHoursSpentPerSW(threading.Thread):
     def __init__(self, person, jiraService, worklog, timeSpentPerSoftware):
         threading.Thread.__init__(self)
         self.person = person
