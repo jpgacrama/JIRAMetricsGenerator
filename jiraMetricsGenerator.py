@@ -12,6 +12,8 @@ from tqdm import tqdm
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
+STORY_POINT_ESTIMATE = '\"Story point estimate\"'
+STORY_POINTS = ['1', '2', '3', '5', '8', '13', '21']
 
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
@@ -68,39 +70,6 @@ UPDATED_DATE = "worklogDate >= \"2021-01-01\" AND worklogDate < \"2021-12-31\""
 DESIRED_YEAR = 2021
 # DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
-
-# Another helper function to get all worklogs in a specific SW©
-def getTimeSpentPerJiraItem(desiredMonth, software):
-    previousKey = None
-    totalTimeSpent = 0
-    timeHelper = TimeHelper()
-    dictionaryWorklog = {}
-
-    for value in software:
-        log_entry_count = len(value.fields.worklog.worklogs)
-
-        for i in range(log_entry_count):
-            dateOfLog = value.fields.worklog.worklogs[i].started
-            dateOfLog = dateOfLog.split(" ")
-            dateOfLog[-1] = dateOfLog[-1][:10]
-            dateOfLog = " ".join(dateOfLog)
-            extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-
-            if extractedDateTime.month == desiredMonth:
-                if previousKey != value.key:
-                    previousKey = value.key
-                    totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                    totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
-                    dictionaryWorklog[previousKey] = totalTimeSpent
-                else:
-                    newTimeSpent = 0
-                    newTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                    newTimeSpent = timeHelper.convertToHours(newTimeSpent)
-                    totalTimeSpent += newTimeSpent
-
-                    dictionaryWorklog[value.key] = totalTimeSpent
-
-    return dictionaryWorklog
 
 class TimeHelper(object):
     def trimDate(self, jiraValue):
@@ -174,6 +143,16 @@ class JIRAService(object):
         username = input("Please enter your username: ")
         api_token = input("Please enter your api-token: ")
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
+
+    def queryStoryPoint(self):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                AND project = {PROJECT}
+                AND {STORY_POINT_ESTIMATE} = '1'
+             """,
+            fields="worklog")
+
+        return allIssues
 
     def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
@@ -802,30 +781,30 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     jiraService = JIRAService()
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    # matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
 
-    try:
-        loop = asyncio.get_event_loop()
-        tasks = [
-            # loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
-        ]
-        start = time.perf_counter()
-        loop.run_until_complete(asyncio.wait(tasks))
-    except Exception as e:
-        print('There was a problem:')
-        print(str(e))
-    finally:
-        loop.close()
+    # try:
+    #     loop = asyncio.get_event_loop()
+    #     tasks = [
+    #         loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
+    #         loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+    #         loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+    #         loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+    #         loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+    #     ]
+    #     start = time.perf_counter()
+    #     loop.run_until_complete(asyncio.wait(tasks))
+    # except Exception as e:
+    #     print('There was a problem:')
+    #     print(str(e))
+    # finally:
+    #     loop.close()
     
-    print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+    # print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
 
 if __name__ == "__main__":
     main()
