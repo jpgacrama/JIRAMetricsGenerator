@@ -105,10 +105,13 @@ class ThreadStoryPointCorrelation(threading.Thread):
     def run(self):
         self.worklog[self.person] = self.jiraService.queryStoryPoint(self.person)
 
-# Helper class for getting Story Point Correlations
+# Helper class for getting Story Point Correlations.
+# This correlation is for the entire lifetime of the JIRA ticket, and is not targeted to a specific month
 class StoryPointCorrelation:
     def __init__(self, jiraService) -> None:
         self.jiraService = jiraService
+        self.totalHours = 0
+        self.timeHelper = TimeHelper()
         self.worklog = AutoVivification()
 
     def __queryStoryPoint__(self):
@@ -130,33 +133,12 @@ class StoryPointCorrelation:
         
         return self.worklog
 
-    def __computeAverageHoursPerStoryPoint__(self, logsPerValue, person, jiraID, description):
-        if self.jiraIDKey != jiraID:
-            self.worklog[person][jiraID] = {}
-            self.worklog[person][jiraID]['description'] = description
-            self.worklog[person][jiraID]['Hours Spent for the Month'] = 0
-            self.jiraIDKey = jiraID
-
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
-        if extractedDateTime:
-            timeSpent = logsPerValue.timeSpentSeconds
-            timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklog[person][jiraID]['Hours Spent for the Month'] += timeSpent
-
     async def computeStoryPointCorrelation(self):
         self.worklog = self.__queryStoryPoint__()
-        print(self.worklog)
-
         for person in self.worklog:
-            for jiraID in self.worklog[person]:                
-                if not self.worklog[person][jiraID]['Hours Spent for the Month']:
-                    self.worklog[person][jiraID] = {}
-                    self.worklog[person][jiraID]['description'] = self.worklog[person][jiraID]['description']
-                    self.worklog[person][jiraID]['Hours Spent for the Month'] = 0
-                
-                for worklogPerJIRAId in self.worklog[person][jiraID]['Hours Spent for the Month']:
-                    description = self.worklog[person][jiraID]['description']
-                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
+            for jiraID in self.worklog[person]:     
+                for totalHoursPerJiraID in self.worklog[person][jiraID]['Total Hours']:
+                    self.totalHours += totalHoursPerJiraID
     
 
 # Helper Class to get Work Logs per SW
