@@ -100,7 +100,7 @@ class ThreadStoryPointCorrelation(threading.Thread):
         self.worklog = worklog
 
     def run(self):
-        self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
+        self.worklog[self.person] = self.jiraService.queryStoryPoint(self.person)
 
 # Helper class for getting Story Point Correlations
 class StoryPointCorrelation:
@@ -124,9 +124,6 @@ class StoryPointCorrelation:
         for thread in threads:
             thread.join()
             pbar.update(n=1) # Increments counter
-
-        self.__cleanWorklogs__()
-        self.__writeToCSVFile__()
 
 # Helper Class to get Work Logs per SW
 class WorkLogsForEachSW:
@@ -191,7 +188,7 @@ class JIRAService:
         # TODO: Query is only Hard-coded to 1
         allIssues = self.jiraService.search_issues(
             f"""
-                AND project = {PROJECT}
+                project = {PROJECT}
                 AND assignee in ({MEMBERS[person]})
                 AND {STORY_POINT_ESTIMATE} = '1'
              """,
