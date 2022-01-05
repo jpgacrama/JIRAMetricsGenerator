@@ -77,7 +77,7 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2021-01-01\" AND worklogDate < \"2021-12-31\""
+UPDATED_DATE = "worklogDate >= \"2021-12-01\" AND worklogDate < \"2021-12-31\""
 DESIRED_YEAR = 2021
 DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
@@ -423,7 +423,7 @@ class HoursSpentPerSW:
         for person in MEMBERS:
             self.worklog[person] = {}
 
-        threads = [ThreadStoryPointCorrelation(
+        threads = [ThreadHoursSpentPerSW(
                 person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
 
         for thread in threads:
@@ -554,7 +554,7 @@ class RawItemsPerPerson:
         if extractedDateTime:
             
             # For Hours Spent for the Current Month
-            if extractedDateTime.year == DESIRED_YEAR:
+            if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
