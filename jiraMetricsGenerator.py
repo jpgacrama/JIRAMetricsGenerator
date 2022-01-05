@@ -138,9 +138,13 @@ class StoryPointCorrelation:
         self.worklog = self.__queryStoryPoint__()
 
         # For Total Hours Spent
-        timeSpent = logsPerValue.timeSpentSeconds
-        timeSpent = self.timeHelper.convertToHours(timeSpent)
-        self.worklog[person][jiraID]['Total Hours Spent'] += timeSpent
+        for person in self.worklog:
+            for jiraID in self.worklog[person]:
+                self.worklog[person][jiraID]['Total Hours'] = 0
+                for worklogPerJIRAId in self.worklog[person][jiraID]['Worklogs']:
+                    timeSpent = worklogPerJIRAId.timeSpentSeconds
+                    timeSpent = self.timeHelper.convertToHours(timeSpent)
+                    self.worklog[person][jiraID]['Total Hours'] += timeSpent
         
         self.__generateCSVFile__()
     
@@ -151,7 +155,7 @@ class StoryPointCorrelation:
             csvwriter = csv.writer(csv_file, delimiter=',')
             
             # Initialize all columns
-            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Story Point', 'Total Hours Spent'])
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Story Point', 'Total Hours'])
 
             for person in self.worklog:
                 for jiraID in self.worklog[person]:
@@ -243,11 +247,11 @@ class JIRAService:
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['description'] = {}
             allWorklogs[str(issue)]['Story Points'] = {}
-            allWorklogs[str(issue)]['Total Hours'] = {}
+            allWorklogs[str(issue)]['Worklogs'] = {}
             
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allWorklogs[str(issue)]['Story Points'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
-            allWorklogs[str(issue)]['Total Hours'] = self.jiraService.worklogs(issue)
+            allWorklogs[str(issue)]['Worklogs'] = self.jiraService.worklogs(issue)
 
         return allWorklogs
 
