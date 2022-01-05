@@ -107,8 +107,8 @@ class StoryPointCorrelation:
     def __init__(self, jiraService) -> None:
         self.jiraService = jiraService
         self.worklog = AutoVivification()
-    
-    async def computeStoryPointCorrelation(self):
+
+    def __queryStoryPoint__(self):
         print("\n-------- GENERATING MATRIX OF STORY POINT CORRELATION --------\n")
 
         for person in MEMBERS:
@@ -124,6 +124,26 @@ class StoryPointCorrelation:
         for thread in threads:
             thread.join()
             pbar.update(n=1) # Increments counter
+
+        return self.worklog
+
+    def __computeAverageHoursPerStoryPoint__(self, logsPerValue, person, jiraID, description):
+        if self.jiraIDKey != jiraID:
+            self.worklogPerPerson[person][jiraID] = {}
+            self.worklogPerPerson[person][jiraID]['description'] = description
+            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
+            self.jiraIDKey = jiraID
+
+        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
+        if extractedDateTime:
+            timeSpent = logsPerValue.timeSpentSeconds
+            timeSpent = self.timeHelper.convertToHours(timeSpent)
+            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
+
+    async def computeStoryPointCorrelation(self):
+        allWorklogs = self.__queryStoryPoint__()
+        print(allWorklogs)
+    
 
 # Helper Class to get Work Logs per SW
 class WorkLogsForEachSW:
