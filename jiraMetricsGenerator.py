@@ -70,6 +70,9 @@ FINISHED_ITEMS_PER_PERSON = 'FinishedItemsPerPerson.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItemsPerPerson.csv'
 RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
 
+# Filename to store your credentials
+CREDENTIAL_FILE = 'Credentials.txt'
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
@@ -124,25 +127,36 @@ class StoryPointCorrelation:
         for thread in threads:
             thread.join()
             pbar.update(n=1) # Increments counter
-
+        
         return self.worklog
 
     def __computeAverageHoursPerStoryPoint__(self, logsPerValue, person, jiraID, description):
         if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[person][jiraID] = {}
-            self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
+            self.worklog[person][jiraID] = {}
+            self.worklog[person][jiraID]['description'] = description
+            self.worklog[person][jiraID]['Hours Spent for the Month'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
+            self.worklog[person][jiraID]['Hours Spent for the Month'] += timeSpent
 
     async def computeStoryPointCorrelation(self):
-        allWorklogs = self.__queryStoryPoint__()
-        print(allWorklogs)
+        self.worklog = self.__queryStoryPoint__()
+        print(self.worklog)
+
+        for person in self.worklog:
+            for jiraID in self.worklog[person]:                
+                if not self.worklog[person][jiraID]['Hours Spent for the Month']:
+                    self.worklog[person][jiraID] = {}
+                    self.worklog[person][jiraID]['description'] = self.worklog[person][jiraID]['description']
+                    self.worklog[person][jiraID]['Hours Spent for the Month'] = 0
+                
+                for worklogPerJIRAId in self.worklog[person][jiraID]['Hours Spent for the Month']:
+                    description = self.worklog[person][jiraID]['description']
+                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
     
 
 # Helper Class to get Work Logs per SW
@@ -214,7 +228,15 @@ class JIRAService:
              """,
             fields="worklog")
 
-        return allIssues
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['Story Points'] = {}
+            allWorklogs[str(issue)]['Total Hours'] = {}
+            allWorklogs[str(issue)]['Story Points'] = self.jiraService.issue(str(issue)).fields.summary
+            allWorklogs[str(issue)]['Total Hours'] = self.jiraService.worklogs(issue)
+
+        return allWorklogs
 
     def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
