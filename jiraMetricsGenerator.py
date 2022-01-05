@@ -136,6 +136,12 @@ class StoryPointCorrelation:
 
     async def computeStoryPointCorrelation(self):
         self.worklog = self.__queryStoryPoint__()
+
+        # For Total Hours Spent
+        timeSpent = logsPerValue.timeSpentSeconds
+        timeSpent = self.timeHelper.convertToHours(timeSpent)
+        self.worklog[person][jiraID]['Total Hours Spent'] += timeSpent
+        
         self.__generateCSVFile__()
     
     def __generateCSVFile__(self):
