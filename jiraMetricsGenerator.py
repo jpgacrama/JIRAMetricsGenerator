@@ -13,33 +13,25 @@ from tqdm import tqdm
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
-STORY_POINTS = [ '1', 
-                 '2',
-                 '3',
-                 '5',
-                 '8',
-                 '13',
-                 '21',
-                ]
 
 MEMBERS = {
-    # 'Arman'     : '6057df8914a23b0069a65dc8',
+    'Arman'     : '6057df8914a23b0069a65dc8',
     'Austin'    : '5fbb3d037cc1030069500950',
-    # 'Correne'   : '616cc99920972200718e6d86',
-    # 'Daniel'    : '61076053fc68c10069c80eba',
-    # 'Duane'     : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'  : '5f85328a53aaa400760d4944',
-    # 'Florante'  : '5fa0b7ad22f39900769a8242',
-    # 'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
-    # 'Jaypea'    : '6073ef399361560068ad4b83',
-    # 'Jerred'    : '5ed4c8d844cc830c23027b31',
-    # 'Joppet'    : '618a332c137a51006a46ea0a',
-    # 'Juliet'    : '5fa89a11ecdae600684d1dc8',
-    # 'Marwin'    : '600e2429cd564b0068e7cca7',
-    # 'Mary'      : '6099e1699b362f006957e1ad',
-    # 'Maye'      : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Ronald'    : '5fb1f35baa1d30006fa6a618',
+    'Correne'   : '616cc99920972200718e6d86',
+    'Daniel'    : '61076053fc68c10069c80eba',
+    'Duane'     : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'  : '5f85328a53aaa400760d4944',
+    'Florante'  : '5fa0b7ad22f39900769a8242',
+    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
+    'Jaypea'    : '6073ef399361560068ad4b83',
+    'Jerred'    : '5ed4c8d844cc830c23027b31',
+    'Joppet'    : '618a332c137a51006a46ea0a',
+    'Juliet'    : '5fa89a11ecdae600684d1dc8',
+    'Marwin'    : '600e2429cd564b0068e7cca7',
+    'Mary'      : '6099e1699b362f006957e1ad',
+    'Maye'      : '6099d80c3fae6f006821f3f5',
+    'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Ronald'    : '5fb1f35baa1d30006fa6a618',
 }
 
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -238,7 +230,15 @@ class JIRAService:
             f"""
                 project = {PROJECT}
                 AND assignee in ({MEMBERS[person]})
-                AND {STORY_POINT_ESTIMATE} = '1'
+                AND (
+                        {STORY_POINT_ESTIMATE} = '1' OR
+                        {STORY_POINT_ESTIMATE} = '2' OR
+                        {STORY_POINT_ESTIMATE} = '3' OR
+                        {STORY_POINT_ESTIMATE} = '5' OR
+                        {STORY_POINT_ESTIMATE} = '8' OR
+                        {STORY_POINT_ESTIMATE} = '13' OR
+                        {STORY_POINT_ESTIMATE} = '21'
+                    )
              """,
             fields="worklog")
 
