@@ -238,7 +238,7 @@ class JIRAService:
             allWorklogs[str(issue)] = {}
             allWorklogs[str(issue)]['Story Points'] = {}
             allWorklogs[str(issue)]['Total Hours'] = {}
-            allWorklogs[str(issue)]['Story Points'] = self.jiraService.issue(str(issue)).fields.summary
+            allWorklogs[str(issue)]['Story Points'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
             allWorklogs[str(issue)]['Total Hours'] = self.jiraService.worklogs(issue)
 
         return allWorklogs
