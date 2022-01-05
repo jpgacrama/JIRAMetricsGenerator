@@ -213,8 +213,13 @@ class JIRAService:
         self.api_token = None
 
     def __logInToJIRA__(self):
-        username = input("Please enter your username: ")
-        api_token = input("Please enter your api-token: ")
+        
+        # TODO: Add reading of Credential file here
+        with open(CREDENTIAL_FILE, 'r', newline='') as file:
+            lines = file.read().splitlines() 
+
+        username = lines[0]
+        api_token = lines[1]
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
 
     def queryStoryPoint(self, person):
