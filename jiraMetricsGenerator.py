@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
+STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 
 MEMBERS = {
     'Arman'     : '6057df8914a23b0069a65dc8',
@@ -60,6 +61,10 @@ TIME_SPENT_PER_PERSON = 'TimeSpentPerPerson.csv'
 FINISHED_ITEMS_PER_PERSON = 'FinishedItemsPerPerson.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItemsPerPerson.csv'
 RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
+STORY_POINT_CORRELATION = 'StoryPointCorrelation.csv'
+
+# Filename to store your credentials
+CREDENTIAL_FILE = 'Credentials.txt'
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
@@ -69,40 +74,7 @@ DESIRED_YEAR = 2021
 DESIRED_MONTH = 12
 DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
 
-# Another helper function to get all worklogs in a specific SW©
-def getTimeSpentPerJiraItem(desiredMonth, software):
-    previousKey = None
-    totalTimeSpent = 0
-    timeHelper = TimeHelper()
-    dictionaryWorklog = {}
-
-    for value in software:
-        log_entry_count = len(value.fields.worklog.worklogs)
-
-        for i in range(log_entry_count):
-            dateOfLog = value.fields.worklog.worklogs[i].started
-            dateOfLog = dateOfLog.split(" ")
-            dateOfLog[-1] = dateOfLog[-1][:10]
-            dateOfLog = " ".join(dateOfLog)
-            extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-
-            if extractedDateTime.month == desiredMonth:
-                if previousKey != value.key:
-                    previousKey = value.key
-                    totalTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                    totalTimeSpent = timeHelper.convertToHours(totalTimeSpent)
-                    dictionaryWorklog[previousKey] = totalTimeSpent
-                else:
-                    newTimeSpent = 0
-                    newTimeSpent = value.fields.worklog.worklogs[i].timeSpentSeconds
-                    newTimeSpent = timeHelper.convertToHours(newTimeSpent)
-                    totalTimeSpent += newTimeSpent
-
-                    dictionaryWorklog[value.key] = totalTimeSpent
-
-    return dictionaryWorklog
-
-class TimeHelper(object):
+class TimeHelper:
     def trimDate(self, jiraValue):
         dateOfLog = jiraValue
         dateOfLog = dateOfLog.split(" ")
@@ -115,10 +87,82 @@ class TimeHelper(object):
         timeInHours = round(timeInSeconds / (60*60), 2)
         return timeInHours
 
+# Multithreaded Class for StoryPointCorrelation
+class ThreadStoryPointCorrelation(threading.Thread):
+    def __init__(self, person, jiraService, worklog):
+        threading.Thread.__init__(self)
+        self.person = person
+        self.jiraService = jiraService
+        self.worklog = worklog
+
+    def run(self):
+        self.worklog[self.person] = self.jiraService.queryStoryPoint(self.person)
+
+# Helper class for getting Story Point Correlations.
+# This correlation is for the entire lifetime of the JIRA ticket, and is not targeted to a specific month
+class StoryPointCorrelation:
+    def __init__(self, jiraService) -> None:
+        self.jiraService = jiraService
+        self.totalHours = 0
+        self.timeHelper = TimeHelper()
+        self.worklog = AutoVivification()
+
+    def __queryStoryPoint__(self):
+        print("\n-------- GENERATING MATRIX OF STORY POINT CORRELATION --------\n")
+
+        for person in MEMBERS:
+            self.worklog[person] = {}
+
+        threads = [ThreadStoryPointCorrelation(
+                person, self.jiraService, self.worklog) for person in MEMBERS]
+
+        for thread in threads:
+            thread.start()
+
+        pbar = tqdm(total=len(threads)) # Init pbar
+        for thread in threads:
+            thread.join()
+            pbar.update(n=1) # Increments counter
+        
+        return self.worklog
+
+    async def computeStoryPointCorrelation(self):
+        self.worklog = self.__queryStoryPoint__()
+
+        # For Total Hours Spent
+        for person in self.worklog:
+            for jiraID in self.worklog[person]:
+                self.worklog[person][jiraID]['Total Hours'] = 0
+                for worklogPerJIRAId in self.worklog[person][jiraID]['Worklogs']:
+                    timeSpent = worklogPerJIRAId.timeSpentSeconds
+                    timeSpent = self.timeHelper.convertToHours(timeSpent)
+                    self.worklog[person][jiraID]['Total Hours'] += timeSpent
+        
+        self.__generateCSVFile__()
+    
+    def __generateCSVFile__(self):
+        fileName = STORY_POINT_CORRELATION
+        
+        with open(fileName, 'w', newline='') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+            
+            # Initialize all columns
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Story Point', 'Total Hours'])
+
+            for person in self.worklog:
+                for jiraID in self.worklog[person]:
+                    csvwriter.writerow([
+                        person, 
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',
+                        self.worklog[person][jiraID]['description'],
+                        self.worklog[person][jiraID]['Story Points'],
+                        self.worklog[person][jiraID]['Total Hours']])
+        
+        print(f"Writing to {fileName} done.")
+
 # Helper Class to get Work Logs per SW
-class WorkLogsForEachSW(object):
+class WorkLogsForEachSW:
     def __init__(self) -> None:
-        super().__init__()
         self.dictionaryWorklog = {}
         self.timeHelper = TimeHelper()
         self.issueId = None
@@ -163,17 +207,53 @@ class WorkLogsForEachSW(object):
             exit()
 
 # This Class is responsible for logging in to JIRA and performing Queries
-class JIRAService(object):
+class JIRAService:
     def __init__(self) -> None:
-        super().__init__()
         self.__logInToJIRA__()
         self.username = None
         self.api_token = None
 
     def __logInToJIRA__(self):
-        username = input("Please enter your username: ")
-        api_token = input("Please enter your api-token: ")
+        
+        # TODO: Add reading of Credential file here
+        with open(CREDENTIAL_FILE, 'r', newline='') as file:
+            lines = file.read().splitlines() 
+
+        username = lines[0]
+        api_token = lines[1]
         self.jiraService = JIRA(URL, basic_auth=(username, api_token))
+
+    def queryStoryPoint(self, person):
+        
+        # TODO: Query is only Hard-coded to 1
+        allIssues = self.jiraService.search_issues(
+            f"""
+                project = {PROJECT}
+                AND assignee in ({MEMBERS[person]})
+                AND (
+                        {STORY_POINT_ESTIMATE} = '1' OR
+                        {STORY_POINT_ESTIMATE} = '2' OR
+                        {STORY_POINT_ESTIMATE} = '3' OR
+                        {STORY_POINT_ESTIMATE} = '5' OR
+                        {STORY_POINT_ESTIMATE} = '8' OR
+                        {STORY_POINT_ESTIMATE} = '13' OR
+                        {STORY_POINT_ESTIMATE} = '21'
+                    )
+             """,
+            fields="worklog")
+
+        allWorklogs = {}
+        for issue in allIssues:
+            allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['Story Points'] = {}
+            allWorklogs[str(issue)]['Worklogs'] = {}
+            
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            allWorklogs[str(issue)]['Story Points'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
+            allWorklogs[str(issue)]['Worklogs'] = self.jiraService.worklogs(issue)
+
+        return allWorklogs
 
     def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
@@ -301,9 +381,8 @@ class JIRAService(object):
 
 # This class is responsible for querying each of the
 # PROJECT items belonging to the various SW
-class TimeSpentPerSoftware(object):
+class TimeSpentPerSoftware:
     def __init__(self) -> None:
-        super().__init__()
         self.software = {}
         self.worklogsForEachSW = WorkLogsForEachSW()
 
@@ -329,9 +408,8 @@ class ThreadHoursSpentPerSW(threading.Thread):
         self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW(self.person)
 
 # This will be the "Caller" class
-class HoursSpentPerSW(object):
+class HoursSpentPerSW:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.result = []
         self.worklog = {}
@@ -432,9 +510,8 @@ class ThreadRawItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryRawItemsPerPerson(self.person)
 
-class RawItemsPerPerson(object):
+class RawItemsPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.personKey = None
@@ -559,9 +636,8 @@ class ThreadDoneItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
 
-class DoneItemsPerPerson(object):
+class DoneItemsPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.timeHelper = TimeHelper()
@@ -645,9 +721,8 @@ class ThreadUnfinishedItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfUnfinishedItemsPerPerson(self.person)
 
-class UnfinishedItemsPerPerson(object):
+class UnfinishedItemsPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.timeHelper = TimeHelper()
@@ -735,9 +810,8 @@ class ThreadItemsPerPerson(threading.Thread):
             elif issueType == 'Ad-hoc':
                 self.itemsPerPerson[self.person][issueType] = self.jiraService.queryAdhocItemsPerPerson(self.person)    
         
-class TimeSpentPerPerson(object):
+class TimeSpentPerPerson:
     def __init__(self, jiraService) -> None:
-        super().__init__()
         self.jiraService = jiraService
         self.issueId = None
         self.issueTypeKey = None
@@ -807,6 +881,7 @@ def main():
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    storyPointCorrelation = StoryPointCorrelation(jiraService)
 
     try:
         loop = asyncio.get_event_loop()
@@ -816,6 +891,7 @@ def main():
             loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
             loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
             loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
