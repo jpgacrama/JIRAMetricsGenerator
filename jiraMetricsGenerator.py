@@ -69,6 +69,7 @@ TIME_SPENT_PER_PERSON = 'TimeSpentPerPerson.csv'
 FINISHED_ITEMS_PER_PERSON = 'FinishedItemsPerPerson.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItemsPerPerson.csv'
 RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
+STORY_POINT_CORRELATION = 'StoryPointCorrelation.csv'
 
 # Filename to store your credentials
 CREDENTIAL_FILE = 'Credentials.txt'
@@ -135,11 +136,27 @@ class StoryPointCorrelation:
 
     async def computeStoryPointCorrelation(self):
         self.worklog = self.__queryStoryPoint__()
-        for person in self.worklog:
-            for jiraID in self.worklog[person]:     
-                for totalHoursPerJiraID in self.worklog[person][jiraID]['Total Hours']:
-                    self.totalHours += totalHoursPerJiraID
+        self.__generateCSVFile__()
     
+    def __generateCSVFile__(self):
+        fileName = STORY_POINT_CORRELATION
+        
+        with open(fileName, 'w', newline='') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+            
+            # Initialize all columns
+            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Story Point', 'Total Hours Spent'])
+
+            for person in self.worklog:
+                for jiraID in self.worklog[person]:
+                    csvwriter.writerow([
+                        person, 
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',
+                        self.worklog[person][jiraID]['description'],
+                        self.worklog[person][jiraID]['Story Points'],
+                        self.worklog[person][jiraID]['Total Hours']])
+        
+        print(f"Writing to {fileName} done.")
 
 # Helper Class to get Work Logs per SW
 class WorkLogsForEachSW:
@@ -218,8 +235,11 @@ class JIRAService:
         allWorklogs = {}
         for issue in allIssues:
             allWorklogs[str(issue)] = {}
+            allWorklogs[str(issue)]['description'] = {}
             allWorklogs[str(issue)]['Story Points'] = {}
             allWorklogs[str(issue)]['Total Hours'] = {}
+            
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allWorklogs[str(issue)]['Story Points'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
             allWorklogs[str(issue)]['Total Hours'] = self.jiraService.worklogs(issue)
 
