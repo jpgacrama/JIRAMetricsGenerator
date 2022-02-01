@@ -71,10 +71,10 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2021-12-01\" AND worklogDate < \"2021-12-31\""
-DESIRED_YEAR = 2021
-DESIRED_MONTH = 12
-DONE_STATUSES = "Closed, Done, \"READY FOR PROD RELEASE\""
+UPDATED_DATE = "worklogDate >= \"2022-01-01\" AND worklogDate < \"2022-01-31\""
+DESIRED_YEAR = 2022
+DESIRED_MONTH = 1
+DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
     def trimDate(self, jiraValue):
