@@ -24,10 +24,8 @@ MEMBERS = {
     'Eddzonne'  : '5f85328a53aaa400760d4944',
     'Florante'  : '5fa0b7ad22f39900769a8242',
     'Hermil'    : '61f71f208d9e3c0068862452',
-    'Jansseen'  : '5f3b1fd49aa9650046aeffb6',
     'Jay'       : '619ed384b43d5b006a0bf8f6',
     'Jaypea'    : '6073ef399361560068ad4b83',
-    'Jerred'    : '5ed4c8d844cc830c23027b31',
     'Jomel'     : '61de3195e76379006864a9bf',
     'Joppet'    : '618a332c137a51006a46ea0a',
     'Juliet'    : '5fa89a11ecdae600684d1dc8',
@@ -36,6 +34,7 @@ MEMBERS = {
     'Mary'      : '6099e1699b362f006957e1ad',
     'Maye'      : '6099d80c3fae6f006821f3f5',
     'Nicko'     : '5f3b1fd4ea5e2f0039697b3d',
+    'Reiner'    : '621c66dd94f7e20069fc9dff',
     'Ronald'    : '5fb1f35baa1d30006fa6a618',
 }
 
@@ -74,7 +73,7 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2022-01-01\" AND worklogDate < \"2022-01-31\""
+UPDATED_DATE = "worklogDate >= \"2022-02-01\" AND worklogDate < \"2022-03-01\""
 DESIRED_YEAR = 2022
 DESIRED_MONTH = 1
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
@@ -892,11 +891,11 @@ def main():
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
-            # loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
