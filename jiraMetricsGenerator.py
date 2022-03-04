@@ -891,11 +891,11 @@ def main():
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
-            loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            # loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
