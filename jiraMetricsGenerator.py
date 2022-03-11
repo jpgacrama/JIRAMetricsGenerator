@@ -300,6 +300,10 @@ class JIRAService:
 
         # Returns a list of Worklogs
         return allWorklogs
+
+    # TODO
+    def queryItemsPerStoryPointForEveryPerson(self, person):
+        pass
     
     def queryRawItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
@@ -875,6 +879,10 @@ class TimeSpentPerPerson:
         fileName = TIME_SPENT_PER_PERSON
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
+
+class StoryPointCorrelation:
+    def __init__(self) -> None:
+        pass
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
