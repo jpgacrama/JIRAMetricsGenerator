@@ -73,9 +73,9 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2022-02-01\" AND worklogDate < \"2022-03-01\""
+UPDATED_DATE = "worklogDate >= \"2022-03-01\" AND worklogDate < \"2022-03-31\""
 DESIRED_YEAR = 2022
-DESIRED_MONTH = 2
+DESIRED_MONTH = 3
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
