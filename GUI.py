@@ -23,6 +23,4 @@ while True:
         startDate = values['start_date']
         endDate = values['end_date']
 
-        print(f'Start Date: {startDate}')
-        print(f'End Date: {endDate}')
 window.close()
