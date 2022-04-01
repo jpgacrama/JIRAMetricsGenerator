@@ -1,20 +1,23 @@
+#!/usr/bin/env python
 import PySimpleGUI as sg
 
-sg.theme('BluePurple')
+sg.theme('Default1')
 
-layout = [[sg.Text('Your typed chars appear here:'), sg.Text(size=(15,1), key='-OUTPUT-')],
-          [sg.Input(key='-IN-')],
-          [sg.Button('Show'), sg.Button('Exit')]]
+# Getting Start Date and End Dates
 
-window = sg.Window('Pattern 2B', layout)
+layout = [[sg.Text('Choose your date range', key='-TXT-')],
+      [sg.Input(key='start_date', size=(20,1)), sg.CalendarButton(
+            'Select Start Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
+      [sg.Button('Read'), sg.Exit()]]
 
-while True:  # Event Loop
+window = sg.Window('JIRA Metrics Generator', layout)
+
+while True:
     event, values = window.read()
     print(event, values)
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
-    if event == 'Show':
-        # Update the "output" text element to be the value of "input" element
-        window['-OUTPUT-'].update(values['-IN-'])
-
+    elif event == 'Read':
+        startDate = values['start_date']
+        print(f'Start Date: {startDate}')
 window.close()
