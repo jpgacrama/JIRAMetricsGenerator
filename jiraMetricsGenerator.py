@@ -893,6 +893,10 @@ def gui():
 
     window = sg.Window('JIRA Metrics Generator', layout)
 
+    # start cpu measurement thread
+    thread = threading.Thread(target=main, args=(None,))
+    thread.start()
+
     while True:
         event, values = window.read()
         print(event, values)
@@ -908,7 +912,7 @@ def gui():
     
     window.close()
 
-def main():
+def main(args):
     os.system('cls' if os.name == 'nt' else 'clear')
     gui()
     jiraService = JIRAService()
