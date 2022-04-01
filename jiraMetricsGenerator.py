@@ -10,6 +10,8 @@ import threading
 import asyncio
 from tqdm import tqdm
 
+# HI JAYPEA
+
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
