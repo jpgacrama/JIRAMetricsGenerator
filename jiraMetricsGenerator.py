@@ -773,7 +773,17 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def gui():
+def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    jiraService = JIRAService()
+
+    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+
+    # START THE GUI
     sg.theme('Default1')
 
     # Getting Start Date and End Dates
@@ -786,10 +796,6 @@ def gui():
         [sg.Button('Start'), sg.Exit()]]
 
     window = sg.Window('JIRA Metrics Generator', layout)
-
-    # start cpu measurement thread
-    thread = threading.Thread(target=main, args=(None,))
-    thread.start()
 
     while True:
         event, values = window.read()
@@ -804,19 +810,6 @@ def gui():
             UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
             break
     
-    window.close()
-
-def main(args):
-    os.system('cls' if os.name == 'nt' else 'clear')
-    gui()
-    jiraService = JIRAService()
-
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
-
     try:
         loop = asyncio.get_event_loop()
         tasks = [
@@ -833,9 +826,9 @@ def main(args):
         print(str(e))
     finally:
         loop.close()
-    
+
     print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+    window.close()
 
 if __name__ == "__main__":
     main()
-    exit(0)
