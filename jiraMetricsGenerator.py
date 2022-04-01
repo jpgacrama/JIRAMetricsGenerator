@@ -914,11 +914,11 @@ def main():
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
-    storyPointCorrelation = StoryPointCorrelation(jiraService)
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    # storyPointCorrelation = StoryPointCorrelation(jiraService)
 
     try:
         loop = asyncio.get_event_loop()
@@ -942,3 +942,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    exit(0)
