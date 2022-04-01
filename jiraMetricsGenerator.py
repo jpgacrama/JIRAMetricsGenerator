@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-import os
 from jira import JIRA
 from datetime import datetime
+from tqdm import tqdm
+import os
 import time
 import pandas as pd
 import csv
 import threading
 import asyncio
-from tqdm import tqdm
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
