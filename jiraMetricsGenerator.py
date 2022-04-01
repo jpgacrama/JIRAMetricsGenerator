@@ -74,7 +74,9 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2022-03-01\" AND worklogDate < \"2022-03-31\""
+startDate = ''
+endDate = ''
+UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
 DESIRED_YEAR = 2022
 DESIRED_MONTH = 3
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
@@ -900,6 +902,11 @@ def gui():
             startDate = values['start_date']
             endDate = values['end_date']
 
+            global UPDATED_DATE
+            UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
+            print(UPDATED_DATE)
+            break
+
     window.close()
 
 def main():
@@ -918,11 +925,11 @@ def main():
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
-            loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            # loop.create_task(storyPointCorrelation.computeStoryPointCorrelation()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
