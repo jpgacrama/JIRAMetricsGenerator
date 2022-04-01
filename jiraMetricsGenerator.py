@@ -904,9 +904,8 @@ def gui():
 
             global UPDATED_DATE
             UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
-            print(UPDATED_DATE)
             break
-
+    
     window.close()
 
 def main():
