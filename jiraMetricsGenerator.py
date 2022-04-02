@@ -808,7 +808,6 @@ def main():
 
             global UPDATED_DATE
             UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
-            window.close()
 
             try:
                 loop = asyncio.get_event_loop()
@@ -828,7 +827,9 @@ def main():
                 loop.close()
 
             print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+            break
     
+    window.close() 
    
 if __name__ == "__main__":
     main()
