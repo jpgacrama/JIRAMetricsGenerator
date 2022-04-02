@@ -73,9 +73,6 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-startDate = ''
-endDate = ''
-UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
 DESIRED_YEAR = 2022
 DESIRED_MONTH = 3
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
@@ -775,14 +772,7 @@ class TimeSpentPerPerson:
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    jiraService = JIRAService()
-
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    # rawItemsPerPerson = RawItemsPerPerson(jiraService)
-
+    
     # START THE GUI
     sg.theme('Default1')
 
@@ -802,14 +792,21 @@ def main():
     global UPDATED_DATE
     UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
 
+    jiraService = JIRAService()
+    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+
     try:
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
