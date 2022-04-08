@@ -778,12 +778,25 @@ def main():
 
     # Getting Start Date and End Dates
 
+    months = ['January',
+              'February',
+              'March',
+              'April',
+              'May',
+              'June',
+              'July',
+              'August',
+              'September',
+              'October',
+              'November',
+              'December']
+
     layout = [[sg.Text('Choose your date range', key='-TXT-')],
         [sg.Input(key='start_date', size=(20,1)), sg.CalendarButton(
                 'Select Start Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
         [sg.Input(key='end_date', size=(20,1)), sg.CalendarButton(
                 'Select End Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
-        [sg.OptionMenu(values=['.txt','.pdf','.gif', '.jpg','.mp4','.gif','.dat','.sql'],size=(4,8),default_value='.doc',key='ftype')],
+        [sg.OptionMenu(values=months,size=(4,8),default_value=months[0],key='ftype')],
         [sg.Button('Start and Close'), sg.Exit()]]
 
     event, values = sg.Window('JIRA Metrics Generator', layout).read(close=True)
