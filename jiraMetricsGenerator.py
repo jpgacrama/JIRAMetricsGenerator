@@ -840,6 +840,12 @@ def main():
                 startYear = parse(startDate, fuzzy=True).year
                 endYear = parse(endDate, fuzzy=True).year
 
+                startDate = parse(startDate, fuzzy=True)
+                endDate = parse(endDate, fuzzy=True)
+
+                if endDate < startDate:
+                    raise Exception('Start Date should be earlier than End Date')
+
                 if startYear != endYear:
                     raise Exception('Start Year and End Year should be the same')
                 else:
