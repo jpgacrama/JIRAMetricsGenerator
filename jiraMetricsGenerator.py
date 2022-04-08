@@ -838,13 +838,13 @@ def main():
             global UPDATED_DATE
             UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
             runProgram()
-            window.close()
+            window.CloseNonBlocking()
 
         if values['desired_month']:
             global DESIRED_MONTH
             DESIRED_MONTH = months.index(values['desired_month']) + 1
 
-    window.close()
+    window.CloseNonBlocking()
 
 if __name__ == "__main__":
     main()
