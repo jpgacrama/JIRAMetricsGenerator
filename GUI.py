@@ -1,26 +1,17 @@
 #!/usr/bin/env python
 import PySimpleGUI as sg
 
-sg.theme('Default1')
-
-# Getting Start Date and End Dates
-
-layout = [[sg.Text('Choose your date range', key='-TXT-')],
-      [sg.Input(key='start_date', size=(20,1)), sg.CalendarButton(
-            'Select Start Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
-      [sg.Input(key='end_date', size=(20,1)), sg.CalendarButton(
-            'Select End Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
-      [sg.Button('Read'), sg.Exit()]]
-
-window = sg.Window('JIRA Metrics Generator', layout)
-
-while True:
-    event, values = window.read()
-    print(event, values)
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-    elif event == 'Read':
-        startDate = values['start_date']
-        endDate = values['end_date']
-
-window.close()
+#set the theme for the screen/window
+sg.theme('SystemDefault')
+menu_def=['&File', ['&New File', '&Open...','Open &Module','---', '!&Recent Files','C&lose']],['&Save',['&Save File', 'Save &As','Save &Copy'  ]],['&Edit', ['&Cut', '&Copy', '&Paste']]
+#define layout
+layout=[[sg.Menu(menu_def, background_color='lightsteelblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
+        [sg.Multiline(size=(80,10),tooltip='Write your Text here')],
+        [sg.Text('File Name'),sg.Input(),sg.OptionMenu(values=['.txt','.pdf','.gif', '.jpg','.mp4','.gif','.dat','.sql'],size=(4,8),default_value='.doc',key='ftype')],
+        [sg.Button('SAVE', font=('Times New Roman',12)),sg.Button('CANCEL', font=('Times New Roman',12))]]
+#Define Window
+win =sg.Window('Your Custom Editor',layout)
+#Read  values entered by user
+events,values=win.read()
+#close first window
+win.close()
