@@ -830,7 +830,6 @@ def main():
     window = sg.Window('JIRA Metrics Generator', layout)
     while True:
         event, values = window.read()
-        print(event, values)
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
         elif event == 'Start and Close':
@@ -842,8 +841,7 @@ def main():
 
         if values['desired_month']:
             global DESIRED_MONTH
-            DESIRED_MONTH = values['desired_month']
-            print(DESIRED_MONTH)
+            DESIRED_MONTH = months.index(values['desired_month']) + 1
 
     window.close()
 
