@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import os
 from jira import JIRA
 from datetime import datetime
+from dateutil.parser import parse
+from tqdm import tqdm
+import os
 import time
 import pandas as pd
 import csv
 import threading
 import asyncio
-from tqdm import tqdm
+import PySimpleGUI as sg
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -72,9 +74,6 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-UPDATED_DATE = "worklogDate >= \"2022-03-01\" AND worklogDate < \"2022-03-31\""
-DESIRED_YEAR = 2022
-DESIRED_MONTH = 3
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
@@ -770,8 +769,7 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def main():
-    os.system('cls' if os.name == 'nt' else 'clear')
+def runProgram():
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
@@ -796,8 +794,58 @@ def main():
         print(str(e))
     finally:
         loop.close()
-    
+
     print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+
+def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
+    # START THE GUI
+    sg.theme('Default1')
+
+    try:
+        layout = [[sg.Text('Choose your date range', key='-TXT-')],
+            [sg.Input(key='start_date', size=(20,1)), 
+                sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
+            [sg.Input(key='end_date', size=(20,1)),
+                sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
+            [sg.Button('Start and Close'), sg.Exit()]]
+
+        window = sg.Window('JIRA Metrics Generator', layout)
+        while True:
+            event, values = window.read()
+            if event == sg.WIN_CLOSED or event == 'Exit':
+                break
+            elif event == 'Start and Close':
+                startDate = values['start_date']
+                endDate = values['end_date']
+                global UPDATED_DATE
+                UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
+                startDate = parse(startDate, fuzzy=True)
+                endDate = parse(endDate, fuzzy=True)
+
+                if endDate < startDate:
+                    raise Exception('Start Date should be earlier than End Date')
+
+                if startDate.year != endDate.year:
+                    raise Exception('Start Year and End Year should be the same')
+                else:
+                    global DESIRED_YEAR
+                    DESIRED_YEAR = endDate.year
+                
+                if endDate.month != startDate.month:
+                    raise Exception('You should generate a report on the same month')
+                else:
+                    global DESIRED_MONTH
+                    DESIRED_MONTH = endDate.month
+
+                runProgram()
+                window.CloseNonBlocking()
+
+    except Exception as error:
+        sg.popup_error(error)
+
+    window.CloseNonBlocking()
 
 if __name__ == "__main__":
     main()
