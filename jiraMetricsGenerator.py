@@ -74,7 +74,6 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
 DESIRED_YEAR = 2022
-DESIRED_MONTH = 3
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
@@ -824,7 +823,7 @@ def main():
             sg.CalendarButton('Select Start Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
         [sg.Input(key='end_date', size=(20,1)),
             sg.CalendarButton('Select End Date', close_when_date_chosen=True, location=(0,0), no_titlebar=False, format='%Y-%m-%d', )],
-        [sg.Combo(values=months,size=(18,1),default_value=months[0],key='ftype'), 
+        [sg.Combo(values=months,size=(18,1),default_value=months[0], enable_events=True, readonly=True, key='desired_month'), 
             sg.Text('Select Desired Month')],
         [sg.Button('Start and Close'), sg.Exit()]]
 
@@ -840,6 +839,11 @@ def main():
             global UPDATED_DATE
             UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
             runProgram()
+
+        if values['desired_month']:
+            global DESIRED_MONTH
+            DESIRED_MONTH = values['desired_month']
+            print(DESIRED_MONTH)
 
     window.close()
 
