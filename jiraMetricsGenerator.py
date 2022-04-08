@@ -74,7 +74,6 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
 # You need to MANUALLY EDIT the following values before running this script
-DESIRED_YEAR = 2022
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
@@ -842,7 +841,11 @@ def main():
                 endYear = parse(endDate, fuzzy=True).year
 
                 if startYear != endYear:
-                    raise Exception('Start Year and End Year are not the same')
+                    raise Exception('Start Year and End Year should be the same')
+                else:
+                    global DESIRED_YEAR
+                    DESIRED_YEAR = endYear
+                    print(DESIRED_YEAR)
 
                 runProgram()
                 window.CloseNonBlocking()
