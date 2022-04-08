@@ -833,7 +833,7 @@ def main():
         print(event, values)
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
-        elif event == 'Read':
+        elif event == 'Start and Close':
             startDate = values['start_date']
             endDate = values['end_date']
             global UPDATED_DATE
