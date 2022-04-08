@@ -803,28 +803,12 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    # Getting Start Date and End Dates
-
-    months = ['January',
-              'February',
-              'March',
-              'April',
-              'May',
-              'June',
-              'July',
-              'August',
-              'September',
-              'October',
-              'November',
-              'December']
     try:
         layout = [[sg.Text('Choose your date range', key='-TXT-')],
             [sg.Input(key='start_date', size=(20,1)), 
                 sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
             [sg.Input(key='end_date', size=(20,1)),
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Combo(values=months,size=(18,1),default_value=months[0], enable_events=True, readonly=True, key='desired_month'), 
-                sg.Text('Select Desired Month')],
             [sg.Button('Start and Close'), sg.Exit()]]
 
         window = sg.Window('JIRA Metrics Generator', layout)
@@ -849,14 +833,16 @@ def main():
                     global DESIRED_YEAR
                     DESIRED_YEAR = endDate.year
                     print(DESIRED_YEAR)
+                
+                if endDate.month != startDate.month:
+                    raise Exception('You should generate a report on the same month')
+                else:
+                    global DESIRED_MONTH
+                    DESIRED_MONTH = endDate.month
 
                 runProgram()
                 window.CloseNonBlocking()
 
-            if values['desired_month']:
-                global DESIRED_MONTH
-                DESIRED_MONTH = months.index(values['desired_month']) + 1
-    
     except Exception as error:
         sg.popup_error(error)
 
