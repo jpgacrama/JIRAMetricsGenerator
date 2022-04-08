@@ -837,20 +837,17 @@ def main():
                 endDate = values['end_date']
                 global UPDATED_DATE
                 UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
-                startYear = parse(startDate, fuzzy=True).year
-                endYear = parse(endDate, fuzzy=True).year
-
                 startDate = parse(startDate, fuzzy=True)
                 endDate = parse(endDate, fuzzy=True)
 
                 if endDate < startDate:
                     raise Exception('Start Date should be earlier than End Date')
 
-                if startYear != endYear:
+                if startDate.year != endDate.year:
                     raise Exception('Start Year and End Year should be the same')
                 else:
                     global DESIRED_YEAR
-                    DESIRED_YEAR = endYear
+                    DESIRED_YEAR = endDate.year
                     print(DESIRED_YEAR)
 
                 runProgram()
