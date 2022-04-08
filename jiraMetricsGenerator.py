@@ -340,6 +340,9 @@ class HoursSpentPerSW:
         for thread in threads:
             thread.join()
             pbar.update(n=1) # Increments counter
+            
+            # TODO: How to update the progress bar which is located outside
+            progress_bar.update_bar(i+1)
 
         self.__cleanWorklogs__()
         self.__writeToCSVFile__()
@@ -809,7 +812,9 @@ def main():
                 sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
             [sg.Input(key='end_date', size=(20,1)),
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Button('Start and Close'), sg.Exit()]]
+            [sg.Button('Start and Close'), sg.Exit()],
+            [sg.Text('Hours Spent per SW'),
+                sg.ProgressBar(1, orientation='h', size=(20, 20), key='progress')]]
 
         window = sg.Window('JIRA Metrics Generator', layout)
         while True:
