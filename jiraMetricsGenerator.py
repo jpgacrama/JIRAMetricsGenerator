@@ -770,6 +770,34 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
+def runProgram():
+    jiraService = JIRAService()
+
+    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+
+    try:
+        loop = asyncio.get_event_loop()
+        tasks = [
+            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+        ]
+        start = time.perf_counter()
+        loop.run_until_complete(asyncio.wait(tasks))
+    except Exception as e:
+        print('There was a problem:')
+        print(str(e))
+    finally:
+        loop.close()
+
+    print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     
@@ -799,39 +827,20 @@ def main():
         [sg.OptionMenu(values=months,size=(4,8),default_value=months[0],key='ftype')],
         [sg.Button('Start and Close'), sg.Exit()]]
 
-    event, values = sg.Window('JIRA Metrics Generator', layout).read(close=True)
-    startDate = values['start_date']
-    endDate = values['end_date']
+    window = sg.Window('JIRA Metrics Generator', layout)
+    while True:
+        event, values = window.read()
+        print(event, values)
+        if event == sg.WIN_CLOSED or event == 'Exit':
+            break
+        elif event == 'Read':
+            startDate = values['start_date']
+            endDate = values['end_date']
+            global UPDATED_DATE
+            UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
+            runProgram()
 
-    global UPDATED_DATE
-    UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
+    window.close()
 
-    jiraService = JIRAService()
-
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
-
-    try:
-        loop = asyncio.get_event_loop()
-        tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
-        ]
-        start = time.perf_counter()
-        loop.run_until_complete(asyncio.wait(tasks))
-    except Exception as e:
-        print('There was a problem:')
-        print(str(e))
-    finally:
-        loop.close()
-
-    print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
-     
 if __name__ == "__main__":
     main()
