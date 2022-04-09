@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from lib2to3.pgen2.token import NUMBER
 from jira import JIRA
 from datetime import datetime
 from dateutil.parser import parse
