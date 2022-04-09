@@ -820,7 +820,7 @@ def main():
     sg.theme('Default1')
 
     try:
-        layout = [[sg.Text('Choose your date range', key='-TXT-')],
+        layout =[
             [name('Select Start Date'),
                 sg.Input(key='start_date', size=(20,1), justification='center'), 
                 sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
@@ -837,8 +837,10 @@ def main():
                 sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='unfinishedItemsPerPerson')],
             [name('All Items Per Person. This takes time. Please be patient'),
                 sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='allItemsPerPerson')],
-            [sg.Button('Start and Close'), sg.Exit()],
+            [sg.Button('Start', size=(20,1)), sg.Exit(size=(20,1))],
             ]
+
+        layout = [[sg.Column(layout, element_justification='c')]]
 
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
         progressBarHoursPerSW = window['progressHoursPerSW']
@@ -851,7 +853,7 @@ def main():
             event, values = window.read()
             if event == sg.WIN_CLOSED or event == 'Exit':
                 break
-            elif event == 'Start and Close':
+            elif event == 'Start':
                 startDate = values['start_date']
                 endDate = values['end_date']
                 global UPDATED_DATE
