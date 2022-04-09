@@ -542,7 +542,7 @@ class DoneItemsPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
     
-    def __extractDoneItemsPerPerson__(self):
+    def __extractDoneItemsPerPerson__(self, progressBarDoneItemsPerPerson):
         print("\n-------- GENERATING MATRIX OF DONE ITEMS PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -554,10 +554,11 @@ class DoneItemsPerPerson:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
+            i += 1
+            progressBarDoneItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
 
         return self.itemsPerPerson
 
@@ -574,8 +575,8 @@ class DoneItemsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
 
-    async def extractDoneItemsPerPerson(self):
-        allWorklogs = self.__extractDoneItemsPerPerson__()
+    async def extractDoneItemsPerPerson(self, progressBarDoneItemsPerPerson):
+        allWorklogs = self.__extractDoneItemsPerPerson__(progressBarDoneItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
                 if not allWorklogs[person][jiraID]['Hours Spent for the Month']:
@@ -771,12 +772,14 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def runProgram(progressBarHoursPerSW, progressBarTimeSpentPerPerson):
+def runProgram(progressBarHoursPerSW,
+               progressBarTimeSpentPerPerson,
+               progressBarDoneItemsPerPerson):
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     # rawItemsPerPerson = RawItemsPerPerson(jiraService)
 
@@ -785,7 +788,7 @@ def runProgram(progressBarHoursPerSW, progressBarTimeSpentPerPerson):
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
             loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson(progressBarDoneItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
             # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
         ]
@@ -816,11 +819,14 @@ def main():
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')],
             [sg.Text('Time Spent Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='timeSpentPerPerson')],
+            [sg.Text('Done Items Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(20, 20), key='doneItemsPerPerson')],
             ]
 
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
         progressBarHoursPerSW = window['progressHoursPerSW']
         progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
+        progressBarDoneItemsPerPerson = window['doneItemsPerPerson']
 
         while True:
             event, values = window.read()
@@ -849,7 +855,9 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
-                runProgram(progressBarHoursPerSW, progressBarTimeSpentPerPerson)
+                runProgram(progressBarHoursPerSW,
+                           progressBarTimeSpentPerPerson,
+                           progressBarDoneItemsPerPerson)
                 sg.popup('Finished generating all reports 😄')
                 break
 
