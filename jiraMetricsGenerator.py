@@ -819,7 +819,7 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global TIME_SPENT_PER_SW
+    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON
 
     try:
         layout =[
@@ -831,10 +831,17 @@ def main():
                 sg.Input(key='end_date', size=(40,1), justification='center'),
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(15,1))],
             [sg.VerticalSeparator()],
+            [sg.VerticalSeparator()],
+            [sg.VerticalSeparator()],
             [sg.Text('ENTER FILE NAMES FOR THE REPORTS IN CSV FORMAT')],
             [name('Hours Spent per SW'),
                 sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=TIME_SPENT_PER_SW), 
                 sg.FileBrowse(size=(15,1))],
+            [name('Time Spent Per Person'),
+                sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=TIME_SPENT_PER_PERSON), 
+                sg.FileBrowse(size=(15,1))],
+            [sg.VerticalSeparator()],
+            [sg.VerticalSeparator()],
             [sg.VerticalSeparator()],
             [sg.Text('PROGRESS BARS')],
             [name('Hours Spent per SW'),
@@ -872,14 +879,6 @@ def main():
                 startDate = parse(startDate, fuzzy=True)
                 endDate = parse(endDate, fuzzy=True)
 
-                # Filenames
-                fileForHoursPerSW = values['fileForHoursPerSW']
-                if not fileForHoursPerSW.endswith('csv'):
-                    raise Exception('Filename should have .csv extension')
-                else:
-                    if fileForHoursPerSW != TIME_SPENT_PER_SW:
-                        TIME_SPENT_PER_SW = fileForHoursPerSW
-
                 if endDate < startDate:
                     raise Exception('Start Date should be earlier than End Date')
 
@@ -895,6 +894,22 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
+                # Filenames
+                fileForHoursPerSW = values['fileForHoursPerSW']
+                if not fileForHoursPerSW.endswith('csv'):
+                    raise Exception('Filename should have .csv extension')
+                else:
+                    if fileForHoursPerSW != TIME_SPENT_PER_SW:
+                        TIME_SPENT_PER_SW = fileForHoursPerSW
+
+                fileForTimeSpentPerPerson = values['fileForTimeSpentPerPerson']
+                if not fileForTimeSpentPerPerson.endswith('csv'):
+                    raise Exception('Filename should have .csv extension')
+                else:
+                    if fileForTimeSpentPerPerson != TIME_SPENT_PER_PERSON:
+                        TIME_SPENT_PER_PERSON = fileForTimeSpentPerPerson
+
+                # Generate Reports
                 reportGeneratingTime = generateReports(progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
                            progressBarDoneItemsPerPerson,
