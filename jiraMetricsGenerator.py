@@ -885,7 +885,7 @@ def main():
                 break
 
     except Exception as error:
-        sg.popup_error(error)
+        sg.popup_error(error, title='Exception Raised')
 
     window.CloseNonBlocking()
 
