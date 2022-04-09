@@ -64,11 +64,11 @@ SOFTWARE = [
     ]
 
 # Filenames for the output files
-TIME_SPENT_PER_SW = 'HoursDistributionPerSW.csv'
-TIME_SPENT_PER_PERSON = 'TimeSpentPerPerson.csv'
-FINISHED_ITEMS_PER_PERSON = 'FinishedItemsPerPerson.csv'
-UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItemsPerPerson.csv'
-ALL_ITEMS_PER_PERSON = 'AllItemsPerPerson.csv'
+TIME_SPENT_PER_SW = 'HoursPerSW.csv'
+TIME_SPENT_PER_PERSON = 'TimePerPerson.csv'
+FINISHED_ITEMS_PER_PERSON = 'FinishedItems.csv'
+UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
+ALL_ITEMS_PER_PERSON = 'AllItems.csv'
 
 # Filename to store your credentials
 CREDENTIAL_FILE = 'Credentials.txt'
