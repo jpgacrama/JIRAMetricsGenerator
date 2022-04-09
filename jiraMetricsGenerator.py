@@ -845,7 +845,8 @@ def main():
                     DESIRED_MONTH = endDate.month
 
                 runProgram(progress_bar)
-                window.CloseNonBlocking()
+                sg.popup('Finished generating all reports 😄')
+                break
 
     except Exception as error:
         sg.popup_error(error)
