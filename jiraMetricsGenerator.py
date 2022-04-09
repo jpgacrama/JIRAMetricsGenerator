@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil.parser import parse
 import os
 import time
+from numpy import size
 import pandas as pd
 import csv
 import threading
@@ -820,20 +821,22 @@ def main():
 
     try:
         layout = [[sg.Text('Choose your date range', key='-TXT-')],
-            [sg.Input(key='start_date', size=(20,1)), 
-                sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Input(key='end_date', size=(20,1)),
-                sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
+            [name('Select Start Date'),
+                sg.Input(key='start_date', size=(20,1)), 
+                sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
+            [name('Select End Date'),
+                sg.Input(key='end_date', size=(20,1)),
+                sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
             [name('Hours Spent per SW'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')],
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='progressHoursPerSW')],
             [name('Time Spent Per Person'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='timeSpentPerPerson')],
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='timeSpentPerPerson')],
             [name('Done Items Per Person'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='doneItemsPerPerson')],
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='doneItemsPerPerson')],
             [name('Unfinished Items Per Person'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='unfinishedItemsPerPerson')],
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='unfinishedItemsPerPerson')],
             [name('All Items Per Person. This takes time. Please be patient'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='allItemsPerPerson')],
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='allItemsPerPerson')],
             [sg.Button('Start and Close'), sg.Exit()],
             ]
 
