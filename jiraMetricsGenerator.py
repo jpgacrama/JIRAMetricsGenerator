@@ -881,7 +881,7 @@ def main():
                            progressBarDoneItemsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
                            progressBarAllItemsPerPerson)
-                sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.')
+                sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.', title='Success')
                 break
 
     except Exception as error:
