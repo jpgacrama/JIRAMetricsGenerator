@@ -535,7 +535,7 @@ class ThreadDoneItemsPerPerson(threading.Thread):
     def run(self):
         self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfDoneItemsPerPerson(self.person)
 
-class DoneItemsPerPerson:
+class FinishedItemsPerPerson:
     def __init__(self, jiraService) -> None:
         self.jiraService = jiraService
         self.jiraIDKey = None
@@ -543,8 +543,8 @@ class DoneItemsPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
     
-    def __extractDoneItemsPerPerson__(self, progressBarDoneItemsPerPerson):
-        print("\n-------- GENERATING MATRIX OF DONE ITEMS PER PERSON --------\n")
+    def __extractFinishedItemsPerPerson__(self, progressBarFinishedItemsPerPerson):
+        print("\n-------- GENERATING MATRIX OF FINISHED ITEMS PER PERSON --------\n")
 
         for person in MEMBERS:
             self.itemsPerPerson[person] = {}
@@ -559,11 +559,11 @@ class DoneItemsPerPerson:
         for thread in threads:
             thread.join()
             i += 1
-            progressBarDoneItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
+            progressBarFinishedItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
 
         return self.itemsPerPerson
 
-    def __computeDoneItemsPerPerson__(self, logsPerValue, person, jiraID, description):
+    def __computeFinishedItemsPerPerson__(self, logsPerValue, person, jiraID, description):
         if self.jiraIDKey != jiraID:
             self.worklogPerPerson[person][jiraID] = {}
             self.worklogPerPerson[person][jiraID]['description'] = description
@@ -576,8 +576,8 @@ class DoneItemsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
 
-    async def extractDoneItemsPerPerson(self, progressBarDoneItemsPerPerson):
-        allWorklogs = self.__extractDoneItemsPerPerson__(progressBarDoneItemsPerPerson)
+    async def extractFinishedItemsPerPerson(self, progressBarFinishedItemsPerPerson):
+        allWorklogs = self.__extractFinishedItemsPerPerson__(progressBarFinishedItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
                 if not allWorklogs[person][jiraID]['Hours Spent for the Month']:
@@ -587,7 +587,7 @@ class DoneItemsPerPerson:
                 
                 for worklogPerJIRAId in allWorklogs[person][jiraID]['Hours Spent for the Month']:
                     description = allWorklogs[person][jiraID]['description']
-                    self.__computeDoneItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
+                    self.__computeFinishedItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
 
         self.__generateCSVFile__()
 
@@ -776,23 +776,23 @@ class TimeSpentPerPerson:
 
 def generateReports(progressBarHoursPerSW,
                progressBarTimeSpentPerPerson,
-               progressBarDoneItemsPerPerson,
+               progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    doneItemsPerPerson = DoneItemsPerPerson(jiraService)
+    doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     allItemsPerPerson = AllItemsPerPerson(jiraService)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
+            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson(progressBarDoneItemsPerPerson)),
+            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
             # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
@@ -819,7 +819,7 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
+    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON, UNFINISHED_ITEMS_PER_PERSON
 
     try:
         layout =[
@@ -840,8 +840,11 @@ def main():
             [name('Time Spent Per Person'),
                 sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=TIME_SPENT_PER_PERSON), 
                 sg.FileBrowse(size=(15,1))],
-            [name('Done Items Per Person'),
-                sg.InputText(key='fileForDoneItemsPerPerson', size=(40,1), default_text=FINISHED_ITEMS_PER_PERSON), 
+            [name('Finished Items Per Person'),
+                sg.InputText(key='fileForFinishedItemsPerPerson', size=(40,1), default_text=FINISHED_ITEMS_PER_PERSON), 
+                sg.FileBrowse(size=(15,1))],
+            [name('Unfinished Items Per Person'),
+                sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=UNFINISHED_ITEMS_PER_PERSON), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator()],
             [sg.VerticalSeparator()],
@@ -851,7 +854,7 @@ def main():
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='progressHoursPerSW')],
             [name('Time Spent Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='timeSpentPerPerson')],
-            [name('Done Items Per Person'),
+            [name('Finished Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='doneItemsPerPerson')],
             [name('Unfinished Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='unfinishedItemsPerPerson')],
@@ -865,7 +868,7 @@ def main():
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
         progressBarHoursPerSW = window['progressHoursPerSW']
         progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
-        progressBarDoneItemsPerPerson = window['doneItemsPerPerson']
+        progressBarFinishedItemsPerPerson = window['doneItemsPerPerson']
         progressBarUnfinishedItemsPerPerson = window['unfinishedItemsPerPerson']
         progressBarAllItemsPerPerson = window['allItemsPerPerson']
 
@@ -912,17 +915,24 @@ def main():
                     if fileForTimeSpentPerPerson != TIME_SPENT_PER_PERSON:
                         TIME_SPENT_PER_PERSON = fileForTimeSpentPerPerson
 
-                fileForDoneItemsPerPerson = values['fileForDoneItemsPerPerson']
-                if not fileForDoneItemsPerPerson.endswith('csv'):
+                fileForFinishedItemsPerPerson = values['fileForFinishedItemsPerPerson']
+                if not fileForFinishedItemsPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForDoneItemsPerPerson != FINISHED_ITEMS_PER_PERSON:
-                        FINISHED_ITEMS_PER_PERSON = fileForDoneItemsPerPerson
+                    if fileForFinishedItemsPerPerson != FINISHED_ITEMS_PER_PERSON:
+                        FINISHED_ITEMS_PER_PERSON = fileForFinishedItemsPerPerson
+
+                fileForUnfinishedItemsPerPerson = values['fileForUnfinishedItemsPerPerson']
+                if not fileForUnfinishedItemsPerPerson.endswith('csv'):
+                    raise Exception('Filename should have .csv extension')
+                else:
+                    if fileForUnfinishedItemsPerPerson != UNFINISHED_ITEMS_PER_PERSON:
+                        UNFINISHED_ITEMS_PER_PERSON = fileForUnfinishedItemsPerPerson
 
                 # Generate Reports
                 reportGeneratingTime = generateReports(progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
-                           progressBarDoneItemsPerPerson,
+                           progressBarFinishedItemsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
                            progressBarAllItemsPerPerson)
                 sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.', title='Success')
