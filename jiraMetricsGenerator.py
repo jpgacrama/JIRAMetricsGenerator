@@ -819,7 +819,7 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON
+    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
 
     try:
         layout =[
@@ -839,6 +839,9 @@ def main():
                 sg.FileBrowse(size=(15,1))],
             [name('Time Spent Per Person'),
                 sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=TIME_SPENT_PER_PERSON), 
+                sg.FileBrowse(size=(15,1))],
+            [name('Done Items Per Person'),
+                sg.InputText(key='fileForDoneItemsPerPerson', size=(40,1), default_text=FINISHED_ITEMS_PER_PERSON), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator()],
             [sg.VerticalSeparator()],
@@ -908,6 +911,13 @@ def main():
                 else:
                     if fileForTimeSpentPerPerson != TIME_SPENT_PER_PERSON:
                         TIME_SPENT_PER_PERSON = fileForTimeSpentPerPerson
+
+                fileForDoneItemsPerPerson = values['fileForDoneItemsPerPerson']
+                if not fileForDoneItemsPerPerson.endswith('csv'):
+                    raise Exception('Filename should have .csv extension')
+                else:
+                    if fileForDoneItemsPerPerson != FINISHED_ITEMS_PER_PERSON:
+                        FINISHED_ITEMS_PER_PERSON = fileForDoneItemsPerPerson
 
                 # Generate Reports
                 reportGeneratingTime = generateReports(progressBarHoursPerSW,
