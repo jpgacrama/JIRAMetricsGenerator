@@ -812,10 +812,10 @@ def main():
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
             [sg.Button('Start and Close'), sg.Exit()],
             [sg.Text('Hours Spent per SW'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='progress')]]
+                sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')]]
 
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
-        progress_bar = window['progress']
+        progress_bar_hours_per_sw = window['progressHoursPerSW']
 
         while True:
             event, values = window.read()
@@ -844,7 +844,7 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
-                runProgram(progress_bar)
+                runProgram(progress_bar_hours_per_sw)
                 sg.popup('Finished generating all reports 😄')
                 break
 
