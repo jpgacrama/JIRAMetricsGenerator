@@ -19,26 +19,26 @@ STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 
 MEMBERS = {
     'Arman'         : '6057df8914a23b0069a65dc8',
-    # 'Austin'        : '5fbb3d037cc1030069500950',
-    # 'Correne'       : '616cc99920972200718e6d86',
-    # 'Daniel'        : '61076053fc68c10069c80eba',
-    # 'Duane'         : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'      : '5f85328a53aaa400760d4944',
-    # 'Florante'      : '5fa0b7ad22f39900769a8242',
-    # 'Hermil'        : '61f71f208d9e3c0068862452',
-    # 'Jay'           : '619ed384b43d5b006a0bf8f6',
-    # 'Jaypea'        : '6073ef399361560068ad4b83',
-    # 'John Ramos'    : '6226fffdb7e7c70071599641',
-    # 'Jomel'         : '61de3195e76379006864a9bf',
-    # 'Joppet'        : '618a332c137a51006a46ea0a',
-    # 'Juliet'        : '5fa89a11ecdae600684d1dc8',
-    # 'King'          : '61f71f2130f6b8006a9f6314',
-    # 'Marwin'        : '600e2429cd564b0068e7cca7',
-    # 'Mary'          : '6099e1699b362f006957e1ad',
-    # 'Maye'          : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'         : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Reiner'        : '621c66dd94f7e20069fc9dff',
-    # 'Ronald'        : '5fb1f35baa1d30006fa6a618',
+    'Austin'        : '5fbb3d037cc1030069500950',
+    'Correne'       : '616cc99920972200718e6d86',
+    'Daniel'        : '61076053fc68c10069c80eba',
+    'Duane'         : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'      : '5f85328a53aaa400760d4944',
+    'Florante'      : '5fa0b7ad22f39900769a8242',
+    'Hermil'        : '61f71f208d9e3c0068862452',
+    'Jay'           : '619ed384b43d5b006a0bf8f6',
+    'Jaypea'        : '6073ef399361560068ad4b83',
+    'John Ramos'    : '6226fffdb7e7c70071599641',
+    'Jomel'         : '61de3195e76379006864a9bf',
+    'Joppet'        : '618a332c137a51006a46ea0a',
+    'Juliet'        : '5fa89a11ecdae600684d1dc8',
+    'King'          : '61f71f2130f6b8006a9f6314',
+    'Marwin'        : '600e2429cd564b0068e7cca7',
+    'Mary'          : '6099e1699b362f006957e1ad',
+    'Maye'          : '6099d80c3fae6f006821f3f5',
+    'Nicko'         : '5f3b1fd4ea5e2f0039697b3d',
+    'Reiner'        : '621c66dd94f7e20069fc9dff',
+    'Ronald'        : '5fb1f35baa1d30006fa6a618',
 }
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
@@ -790,11 +790,11 @@ def generateReports(progressBarHoursPerSW,
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
+            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
+            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
@@ -819,7 +819,7 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON, UNFINISHED_ITEMS_PER_PERSON
+    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON, UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON
 
     try:
         layout =[
@@ -845,6 +845,9 @@ def main():
                 sg.FileBrowse(size=(15,1))],
             [name('Unfinished Items Per Person'),
                 sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=UNFINISHED_ITEMS_PER_PERSON), 
+                sg.FileBrowse(size=(15,1))],
+            [name('All Items Per Person'),
+                sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=ALL_ITEMS_PER_PERSON), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator()],
             [sg.VerticalSeparator()],
@@ -929,6 +932,13 @@ def main():
                     if fileForUnfinishedItemsPerPerson != UNFINISHED_ITEMS_PER_PERSON:
                         UNFINISHED_ITEMS_PER_PERSON = fileForUnfinishedItemsPerPerson
 
+                fileForAllItemsPerPerson = values['fileForAllItemsPerPerson']
+                if not fileForAllItemsPerPerson.endswith('csv'):
+                    raise Exception('Filename should have .csv extension')
+                else:
+                    if fileForAllItemsPerPerson != ALL_ITEMS_PER_PERSON:
+                        ALL_ITEMS_PER_PERSON = fileForAllItemsPerPerson
+                
                 # Generate Reports
                 reportGeneratingTime = generateReports(progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
