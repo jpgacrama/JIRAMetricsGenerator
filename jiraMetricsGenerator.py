@@ -822,10 +822,10 @@ def main():
     try:
         layout = [[sg.Text('Choose your date range', key='-TXT-')],
             [name('Select Start Date'),
-                sg.Input(key='start_date', size=(20,1)), 
+                sg.Input(key='start_date', size=(20,1), justification='center'), 
                 sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
             [name('Select End Date'),
-                sg.Input(key='end_date', size=(20,1)),
+                sg.Input(key='end_date', size=(20,1), justification='center'),
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
             [name('Hours Spent per SW'),
                 sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='progressHoursPerSW')],
