@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+from lib2to3.pgen2.token import NUMBER
 from jira import JIRA
 from datetime import datetime
 from dateutil.parser import parse
-from tqdm import tqdm
 import os
 import time
+from numpy import size
 import pandas as pd
 import csv
 import threading
@@ -40,6 +41,7 @@ MEMBERS = {
     'Ronald'        : '5fb1f35baa1d30006fa6a618',
 }
 
+NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 ISSUE_TYPES = ['Project', 'Ad-hoc']
 
 SOFTWARE = [
@@ -66,14 +68,13 @@ TIME_SPENT_PER_SW = 'HoursDistributionPerSW.csv'
 TIME_SPENT_PER_PERSON = 'TimeSpentPerPerson.csv'
 FINISHED_ITEMS_PER_PERSON = 'FinishedItemsPerPerson.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItemsPerPerson.csv'
-RAW_ITEMS_PER_PERSON = 'RawItemsPerPerson.csv'
+ALL_ITEMS_PER_PERSON = 'AllItemsPerPerson.csv'
 
 # Filename to store your credentials
 CREDENTIAL_FILE = 'Credentials.txt'
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Only JIRA Query can filter out DONE Items. 
-# You need to MANUALLY EDIT the following values before running this script
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 class TimeHelper:
@@ -144,7 +145,6 @@ class JIRAService:
 
     def __logInToJIRA__(self):
         
-        # TODO: Add reading of Credential file here
         with open(CREDENTIAL_FILE, 'r', newline='') as file:
             lines = file.read().splitlines() 
 
@@ -194,7 +194,7 @@ class JIRAService:
         # Returns a list of Worklogs
         return allWorklogs
     
-    def queryRawItemsPerPerson(self, person):
+    def queryAllItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
                 {UPDATED_DATE}
@@ -322,7 +322,7 @@ class HoursSpentPerSW:
             df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
-    async def extractTimeSpentPerSW(self):
+    async def extractHoursPerSW(self, progressBarHoursPerSW):
         timeSpentPerSoftware = TimeSpentPerSoftware()
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
@@ -336,10 +336,11 @@ class HoursSpentPerSW:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
+            i += 1
+            progressBarHoursPerSW.update_bar(i, NUMBER_OF_PEOPLE - 1)
 
         self.__cleanWorklogs__()
         self.__writeToCSVFile__()
@@ -396,8 +397,8 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 
-# Multithreaded Class for ThreadRawItemsPerPerson
-class ThreadRawItemsPerPerson(threading.Thread):
+# Multithreaded Class for ThreadAllItemsPerPerson
+class ThreadAllItemsPerPerson(threading.Thread):
     def __init__(self, person, jiraService, itemsPerPerson):
         threading.Thread.__init__(self)
         self.person = person
@@ -405,9 +406,9 @@ class ThreadRawItemsPerPerson(threading.Thread):
         self.itemsPerPerson = itemsPerPerson
 
     def run(self):
-        self.itemsPerPerson[self.person] = self.jiraService.queryRawItemsPerPerson(self.person)
+        self.itemsPerPerson[self.person] = self.jiraService.queryAllItemsPerPerson(self.person)
 
-class RawItemsPerPerson:
+class AllItemsPerPerson:
     def __init__(self, jiraService) -> None:
         self.jiraService = jiraService
         self.jiraIDKey = None
@@ -416,26 +417,27 @@ class RawItemsPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
     
-    def __extractRawItemsPerPerson__(self):
-        print("\n-------- GENERATING MATRIX OF RAW ITEMS PER PERSON --------\n")
+    def __extractAllItemsPerPerson__(self, progressBarAllItemsPerPerson):
+        print("\n-------- GENERATING MATRIX OF ALL ITEMS PER PERSON --------\n")
         
         for person in MEMBERS:
             self.itemsPerPerson[person] = {}
 
-        threads = [ThreadRawItemsPerPerson(
+        threads = [ThreadAllItemsPerPerson(
                 person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
 
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
-
+            i += 1
+            progressBarAllItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
+        
         return self.itemsPerPerson
 
-    def __computeRawItemsPerPerson__(
+    def __computeAllItemsPerPerson__(
         self, logsPerValue, person, jiraID, description, software,
         component, issueType, storyPoint, status, dateStarted, dateFinished):
         
@@ -471,8 +473,8 @@ class RawItemsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
-    async def extractRawItemsPerPerson(self):
-        allWorklogs = self.__extractRawItemsPerPerson__()
+    async def extractAllItemsPerPerson(self, progressBarAllItemsPerPerson):
+        allWorklogs = self.__extractAllItemsPerPerson__(progressBarAllItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:
                 for worklogPerJIRAId in allWorklogs[person][jiraID]['Hours Spent for the Month']:
@@ -485,7 +487,7 @@ class RawItemsPerPerson:
                     dateStarted = allWorklogs[person][jiraID]['Date Started']
                     dateFinished = allWorklogs[person][jiraID]['Date Finished']
                     
-                    self.__computeRawItemsPerPerson__(
+                    self.__computeAllItemsPerPerson__(
                         worklogPerJIRAId, person, jiraID,
                         description, software, component, issueType,
                         storyPoint, status, dateStarted, dateFinished)
@@ -493,7 +495,7 @@ class RawItemsPerPerson:
         self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
-        fileName = RAW_ITEMS_PER_PERSON
+        fileName = ALL_ITEMS_PER_PERSON
         
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -541,7 +543,7 @@ class DoneItemsPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
     
-    def __extractDoneItemsPerPerson__(self):
+    def __extractDoneItemsPerPerson__(self, progressBarDoneItemsPerPerson):
         print("\n-------- GENERATING MATRIX OF DONE ITEMS PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -553,10 +555,11 @@ class DoneItemsPerPerson:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
+            i += 1
+            progressBarDoneItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
 
         return self.itemsPerPerson
 
@@ -573,8 +576,8 @@ class DoneItemsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
 
-    async def extractDoneItemsPerPerson(self):
-        allWorklogs = self.__extractDoneItemsPerPerson__()
+    async def extractDoneItemsPerPerson(self, progressBarDoneItemsPerPerson):
+        allWorklogs = self.__extractDoneItemsPerPerson__(progressBarDoneItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
                 if not allWorklogs[person][jiraID]['Hours Spent for the Month']:
@@ -626,7 +629,7 @@ class UnfinishedItemsPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
     
-    def __extractUnfinishedItemsPerPerson__(self):
+    def __extractUnfinishedItemsPerPerson__(self, progressBarUnfinishedItemsPerPerson):
         print("\n-------- GENERATING MATRIX OF UNFINISHED ITEMS PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -638,11 +641,12 @@ class UnfinishedItemsPerPerson:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
-        
+            i += 1
+            progressBarUnfinishedItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
+
         return self.itemsPerPerson
 
     def __computeUnfinishedItemsPerPerson__(self, logsPerValue, person, jiraID, description):
@@ -658,8 +662,8 @@ class UnfinishedItemsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
-    async def extractUnfinishedItemsPerPerson(self):
-        allWorklogs = self.__extractUnfinishedItemsPerPerson__()
+    async def extractUnfinishedItemsPerPerson(self, progressBarUnfinishedItemsPerPerson):
+        allWorklogs = self.__extractUnfinishedItemsPerPerson__(progressBarUnfinishedItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
                 if not allWorklogs[person][jiraID]['Total Hours Spent']:
@@ -717,7 +721,7 @@ class TimeSpentPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
 
-    def __extractItemsPerPerson__(self):
+    def __extractTimeSpentPerPerson__(self, progressBarTimeSpentPerPerson):
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -729,10 +733,11 @@ class TimeSpentPerPerson:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
+            i += 1
+            progressBarTimeSpentPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
         
         return self.itemsPerPerson
 
@@ -752,8 +757,8 @@ class TimeSpentPerPerson:
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][issueType] += timeSpent
 
-    async def extractTimeSpentPerPerson(self):
-        allWorklogs = self.__extractItemsPerPerson__()
+    async def extractTimeSpentPerPerson(self, progressBarTimeSpentPerPerson):
+        allWorklogs = self.__extractTimeSpentPerPerson__(progressBarTimeSpentPerPerson)
         for person in allWorklogs:
             self.issueTypeKey = None
             for issueType in ISSUE_TYPES:
@@ -769,23 +774,27 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def runProgram():
+def generateReports(progressBarHoursPerSW,
+               progressBarTimeSpentPerPerson,
+               progressBarDoneItemsPerPerson,
+               progressBarUnfinishedItemsPerPerson,
+               progressBarAllItemsPerPerson):
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    rawItemsPerPerson = RawItemsPerPerson(jiraService)
+    allItemsPerPerson = AllItemsPerPerson(jiraService)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
-            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
-            loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
+            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
+            loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson(progressBarDoneItemsPerPerson)),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
+            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
@@ -795,7 +804,14 @@ def runProgram():
     finally:
         loop.close()
 
-    print(f'Took: {(time.perf_counter() - start) / 60} minutes.')
+    elapsedTimeInMinutes = (time.perf_counter() - start) / 60
+    reportGeneratingTime = f'{round(elapsedTimeInMinutes, 2)}'
+    return reportGeneratingTime
+
+def name(name):
+    nameSize = 60
+    dots = nameSize-len(name)-2
+    return sg.Text(name + ' ' + '•'*dots, size=(nameSize,1), justification='r',pad=(0,0), font='Courier 10')
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -805,13 +821,32 @@ def main():
 
     try:
         layout = [[sg.Text('Choose your date range', key='-TXT-')],
-            [sg.Input(key='start_date', size=(20,1)), 
-                sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Input(key='end_date', size=(20,1)),
-                sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Button('Start and Close'), sg.Exit()]]
+            [name('Select Start Date'),
+                sg.Input(key='start_date', size=(20,1), justification='center'), 
+                sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
+            [name('Select End Date'),
+                sg.Input(key='end_date', size=(20,1), justification='center'),
+                sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', size=(20,1))],
+            [name('Hours Spent per SW'),
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='progressHoursPerSW')],
+            [name('Time Spent Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='timeSpentPerPerson')],
+            [name('Done Items Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='doneItemsPerPerson')],
+            [name('Unfinished Items Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='unfinishedItemsPerPerson')],
+            [name('All Items Per Person. This takes time. Please be patient'),
+                sg.ProgressBar(1, orientation='h', size=(29.4, 20), key='allItemsPerPerson')],
+            [sg.Button('Start and Close'), sg.Exit()],
+            ]
 
-        window = sg.Window('JIRA Metrics Generator', layout)
+        window = sg.Window('JIRA Metrics Generator', layout).Finalize()
+        progressBarHoursPerSW = window['progressHoursPerSW']
+        progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
+        progressBarDoneItemsPerPerson = window['doneItemsPerPerson']
+        progressBarUnfinishedItemsPerPerson = window['unfinishedItemsPerPerson']
+        progressBarAllItemsPerPerson = window['allItemsPerPerson']
+
         while True:
             event, values = window.read()
             if event == sg.WIN_CLOSED or event == 'Exit':
@@ -839,8 +874,13 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
-                runProgram()
-                window.CloseNonBlocking()
+                reportGeneratingTime = generateReports(progressBarHoursPerSW,
+                           progressBarTimeSpentPerPerson,
+                           progressBarDoneItemsPerPerson,
+                           progressBarUnfinishedItemsPerPerson,
+                           progressBarAllItemsPerPerson)
+                sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.')
+                break
 
     except Exception as error:
         sg.popup_error(error)
