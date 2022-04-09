@@ -628,7 +628,7 @@ class UnfinishedItemsPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
     
-    def __extractUnfinishedItemsPerPerson__(self):
+    def __extractUnfinishedItemsPerPerson__(self, progressBarUnfinishedItemsPerPerson):
         print("\n-------- GENERATING MATRIX OF UNFINISHED ITEMS PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -640,11 +640,12 @@ class UnfinishedItemsPerPerson:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
-        
+            i += 1
+            progressBarUnfinishedItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
+
         return self.itemsPerPerson
 
     def __computeUnfinishedItemsPerPerson__(self, logsPerValue, person, jiraID, description):
@@ -660,8 +661,8 @@ class UnfinishedItemsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
 
-    async def extractUnfinishedItemsPerPerson(self):
-        allWorklogs = self.__extractUnfinishedItemsPerPerson__()
+    async def extractUnfinishedItemsPerPerson(self, progressBarUnfinishedItemsPerPerson):
+        allWorklogs = self.__extractUnfinishedItemsPerPerson__(progressBarUnfinishedItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
                 if not allWorklogs[person][jiraID]['Total Hours Spent']:
@@ -774,13 +775,14 @@ class TimeSpentPerPerson:
 
 def runProgram(progressBarHoursPerSW,
                progressBarTimeSpentPerPerson,
-               progressBarDoneItemsPerPerson):
+               progressBarDoneItemsPerPerson,
+               progressBarUnfinishedItemsPerPerson):
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     doneItemsPerPerson = DoneItemsPerPerson(jiraService)
-    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     # rawItemsPerPerson = RawItemsPerPerson(jiraService)
 
     try:
@@ -789,7 +791,7 @@ def runProgram(progressBarHoursPerSW,
             loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
             loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson(progressBarDoneItemsPerPerson)),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
             # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
         ]
         start = time.perf_counter()
@@ -814,19 +816,22 @@ def main():
                 sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
             [sg.Input(key='end_date', size=(20,1)),
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Button('Start and Close'), sg.Exit()],
             [sg.Text('Hours Spent per SW'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')],
             [sg.Text('Time Spent Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='timeSpentPerPerson')],
             [sg.Text('Done Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='doneItemsPerPerson')],
+            [sg.Text('Unfinished Items Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(20, 20), key='unfinishedItemsPerPerson')],
+            [sg.Button('Start and Close'), sg.Exit()],
             ]
 
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
         progressBarHoursPerSW = window['progressHoursPerSW']
         progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
         progressBarDoneItemsPerPerson = window['doneItemsPerPerson']
+        progressBarUnfinishedItemsPerPerson = window['unfinishedItemsPerPerson']
 
         while True:
             event, values = window.read()
@@ -857,7 +862,8 @@ def main():
 
                 runProgram(progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
-                           progressBarDoneItemsPerPerson)
+                           progressBarDoneItemsPerPerson,
+                           progressBarUnfinishedItemsPerPerson)
                 sg.popup('Finished generating all reports 😄')
                 break
 
