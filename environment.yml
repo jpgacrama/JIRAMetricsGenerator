@@ -5,7 +5,7 @@ dependencies:
   - blinker=1.4=py_1
   - brotlipy=0.7.0=py39h5161555_1001
   - ca-certificates=2021.10.8=h4653dfc_0
-  - certifi=2021.10.8=py39h2804cbe_1
+  - certifi=2021.10.8=py39h2804cbe_2
   - cffi=1.14.6=py39h52b1de0_1
   - chardet=4.0.0=py39h2804cbe_1
   - charset-normalizer=2.0.0=pyhd8ed1ab_0
@@ -27,13 +27,15 @@ dependencies:
   - ncurses=6.2=h9aa5885_4
   - numpy=1.21.5=py39h47fb9ce_0
   - oauthlib=3.1.1=pyhd8ed1ab_0
-  - openssl=1.1.1l=h3422bc3_0
+  - openssl=1.1.1n=h90dfc92_0
   - pandas=1.3.5=py39h7f752ed_0
   - pbr=5.6.0=pyhd8ed1ab_0
   - pip=21.2.4=pyhd8ed1ab_0
+  - psutil=5.9.0=py39h5161555_0
   - pycparser=2.20=pyh9f0ad1d_2
   - pyjwt=2.2.0=pyhd8ed1ab_0
   - pyopenssl=21.0.0=pyhd8ed1ab_0
+  - pysimplegui=4.57.0=pyhd8ed1ab_0
   - pysocks=1.7.1=py39h2804cbe_3
   - python=3.9.7=h54d631c_3_cpython
   - python-dateutil=2.8.2=pyhd8ed1ab_0
