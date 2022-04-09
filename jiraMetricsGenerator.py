@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+from lib2to3.pgen2.token import NUMBER
 from jira import JIRA
 from datetime import datetime
 from dateutil.parser import parse
-from tqdm import tqdm
 import os
 import time
 import pandas as pd
@@ -18,28 +18,29 @@ STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 
 MEMBERS = {
     'Arman'         : '6057df8914a23b0069a65dc8',
-    # 'Austin'        : '5fbb3d037cc1030069500950',
-    # 'Correne'       : '616cc99920972200718e6d86',
-    # 'Daniel'        : '61076053fc68c10069c80eba',
-    # 'Duane'         : '5efbf73454020e0ba82ac7a0',
-    # 'Eddzonne'      : '5f85328a53aaa400760d4944',
-    # 'Florante'      : '5fa0b7ad22f39900769a8242',
-    # 'Hermil'        : '61f71f208d9e3c0068862452',
-    # 'Jay'           : '619ed384b43d5b006a0bf8f6',
-    # 'Jaypea'        : '6073ef399361560068ad4b83',
-    # 'John Ramos'    : '6226fffdb7e7c70071599641',
-    # 'Jomel'         : '61de3195e76379006864a9bf',
-    # 'Joppet'        : '618a332c137a51006a46ea0a',
-    # 'Juliet'        : '5fa89a11ecdae600684d1dc8',
-    # 'King'          : '61f71f2130f6b8006a9f6314',
-    # 'Marwin'        : '600e2429cd564b0068e7cca7',
-    # 'Mary'          : '6099e1699b362f006957e1ad',
-    # 'Maye'          : '6099d80c3fae6f006821f3f5',
-    # 'Nicko'         : '5f3b1fd4ea5e2f0039697b3d',
-    # 'Reiner'        : '621c66dd94f7e20069fc9dff',
-    # 'Ronald'        : '5fb1f35baa1d30006fa6a618',
+    'Austin'        : '5fbb3d037cc1030069500950',
+    'Correne'       : '616cc99920972200718e6d86',
+    'Daniel'        : '61076053fc68c10069c80eba',
+    'Duane'         : '5efbf73454020e0ba82ac7a0',
+    'Eddzonne'      : '5f85328a53aaa400760d4944',
+    'Florante'      : '5fa0b7ad22f39900769a8242',
+    'Hermil'        : '61f71f208d9e3c0068862452',
+    'Jay'           : '619ed384b43d5b006a0bf8f6',
+    'Jaypea'        : '6073ef399361560068ad4b83',
+    'John Ramos'    : '6226fffdb7e7c70071599641',
+    'Jomel'         : '61de3195e76379006864a9bf',
+    'Joppet'        : '618a332c137a51006a46ea0a',
+    'Juliet'        : '5fa89a11ecdae600684d1dc8',
+    'King'          : '61f71f2130f6b8006a9f6314',
+    'Marwin'        : '600e2429cd564b0068e7cca7',
+    'Mary'          : '6099e1699b362f006957e1ad',
+    'Maye'          : '6099d80c3fae6f006821f3f5',
+    'Nicko'         : '5f3b1fd4ea5e2f0039697b3d',
+    'Reiner'        : '621c66dd94f7e20069fc9dff',
+    'Ronald'        : '5fb1f35baa1d30006fa6a618',
 }
 
+NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 ISSUE_TYPES = ['Project', 'Ad-hoc']
 
 SOFTWARE = [
@@ -321,7 +322,7 @@ class HoursSpentPerSW:
             df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
-    async def extractTimeSpentPerSW(self):
+    async def extractTimeSpentPerSW(self, progress_bar):
         timeSpentPerSoftware = TimeSpentPerSoftware()
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
@@ -335,13 +336,11 @@ class HoursSpentPerSW:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
-            
-            # TODO: How to update the progress bar which is located outside
-            # progress_bar.update_bar(i+1)
+            i += 1
+            progress_bar.update_bar(i, NUMBER_OF_PEOPLE - 1)
 
         self.__cleanWorklogs__()
         self.__writeToCSVFile__()
@@ -771,7 +770,7 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def runProgram():
+def runProgram(progress_bar):
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
@@ -783,7 +782,7 @@ def runProgram():
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW()),
+            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW(progress_bar)),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
             # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
@@ -816,6 +815,8 @@ def main():
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='progress')]]
 
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
+        progress_bar = window['progress']
+
         while True:
             event, values = window.read()
             if event == sg.WIN_CLOSED or event == 'Exit':
@@ -843,7 +844,7 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
-                runProgram()
+                runProgram(progress_bar)
                 window.CloseNonBlocking()
 
     except Exception as error:
