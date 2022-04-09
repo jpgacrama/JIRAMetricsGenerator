@@ -807,6 +807,10 @@ def generateReports(progressBarHoursPerSW,
     reportGeneratingTime = f'{round(elapsedTimeInMinutes, 2)}'
     return reportGeneratingTime
 
+def name(name):
+    nameSize = 60
+    dots = nameSize-len(name)-2
+    return sg.Text(name + ' ' + '•'*dots, size=(nameSize,1), justification='r',pad=(0,0), font='Courier 10')
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -820,15 +824,15 @@ def main():
                 sg.CalendarButton('Select Start Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
             [sg.Input(key='end_date', size=(20,1)),
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
-            [sg.Text('Hours Spent per SW'),
+            [name('Hours Spent per SW'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')],
-            [sg.Text('Time Spent Per Person'),
+            [name('Time Spent Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='timeSpentPerPerson')],
-            [sg.Text('Done Items Per Person'),
+            [name('Done Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='doneItemsPerPerson')],
-            [sg.Text('Unfinished Items Per Person'),
+            [name('Unfinished Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='unfinishedItemsPerPerson')],
-            [sg.Text('All Items Per Person. This takes time. Please be patient 😄'),
+            [name('All Items Per Person. This takes time. Please be patient'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='allItemsPerPerson')],
             [sg.Button('Start and Close'), sg.Exit()],
             ]
