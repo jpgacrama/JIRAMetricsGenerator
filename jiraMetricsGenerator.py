@@ -322,7 +322,7 @@ class HoursSpentPerSW:
             df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
             self.result[1:] = df.values.tolist()
 
-    async def extractTimeSpentPerSW(self, progress_bar):
+    async def extractHoursPerSW(self, progressBarHoursPerSW):
         timeSpentPerSoftware = TimeSpentPerSoftware()
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
@@ -340,7 +340,7 @@ class HoursSpentPerSW:
         for thread in threads:
             thread.join()
             i += 1
-            progress_bar.update_bar(i, NUMBER_OF_PEOPLE - 1)
+            progressBarHoursPerSW.update_bar(i, NUMBER_OF_PEOPLE - 1)
 
         self.__cleanWorklogs__()
         self.__writeToCSVFile__()
@@ -718,7 +718,7 @@ class TimeSpentPerPerson:
         self.itemsPerPerson = AutoVivification()
         self.worklogPerPerson = AutoVivification()
 
-    def __extractItemsPerPerson__(self):
+    def __extractTimeSpentPerPerson__(self, progressBarTimeSpentPerPerson):
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER PERSON --------\n")
 
         for person in MEMBERS:
@@ -730,10 +730,11 @@ class TimeSpentPerPerson:
         for thread in threads:
             thread.start()
 
-        pbar = tqdm(total=len(threads)) # Init pbar
+        i = 0
         for thread in threads:
             thread.join()
-            pbar.update(n=1) # Increments counter
+            i += 1
+            progressBarTimeSpentPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
         
         return self.itemsPerPerson
 
@@ -753,8 +754,8 @@ class TimeSpentPerPerson:
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerPerson[person][issueType] += timeSpent
 
-    async def extractTimeSpentPerPerson(self):
-        allWorklogs = self.__extractItemsPerPerson__()
+    async def extractTimeSpentPerPerson(self, progressBarTimeSpentPerPerson):
+        allWorklogs = self.__extractTimeSpentPerPerson__(progressBarTimeSpentPerPerson)
         for person in allWorklogs:
             self.issueTypeKey = None
             for issueType in ISSUE_TYPES:
@@ -770,11 +771,11 @@ class TimeSpentPerPerson:
         df.to_csv(fileName, index=True, header=MEMBERS.keys())
         print(f"Writing to {fileName} done.")
 
-def runProgram(progress_bar):
+def runProgram(progressBarHoursPerSW, progressBarTimeSpentPerPerson):
     jiraService = JIRAService()
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     # doneItemsPerPerson = DoneItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
     # rawItemsPerPerson = RawItemsPerPerson(jiraService)
@@ -782,8 +783,8 @@ def runProgram(progress_bar):
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractTimeSpentPerSW(progress_bar)),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson()),
+            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractDoneItemsPerPerson()),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson()),
             # loop.create_task(rawItemsPerPerson.extractRawItemsPerPerson()),
@@ -812,10 +813,14 @@ def main():
                 sg.CalendarButton('Select End Date', close_when_date_chosen=True, no_titlebar=False, format='%Y-%m-%d', )],
             [sg.Button('Start and Close'), sg.Exit()],
             [sg.Text('Hours Spent per SW'),
-                sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')]]
+                sg.ProgressBar(1, orientation='h', size=(20, 20), key='progressHoursPerSW')],
+            [sg.Text('Time Spent Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(20, 20), key='timeSpentPerPerson')],
+            ]
 
         window = sg.Window('JIRA Metrics Generator', layout).Finalize()
-        progress_bar_hours_per_sw = window['progressHoursPerSW']
+        progressBarHoursPerSW = window['progressHoursPerSW']
+        progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
 
         while True:
             event, values = window.read()
@@ -844,7 +849,7 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
-                runProgram(progress_bar_hours_per_sw)
+                runProgram(progressBarHoursPerSW, progressBarTimeSpentPerPerson)
                 sg.popup('Finished generating all reports 😄')
                 break
 
