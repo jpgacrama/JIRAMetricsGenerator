@@ -17,30 +17,14 @@ URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 
-with open('members.json') as membersFile:
+with open('members.json', 'r') as membersFile:
     MEMBERS = json.load(membersFile)
+
+with open('software.json', 'r') as softwareFile:
+    SOFTWARE = json.load(softwareFile)
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 ISSUE_TYPES = ['Project', 'Ad-hoc']
-
-SOFTWARE = [
-    'AAIG CRM',
-    'Ascot',
-    'ASR Marketing',
-    'ASR Reports',
-    'ASRW Marketing',
-    'CMA',
-    'HALO',
-    'HALO Marketing',
-    'HALO Mobile',
-    'Hubspot CMS Websites',
-    'Infrastructure',
-    'Macrovue',
-    'Macrovue Marketing',
-    'Notification',
-    'R:Ed',
-    'Wordpress CMS Websites'
-    ]
 
 # Filenames for the output files
 TIME_SPENT_PER_SW = 'HoursPerSW.csv'
