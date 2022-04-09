@@ -782,10 +782,18 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON, UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON
+    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
+    global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON, CREDENTIAL_FILE
 
     try:
         layout =[
+            [sg.Text('SELECT CREDENTIAL FILE')],
+            [name('Credential File'),
+                sg.InputText(key='fileForCredentials', size=(40,1), default_text=CREDENTIAL_FILE), 
+                sg.FileBrowse(size=(15,1))],
+            [sg.VerticalSeparator()],
+            [sg.VerticalSeparator()],
+            [sg.VerticalSeparator()],
             [sg.Text('SELECT DATE RANGE')],
             [name('Select Start Date'),
                 sg.Input(key='start_date', size=(40,1), justification='center'), 
@@ -843,6 +851,14 @@ def main():
             if event == sg.WIN_CLOSED or event == 'Exit':
                 break
             elif event == 'Start':
+                # File for Credentials
+                fileForCredentials = values['fileForCredentials']
+                if not fileForCredentials.endswith('txt'):
+                    raise Exception('Filename should have .txt extension')
+                else:
+                    if fileForCredentials != CREDENTIAL_FILE:
+                        CREDENTIAL_FILE = fileForCredentials
+
                 # Start and End Dates
                 startDate = values['start_date']
                 endDate = values['end_date']
@@ -866,7 +882,8 @@ def main():
                     global DESIRED_MONTH
                     DESIRED_MONTH = endDate.month
 
-                # Filenames
+                # Filenames for output files
+
                 fileForHoursPerSW = values['fileForHoursPerSW']
                 if not fileForHoursPerSW.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
