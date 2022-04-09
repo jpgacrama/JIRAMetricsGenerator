@@ -144,7 +144,6 @@ class JIRAService:
 
     def __logInToJIRA__(self):
         
-        # TODO: Add reading of Credential file here
         with open(CREDENTIAL_FILE, 'r', newline='') as file:
             lines = file.read().splitlines() 
 
@@ -342,7 +341,7 @@ class HoursSpentPerSW:
             pbar.update(n=1) # Increments counter
             
             # TODO: How to update the progress bar which is located outside
-            progress_bar.update_bar(i+1)
+            # progress_bar.update_bar(i+1)
 
         self.__cleanWorklogs__()
         self.__writeToCSVFile__()
@@ -816,7 +815,7 @@ def main():
             [sg.Text('Hours Spent per SW'),
                 sg.ProgressBar(1, orientation='h', size=(20, 20), key='progress')]]
 
-        window = sg.Window('JIRA Metrics Generator', layout)
+        window = sg.Window('JIRA Metrics Generator', layout).Finalize()
         while True:
             event, values = window.read()
             if event == sg.WIN_CLOSED or event == 'Exit':
