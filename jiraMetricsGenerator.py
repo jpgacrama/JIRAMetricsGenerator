@@ -831,7 +831,7 @@ def main():
             [sg.VerticalSeparator()],
             [sg.Text('ENTER FILE NAMES FOR THE REPORTS')],
             [name('Hours Spent per SW'),
-                sg.InputText(key='fileForHoursPerSW', size=(40,1)),
+                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=TIME_SPENT_PER_SW), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator()],
             [sg.Text('PROGRESS BARS')],
