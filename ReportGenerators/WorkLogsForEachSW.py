@@ -1,9 +1,9 @@
-from TimeHelper import TimeHelper
+from Helpers import TimeHelper
 
 class WorkLogsForEachSW:
     def __init__(self, desiredMonth, desiredYear) -> None:
         self.dictionaryWorklog = {}
-        self.timeHelper = TimeHelper()
+        self.timeHelper = TimeHelper.TimeHelper()
         self.issueId = None
         self.totalTimeSpent = 0
         self.newTimeSpent = 0

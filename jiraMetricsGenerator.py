@@ -10,15 +10,12 @@ import asyncio
 import PySimpleGUI as sg
 import json
 import threading
-from TimeHelper import TimeHelper
-from JIRAService import JIRAService
-from HoursSpentPerSW import HoursSpentPerSW
-from AutoVivification import AutoVivification
-from AllItemsPerPerson import AllItemsPerPerson
+from Helpers import TimeHelper, JIRAService, AutoVivification
+from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
-CREDENTIAL_FILE = 'Credentials.txt'
+CREDENTIAL_FILE = './data/Credentials.txt'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 ISSUE_TYPES = ['Project', 'Ad-hoc']
@@ -32,10 +29,10 @@ UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
 ALL_ITEMS_PER_PERSON = 'AllItems.csv'
 
 # Member and SW Information
-with open('members.json', 'r') as membersFile:
+with open('./data/members.json', 'r') as membersFile:
     MEMBERS = json.load(membersFile)
 
-with open('software.json', 'r') as softwareFile:
+with open('./data/software.json', 'r') as softwareFile:
     SOFTWARE = json.load(softwareFile)
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
@@ -295,21 +292,21 @@ def generateReports(progressBarHoursPerSW,
                progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
-    jiraService = JIRAService(
+    jiraService = JIRAService.JIRAService(
         CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
-    # matrixOfWorklogsPerSW = HoursSpentPerSW(
-        # jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW)
+    matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW)
     # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     # doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    allItemsPerPerson = AllItemsPerPerson(
+    allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
+            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),

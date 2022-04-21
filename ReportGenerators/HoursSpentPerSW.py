@@ -1,6 +1,6 @@
 import pandas as pd
 import threading
-from TimeSpentPerSoftware import TimeSpentPerSoftware
+from Helpers import TimeSpentPerSoftware
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
 class ThreadHoursSpentPerSW(threading.Thread):
@@ -47,7 +47,7 @@ class HoursSpentPerSW:
             self.result[1:] = df.values.tolist()
 
     async def extractHoursPerSW(self):
-        timeSpentPerSoftware = TimeSpentPerSoftware(
+        timeSpentPerSoftware = TimeSpentPerSoftware.TimeSpentPerSoftware(
             self.desiredMonth, self.desiredYear, self.listOfSoftware)
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")

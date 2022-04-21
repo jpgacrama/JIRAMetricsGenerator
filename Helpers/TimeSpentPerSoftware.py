@@ -1,12 +1,10 @@
-from WorkLogsForEachSW import WorkLogsForEachSW
+from ReportGenerators import WorkLogsForEachSW
 
-# This class is responsible for querying each of the
-# PROJECT items belonging to the various SW
 class TimeSpentPerSoftware:
     def __init__(self, desiredMonth, desiredYear, listOfSW) -> None:
         self.software = {}
         self.listOfSW = listOfSW
-        self.worklogsForEachSW = WorkLogsForEachSW(desiredMonth, desiredYear)
+        self.worklogsForEachSW = WorkLogsForEachSW.WorkLogsForEachSW(desiredMonth, desiredYear)
 
     def extractItemsPerSW(self, person, jIRAService):
         self.software[person] = {}

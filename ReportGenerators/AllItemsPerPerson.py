@@ -1,7 +1,6 @@
 import threading
 import csv
-from TimeHelper import TimeHelper
-from AutoVivification import AutoVivification
+from Helpers import TimeHelper, AutoVivification
 
 class ThreadAllItemsPerPerson(threading.Thread):
     def __init__(self, person, jiraService, itemsPerPerson):
@@ -29,9 +28,9 @@ class AllItemsPerPerson:
         self.fileName = fileName
         self.jiraIDKey = None
         self.personKey = None
-        self.timeHelper = TimeHelper()
-        self.itemsPerPerson = AutoVivification()
-        self.worklogPerPerson = AutoVivification()
+        self.timeHelper = TimeHelper.TimeHelper()
+        self.itemsPerPerson = AutoVivification.AutoVivification()
+        self.worklogPerPerson = AutoVivification.AutoVivification()
     
     def __extractAllItemsPerPerson__(self, progressBarAllItemsPerPerson):
         print("\n-------- GENERATING MATRIX OF ALL ITEMS PER PERSON --------\n")
