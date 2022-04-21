@@ -73,7 +73,6 @@ def setConstants():
     return const
 
 def createGUI(const):
-    # START THE GUI
     sg.theme('Default1')
 
     try:
@@ -168,7 +167,6 @@ def createGUI(const):
                     DESIRED_MONTH = endDate.month
 
                 # Filenames for output files
-
                 fileForHoursPerSW = values['fileForHoursPerSW']
                 if not fileForHoursPerSW.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
