@@ -72,10 +72,7 @@ def setConstants():
     const.setCredentialFile('./data/Credentials.txt')
     return const
 
-def main():
-    const = setConstants()
-    clean(const)
-    
+def createGUI(const):
     # START THE GUI
     sg.theme('Default1')
 
@@ -223,5 +220,10 @@ def main():
 
     window.CloseNonBlocking()
 
+def main():
+    const = setConstants()
+    clean(const)
+    createGUI(const)
+    
 if __name__ == "__main__":
     main()
