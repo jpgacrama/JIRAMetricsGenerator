@@ -7,6 +7,7 @@ import time
 import asyncio
 import PySimpleGUI as sg
 import json
+import shutil
 from Helpers import JIRAService
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
@@ -80,8 +81,24 @@ def name(name):
     dots = nameSize-len(name)-2
     return sg.Text(name + ' ' + '•'*dots, size=(nameSize,1), justification='r',pad=(0,0), font='Courier 10')
 
-def main():
+def clean():
+    for folder, subfolders, files in os.walk('./'): 
+        for file in files: 
+            if file.endswith('.csv'): 
+                path = os.path.join(folder, file) 
+                    
+                # printing the path of the file 
+                # to be deleted 
+                print('deleted : ', path )
+                
+                # deleting the csv file 
+                os.remove(path)
+    
+    shutil.rmtree(OUTPUT_FOLDER, ignore_errors=False, onerror=None)
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def main():
+    clean()
     
     # START THE GUI
     sg.theme('Default1')

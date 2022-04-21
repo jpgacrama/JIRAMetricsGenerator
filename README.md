@@ -9,11 +9,8 @@ Pre-requisites:
       and let your IDE use its version of python
 
 THINGS TO REMEMBER:
-1. Use JIRA query to find out the actual value for the current OMNI Sprint
-   and place its corresponding number under the SPRINT Global 
-   
-2. To get the correct Sprint Value, you need to extract the value from a JIRA query.
-   Please ask me how to do this.
+1. Place your Credentials.txt file inside the data folder. This file contains your JIRA API key 
+2. All *.csv outputs are placed in the "output" folder 
 
 CUSTOM FIELDS:
 - customfield_11428: SW
