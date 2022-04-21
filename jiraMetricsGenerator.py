@@ -12,18 +12,12 @@ from Helpers import JIRAService, Const
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
-
-# DIRECTORY OF THE OUTPUT FOLDER
-OUTPUT_FOLDER = './output/'
-
 # Member and SW Information
 with open('./data/members.json', 'r') as membersFile:
     MEMBERS = json.load(membersFile)
 
 with open('./data/software.json', 'r') as softwareFile:
     SOFTWARE = json.load(softwareFile)
-
-NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 
 def generateReports(
                const,
@@ -36,13 +30,13 @@ def generateReports(
        const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, const.getFilenameForHoursSpentPerSW(), OUTPUT_FOLDER)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
     timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
-        jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForTimeSpentPerPerson(),  OUTPUT_FOLDER)
-    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForFinishedItemsPerPerson(), OUTPUT_FOLDER)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForUnfinishedItemsPerPerson(), OUTPUT_FOLDER)
+        jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
+    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForAllItemsPerPerson(), OUTPUT_FOLDER)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
         loop = asyncio.get_event_loop()
@@ -83,7 +77,7 @@ def clean():
                 # deleting the csv file 
                 os.remove(path)
     
-    shutil.rmtree(OUTPUT_FOLDER, ignore_errors=True, onerror=None)
+    shutil.rmtree(const.getOutputFolder(), ignore_errors=True, onerror=None)
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def setConstants():

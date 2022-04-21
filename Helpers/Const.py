@@ -7,6 +7,7 @@ class Const:
         self.filenameForFinishedItemsPerPerson = 'FinishedItems.csv'
         self.filenameForUnfinishedItemsPerPerson = 'UnfinishedItems.csv'
         self.filenameForAllItemsPerPerson = 'AllItems.csv'
+        self.outputFolder = './output/'
 
     def setCredentialFile(self, fileName):
         self.credentialFile = fileName
@@ -25,6 +26,9 @@ class Const:
 
     def setFilenameForAllItemsPerPerson(self, fileName):
         self.filenameForAllItemsPerPerson = fileName
+
+    def setOutputFolder(self, path):
+        self.outputFolder = path
 
     def get_JIRA_URL(self):
         return 'https://macrovue.atlassian.net'
@@ -58,4 +62,7 @@ class Const:
 
     def getFilenameForAllItemsPerPerson(self):
         return self.filenameForAllItemsPerPerson
+
+    def getOutputFolder(self):
+        return self.outputFolder
 
