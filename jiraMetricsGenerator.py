@@ -13,6 +13,8 @@ import threading
 from TimeHelper import TimeHelper
 from JIRAService import JIRAService
 from HoursSpentPerSW import HoursSpentPerSW
+from AutoVivification import AutoVivification
+from AllItemsPerPerson import AllItemsPerPerson
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
@@ -37,142 +39,6 @@ with open('software.json', 'r') as softwareFile:
     SOFTWARE = json.load(softwareFile)
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
-
-class AutoVivification(dict):
-    """Implementation of perl's autovivification feature."""
-    def __getitem__(self, item):
-        try:
-            return dict.__getitem__(self, item)
-        except KeyError:
-            value = self[item] = type(self)()
-            return value
-
-# Multithreaded Class for ThreadAllItemsPerPerson
-class ThreadAllItemsPerPerson(threading.Thread):
-    def __init__(self, person, jiraService, itemsPerPerson):
-        threading.Thread.__init__(self)
-        self.person = person
-        self.jiraService = jiraService
-        self.itemsPerPerson = itemsPerPerson
-
-    def run(self):
-        self.itemsPerPerson[self.person] = self.jiraService.queryAllItemsPerPerson(self.person)
-
-class AllItemsPerPerson:
-    def __init__(self, jiraService) -> None:
-        self.jiraService = jiraService
-        self.jiraIDKey = None
-        self.personKey = None
-        self.timeHelper = TimeHelper()
-        self.itemsPerPerson = AutoVivification()
-        self.worklogPerPerson = AutoVivification()
-    
-    def __extractAllItemsPerPerson__(self, progressBarAllItemsPerPerson):
-        print("\n-------- GENERATING MATRIX OF ALL ITEMS PER PERSON --------\n")
-        
-        for person in MEMBERS:
-            self.itemsPerPerson[person] = {}
-
-        threads = [ThreadAllItemsPerPerson(
-                person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
-
-        for thread in threads:
-            thread.start()
-
-        i = 0
-        for thread in threads:
-            thread.join()
-            i += 1
-            progressBarAllItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
-        
-        return self.itemsPerPerson
-
-    def __computeAllItemsPerPerson__(
-        self, logsPerValue, person, jiraID, description, software,
-        component, issueType, storyPoint, status, dateStarted, dateFinished):
-        
-        if self.personKey != person:
-            self.worklogPerPerson[person] = {}
-            self.personKey = person
-
-        if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[person][jiraID] = {}
-            self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['Software'] = software
-            self.worklogPerPerson[person][jiraID]['Component'] = component
-            self.worklogPerPerson[person][jiraID]['Issue Type'] = issueType
-            self.worklogPerPerson[person][jiraID]['Story Point'] = storyPoint
-            self.worklogPerPerson[person][jiraID]['Status'] = status
-            self.worklogPerPerson[person][jiraID]['Date Started'] = dateStarted
-            self.worklogPerPerson[person][jiraID]['Date Finished'] = dateFinished
-            self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] = 0
-            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
-            self.jiraIDKey = jiraID
-
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
-        if extractedDateTime:
-            
-            # For Hours Spent for the Current Month
-            if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
-                timeSpent = logsPerValue.timeSpentSeconds
-                timeSpent = self.timeHelper.convertToHours(timeSpent)
-                self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'] += timeSpent
-            
-            # For Total Hours Spent
-            timeSpent = logsPerValue.timeSpentSeconds
-            timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
-
-    async def extractAllItemsPerPerson(self, progressBarAllItemsPerPerson):
-        allWorklogs = self.__extractAllItemsPerPerson__(progressBarAllItemsPerPerson)
-        for person in allWorklogs:
-            for jiraID in allWorklogs[person]:
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['Hours Spent for the Month']:
-                    description = allWorklogs[person][jiraID]['description']
-                    software = allWorklogs[person][jiraID]['Software']
-                    component = allWorklogs[person][jiraID]['Component']
-                    issueType = allWorklogs[person][jiraID]['Issue Type']
-                    storyPoint = allWorklogs[person][jiraID]['Story Point']
-                    status = allWorklogs[person][jiraID]['Status']
-                    dateStarted = allWorklogs[person][jiraID]['Date Started']
-                    dateFinished = allWorklogs[person][jiraID]['Date Finished']
-                    
-                    self.__computeAllItemsPerPerson__(
-                        worklogPerJIRAId, person, jiraID,
-                        description, software, component, issueType,
-                        storyPoint, status, dateStarted, dateFinished)
-
-        self.__generateCSVFile__()
-
-    def __generateCSVFile__(self):
-        fileName = ALL_ITEMS_PER_PERSON
-        
-        with open(fileName, 'w', newline='') as csv_file:
-            csvwriter = csv.writer(csv_file, delimiter=',')
-            
-            # Initialize all columns
-            csvwriter.writerow(['Name', 'JIRA ID', 'Description',
-                'Software', 'Component', 'Issue Type', 'Story Point',
-                'Status', 'Date Started', 'Date Finished',
-                'Hours Spent for the Month', 'Total Hours Spent'])
-
-            for person in self.worklogPerPerson:
-                for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([
-                        person, 
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',
-                        self.worklogPerPerson[person][jiraID]['description'],
-                        self.worklogPerPerson[person][jiraID]['Software'],
-                        self.worklogPerPerson[person][jiraID]['Component'],
-                        self.worklogPerPerson[person][jiraID]['Issue Type'],
-                        self.worklogPerPerson[person][jiraID]['Story Point'],
-                        self.worklogPerPerson[person][jiraID]['Status'],
-                        self.worklogPerPerson[person][jiraID]['Date Started'],
-                        self.worklogPerPerson[person][jiraID]['Date Finished'],
-                        self.worklogPerPerson[person][jiraID]['Hours Spent for the Month'],
-                        self.worklogPerPerson[person][jiraID]['Total Hours Spent']])
-        
-        print(f"Writing to {fileName} done.")
 
 # Multithreaded Class for ThreadDoneItemsPerPerson
 class ThreadDoneItemsPerPerson(threading.Thread):
@@ -432,21 +298,22 @@ def generateReports(progressBarHoursPerSW,
     jiraService = JIRAService(
         CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW)
+    # matrixOfWorklogsPerSW = HoursSpentPerSW(
+        # jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW)
     # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     # doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    # allItemsPerPerson = AllItemsPerPerson(jiraService)
+    allItemsPerPerson = AllItemsPerPerson(
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
+            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
