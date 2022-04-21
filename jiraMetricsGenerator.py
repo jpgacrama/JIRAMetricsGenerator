@@ -6,18 +6,10 @@ import os
 import time
 import asyncio
 import PySimpleGUI as sg
-import json
 import shutil
 from Helpers import JIRAService, Const
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
-
-# Member and SW Information
-with open('./data/members.json', 'r') as membersFile:
-    MEMBERS = json.load(membersFile)
-
-with open('./data/software.json', 'r') as softwareFile:
-    SOFTWARE = json.load(softwareFile)
 
 def generateReports(
                const,
@@ -27,16 +19,16 @@ def generateReports(
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, const.getProject(), const.getDoneStatuses())
+       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getSoftware(), const.getMembers(), const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
     timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
-        jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
-    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
+        jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
+    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
         loop = asyncio.get_event_loop()
@@ -64,17 +56,12 @@ def name(name):
     dots = nameSize-len(name)-2
     return sg.Text(name + ' ' + '•'*dots, size=(nameSize,1), justification='r',pad=(0,0), font='Courier 10')
 
-def clean():
+def clean(const):
     for folder, subfolders, files in os.walk('./'): 
         for file in files: 
             if file.endswith('.csv'): 
                 path = os.path.join(folder, file) 
-                    
-                # printing the path of the file 
-                # to be deleted 
                 print('deleted : ', path )
-                
-                # deleting the csv file 
                 os.remove(path)
     
     shutil.rmtree(const.getOutputFolder(), ignore_errors=True, onerror=None)
@@ -86,8 +73,8 @@ def setConstants():
     return const
 
 def main():
-    clean()
     const = setConstants()
+    clean(const)
     
     # START THE GUI
     sg.theme('Default1')

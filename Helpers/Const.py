@@ -1,4 +1,5 @@
 # File containing constants
+import json
 class Const:
     def __init__(self) -> None:
         self.credentialFile = None
@@ -8,6 +9,8 @@ class Const:
         self.filenameForUnfinishedItemsPerPerson = 'UnfinishedItems.csv'
         self.filenameForAllItemsPerPerson = 'AllItems.csv'
         self.outputFolder = './output/'
+        self.members = None
+        self.software = None
 
     def setCredentialFile(self, fileName):
         self.credentialFile = fileName
@@ -66,3 +69,14 @@ class Const:
     def getOutputFolder(self):
         return self.outputFolder
 
+    def getMembers(self):
+        if not self.members:
+            with open('./data/members.json', 'r') as membersFile:
+                self.members = json.load(membersFile)
+        return self.members
+
+    def getSoftware(self):
+        if not self.software:
+            with open('./data/software.json', 'r') as softwareFile:
+                self.software = json.load(softwareFile)
+        return self.software
