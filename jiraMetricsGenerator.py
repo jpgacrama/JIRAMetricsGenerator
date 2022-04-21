@@ -5,15 +5,14 @@ from dateutil.parser import parse
 import os
 import time
 from numpy import size
-import pandas as pd
 import csv
-import threading
 import asyncio
 import PySimpleGUI as sg
 import json
+import threading
 from TimeHelper import TimeHelper
 from JIRAService import JIRAService
-from TimeSpentPerSoftware import TimeSpentPerSoftware
+from HoursSpentPerSW import HoursSpentPerSW
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
@@ -24,7 +23,7 @@ ISSUE_TYPES = ['Project', 'Ad-hoc']
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 # Filenames for the output files
-TIME_SPENT_PER_SW = 'HoursPerSW.csv'
+HOURS_SPENT_PER_SW = 'HoursPerSW.csv'
 TIME_SPENT_PER_PERSON = 'TimePerPerson.csv'
 FINISHED_ITEMS_PER_PERSON = 'FinishedItems.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
@@ -38,105 +37,6 @@ with open('software.json', 'r') as softwareFile:
     SOFTWARE = json.load(softwareFile)
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
-
-
-# Multithreaded Class for MatrixOfWorklogsPerSW
-class ThreadHoursSpentPerSW(threading.Thread):
-    def __init__(self, person, jiraService, worklog, timeSpentPerSoftware):
-        threading.Thread.__init__(self)
-        self.person = person
-        self.jiraService = jiraService
-        self.worklog = worklog
-        self.timeSpentPerSoftware = timeSpentPerSoftware
-
-    def run(self):
-        self.timeSpentPerSoftware.extractItemsPerSW(self.person, self.jiraService)
-        self.worklog[self.person] = self.timeSpentPerSoftware.getTimeSpentForEachSW(self.person)
-
-# This will be the "Caller" class
-class HoursSpentPerSW:
-    def __init__(self, jiraService) -> None:
-        self.jiraService = jiraService
-        self.result = []
-        self.worklog = {}
-
-    # Function to get the total hours spent for every SW
-    def __getTotal__(self):
-        if len(self.result) == 0:
-            print("You need to call MatrixOfWorklogsPerSW.generateMatrix() first")
-            exit(1)
-        else:
-            df = pd.DataFrame(self.result[1:])
-            df.loc['Column_Total'] = df.sum(numeric_only=True, axis=0)
-            df.loc[:, 'Row_Total'] = df.sum(numeric_only=True, axis=1)
-            self.result[1:] = df.values.tolist()
-
-    async def extractHoursPerSW(self, progressBarHoursPerSW):
-        timeSpentPerSoftware = TimeSpentPerSoftware(
-            DESIRED_MONTH, DESIRED_YEAR, SOFTWARE)
-
-        print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
-
-        for person in MEMBERS:
-            self.worklog[person] = {}
-
-        threads = [ThreadHoursSpentPerSW(
-                person, self.jiraService, self.worklog, timeSpentPerSoftware) for person in MEMBERS]
-
-        for thread in threads:
-            thread.start()
-
-        i = 0
-        for thread in threads:
-            thread.join()
-            i += 1
-            progressBarHoursPerSW.update_bar(i, NUMBER_OF_PEOPLE - 1)
-
-        self.__cleanWorklogs__()
-        self.__writeToCSVFile__()
-
-    def __cleanWorklogs__(self):
-        tempWorklog = {}
-        for person in MEMBERS:
-            tempWorklog[person] = self.worklog[person][person]
-
-        # Formatting the data before writing to CSV
-        tempData = list(tempWorklog.values())
-        subset = set()
-        for element in tempData:
-            for index in element:
-                subset.add(index)
-        tempResult = []
-        tempResult.append(subset)
-        for key, value in tempWorklog.items():
-            tempData2 = []
-            for index in subset:
-                tempData2.append(value.get(index, 0))
-            tempResult.append(tempData2)
-
-        self.result = [[index for index, value in tempWorklog.items()]] + \
-            list(map(list, zip(*tempResult)))
-
-    def __writeToCSVFile__(self):
-        if len(self.result) != 0:
-            self.__getTotal__()
-            fileName = TIME_SPENT_PER_SW
-            self.result[0].insert(0, 'SW Names')
-
-            # Putting "Total" at the last column
-            self.result[0].insert(len(MEMBERS) + 1, 'Total')
-
-            # Putting "Total" at the last row
-            self.result[-1].insert(0, 'Total')
-            self.result[-1].pop(1)
-            
-            df = pd.DataFrame(self.result)
-            df.to_csv(fileName, index=False, header=False)
-        else:
-            print("Data to write to CSV file is not yet available")
-            exit(1)
-        
-        print(f'Writing to {fileName} done.')
 
 class AutoVivification(dict):
     """Implementation of perl's autovivification feature."""
@@ -532,16 +432,17 @@ def generateReports(progressBarHoursPerSW,
     jiraService = JIRAService(
         CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
-    timeSpentPerPerson = TimeSpentPerPerson(jiraService)
-    doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    allItemsPerPerson = AllItemsPerPerson(jiraService)
+    matrixOfWorklogsPerSW = HoursSpentPerSW(
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW)
+    # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
+    # doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
+    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
+    # allItemsPerPerson = AllItemsPerPerson(jiraService)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
+            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
@@ -570,7 +471,7 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global TIME_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
+    global HOURS_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
     global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON, CREDENTIAL_FILE
 
     try:
@@ -590,7 +491,7 @@ def main():
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('ENTER FILE NAMES FOR THE REPORTS IN CSV FORMAT')],
             [name('Hours Spent per SW'),
-                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=TIME_SPENT_PER_SW), 
+                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=HOURS_SPENT_PER_SW), 
                 sg.FileBrowse(size=(15,1))],
             [name('Time Spent Per Person'),
                 sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=TIME_SPENT_PER_PERSON), 
@@ -670,8 +571,8 @@ def main():
                 if not fileForHoursPerSW.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForHoursPerSW != TIME_SPENT_PER_SW:
-                        TIME_SPENT_PER_SW = fileForHoursPerSW
+                    if fileForHoursPerSW != HOURS_SPENT_PER_SW:
+                        HOURS_SPENT_PER_SW = fileForHoursPerSW
 
                 fileForTimeSpentPerPerson = values['fileForTimeSpentPerPerson']
                 if not fileForTimeSpentPerPerson.endswith('csv'):
