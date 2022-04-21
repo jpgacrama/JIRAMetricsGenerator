@@ -13,18 +13,13 @@ import PySimpleGUI as sg
 import json
 from TimeHelper import TimeHelper
 
+# JIRA-related information
 URL = 'https://macrovue.atlassian.net'
+CREDENTIAL_FILE = 'Credentials.txt'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
-
-with open('members.json', 'r') as membersFile:
-    MEMBERS = json.load(membersFile)
-
-with open('software.json', 'r') as softwareFile:
-    SOFTWARE = json.load(softwareFile)
-
-NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 ISSUE_TYPES = ['Project', 'Ad-hoc']
+DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
 # Filenames for the output files
 TIME_SPENT_PER_SW = 'HoursPerSW.csv'
@@ -33,12 +28,14 @@ FINISHED_ITEMS_PER_PERSON = 'FinishedItems.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
 ALL_ITEMS_PER_PERSON = 'AllItems.csv'
 
-# Filename to store your credentials
-CREDENTIAL_FILE = 'Credentials.txt'
+# Member and SW Information
+with open('members.json', 'r') as membersFile:
+    MEMBERS = json.load(membersFile)
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Only JIRA Query can filter out DONE Items. 
-DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
+with open('software.json', 'r') as softwareFile:
+    SOFTWARE = json.load(softwareFile)
+
+NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 
 
 # Helper Class to get Work Logs per SW
