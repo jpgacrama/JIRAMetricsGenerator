@@ -13,7 +13,6 @@ from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 # Filenames for the output files
-HOURS_SPENT_PER_SW = 'HoursPerSW.csv'
 TIME_SPENT_PER_PERSON = 'TimePerPerson.csv'
 FINISHED_ITEMS_PER_PERSON = 'FinishedItems.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
@@ -42,7 +41,7 @@ def generateReports(
        const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, const.getFilenameForHoursSpentPerSW(), OUTPUT_FOLDER)
     timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
         jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, TIME_SPENT_PER_PERSON,  OUTPUT_FOLDER)
     doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, FINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
@@ -104,7 +103,7 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global HOURS_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
+    global TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
     global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON
 
     try:
@@ -124,7 +123,7 @@ def main():
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('ENTER FILE NAMES FOR THE REPORTS IN CSV FORMAT')],
             [name('Hours Spent per SW'),
-                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=HOURS_SPENT_PER_SW), 
+                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=const.getFilenameForHoursSpentPerSW()), 
                 sg.FileBrowse(size=(15,1))],
             [name('Time Spent Per Person'),
                 sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=TIME_SPENT_PER_PERSON), 
@@ -204,8 +203,8 @@ def main():
                 if not fileForHoursPerSW.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForHoursPerSW != HOURS_SPENT_PER_SW:
-                        HOURS_SPENT_PER_SW = fileForHoursPerSW
+                    if fileForHoursPerSW != const.getFilenameForHoursSpentPerSW():
+                        const.setFilenameForHoursSpentPerSW(fileForHoursPerSW)
 
                 fileForTimeSpentPerPerson = values['fileForTimeSpentPerPerson']
                 if not fileForTimeSpentPerPerson.endswith('csv'):
