@@ -12,10 +12,6 @@ from Helpers import JIRAService, Const
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
-# JIRA-related information
-STORY_POINT_ESTIMATE = '\"Story point estimate\"'
-DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
-
 # Filenames for the output files
 HOURS_SPENT_PER_SW = 'HoursPerSW.csv'
 TIME_SPENT_PER_PERSON = 'TimePerPerson.csv'
@@ -43,7 +39,7 @@ def generateReports(
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, const.getProject(), DONE_STATUSES)
+       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
