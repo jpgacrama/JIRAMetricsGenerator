@@ -4,13 +4,10 @@ from tkinter import SW
 from dateutil.parser import parse
 import os
 import time
-from numpy import size
-import csv
 import asyncio
 import PySimpleGUI as sg
 import json
-import threading
-from Helpers import TimeHelper, JIRAService, AutoVivification
+from Helpers import JIRAService
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
@@ -48,23 +45,23 @@ def generateReports(progressBarHoursPerSW,
     jiraService = JIRAService.JIRAService(
         CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
-    # matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-    #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
-    # timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
-    #     jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, TIME_SPENT_PER_PERSON,  OUTPUT_FOLDER)
-    # doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, FINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+    matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
+    timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
+        jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, TIME_SPENT_PER_PERSON,  OUTPUT_FOLDER)
+    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, FINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, UNFINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
-    # allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-    #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+    allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
-            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
+            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
+            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
