@@ -6,6 +6,9 @@ class Const:
     def get_JIRA_URL(self):
         return 'https://macrovue.atlassian.net'
 
+    def getProject(self):
+        return 'OMNI'
+
     def setCredentialFile(self, fileName):
         self.credentialFile = fileName
 

@@ -13,7 +13,6 @@ from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 # JIRA-related information
-PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
@@ -36,13 +35,15 @@ with open('./data/software.json', 'r') as softwareFile:
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 
-def generateReports(progressBarHoursPerSW,
+def generateReports(
+               const,
+               progressBarHoursPerSW,
                progressBarTimeSpentPerPerson,
                progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-        Const.Const.getCredentialFile(), Const.Const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
+       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, const.getProject(), DONE_STATUSES)
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
@@ -57,10 +58,10 @@ def generateReports(progressBarHoursPerSW,
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
+            # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
+            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
@@ -175,8 +176,8 @@ def main():
                 if not fileForCredentials.endswith('txt'):
                     raise Exception('Filename should have .txt extension')
                 else:
-                    if fileForCredentials != Const.Const.getCredentialFile():
-                        Const.Const.setCredentialFile(fileForCredentials)
+                    if fileForCredentials != const.getCredentialFile():
+                        const.setCredentialFile(fileForCredentials)
 
                 # Start and End Dates
                 startDate = values['start_date']
@@ -239,7 +240,9 @@ def main():
                         ALL_ITEMS_PER_PERSON = fileForAllItemsPerPerson
                 
                 # Generate Reports
-                reportGeneratingTime = generateReports(progressBarHoursPerSW,
+                reportGeneratingTime = generateReports(
+                           const,
+                           progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
                            progressBarFinishedItemsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
