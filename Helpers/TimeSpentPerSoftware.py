@@ -1,4 +1,4 @@
-from ReportGenerators import WorkLogsForEachSW
+from Helpers import WorkLogsForEachSW
 
 class TimeSpentPerSoftware:
     def __init__(self, desiredMonth, desiredYear, listOfSW) -> None:
