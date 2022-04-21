@@ -303,17 +303,17 @@ def generateReports(progressBarHoursPerSW,
     # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     # doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    # allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        # jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON)
+    allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
+            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))

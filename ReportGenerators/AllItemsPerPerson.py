@@ -1,5 +1,6 @@
 import threading
 import csv
+import os
 from Helpers import TimeHelper, AutoVivification
 
 class ThreadAllItemsPerPerson(threading.Thread):
@@ -19,13 +20,15 @@ class AllItemsPerPerson:
             desiredMonth,
             desiredYear,
             members,
-            fileName) -> None:
+            fileName,
+            outputFolder) -> None:
         self.jiraService = jiraService
         self.progressBarHoursPerSW = progressBarHoursPerSW
         self.desiredMonth = desiredMonth
         self.desiredYear = desiredYear
         self.members = members
         self.fileName = fileName
+        self.outputFolder = outputFolder
         self.jiraIDKey = None
         self.personKey = None
         self.timeHelper = TimeHelper.TimeHelper()
@@ -111,7 +114,8 @@ class AllItemsPerPerson:
         self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
-        with open(self.fileName, 'w', newline='') as csv_file:
+        os.makedirs(self.outputFolder, exist_ok=True) 
+        with open(self.outputFolder + self.fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
             
             # Initialize all columns
