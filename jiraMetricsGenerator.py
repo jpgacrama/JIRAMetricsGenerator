@@ -11,7 +11,7 @@ import threading
 import asyncio
 import PySimpleGUI as sg
 import json
-import TimeHelper
+from TimeHelper import TimeHelper
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
