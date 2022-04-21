@@ -12,7 +12,7 @@ import json
 import threading
 from Helpers import TimeHelper, JIRAService, AutoVivification
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
-from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson
+from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
@@ -40,92 +40,6 @@ with open('./data/software.json', 'r') as softwareFile:
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 
-# Multithreaded Class for ThreadUnfinishedItemsPerPerson
-class ThreadUnfinishedItemsPerPerson(threading.Thread):
-    def __init__(self, person, jiraService, itemsPerPerson):
-        threading.Thread.__init__(self)
-        self.person = person
-        self.jiraService = jiraService
-        self.itemsPerPerson = itemsPerPerson
-
-    def run(self):
-        self.itemsPerPerson[self.person] = self.jiraService.queryNumberOfUnfinishedItemsPerPerson(self.person)
-
-class UnfinishedItemsPerPerson:
-    def __init__(self, jiraService) -> None:
-        self.jiraService = jiraService
-        self.jiraIDKey = None
-        self.timeHelper = TimeHelper()
-        self.itemsPerPerson = AutoVivification()
-        self.worklogPerPerson = AutoVivification()
-    
-    def __extractUnfinishedItemsPerPerson__(self, progressBarUnfinishedItemsPerPerson):
-        print("\n-------- GENERATING MATRIX OF UNFINISHED ITEMS PER PERSON --------\n")
-
-        for person in MEMBERS:
-            self.itemsPerPerson[person] = {}
-
-        threads = [ThreadUnfinishedItemsPerPerson(
-                person, self.jiraService, self.itemsPerPerson) for person in MEMBERS]
-
-        for thread in threads:
-            thread.start()
-
-        i = 0
-        for thread in threads:
-            thread.join()
-            i += 1
-            progressBarUnfinishedItemsPerPerson.update_bar(i, NUMBER_OF_PEOPLE - 1)
-
-        return self.itemsPerPerson
-
-    def __computeUnfinishedItemsPerPerson__(self, logsPerValue, person, jiraID, description):
-        if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[person][jiraID] = {}
-            self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
-            self.jiraIDKey = jiraID
-
-        extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
-        if extractedDateTime:
-            timeSpent = logsPerValue.timeSpentSeconds
-            timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
-
-    async def extractUnfinishedItemsPerPerson(self, progressBarUnfinishedItemsPerPerson):
-        allWorklogs = self.__extractUnfinishedItemsPerPerson__(progressBarUnfinishedItemsPerPerson)
-        for person in allWorklogs:
-            for jiraID in allWorklogs[person]:                
-                if not allWorklogs[person][jiraID]['Total Hours Spent']:
-                    self.worklogPerPerson[person][jiraID] = {}
-                    self.worklogPerPerson[person][jiraID]['description'] = allWorklogs[person][jiraID]['description']
-                    self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
-                
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['Total Hours Spent']:
-                    description = allWorklogs[person][jiraID]['description']
-                    self.__computeUnfinishedItemsPerPerson__(worklogPerJIRAId, person, jiraID, description)
-
-        self.__generateCSVFile__()
-
-    def __generateCSVFile__(self):
-        fileName = UNFINISHED_ITEMS_PER_PERSON
-        
-        with open(fileName, 'w', newline='') as csv_file:
-            csvwriter = csv.writer(csv_file, delimiter=',')
-            
-            # Initialize all columns
-            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Hours Spent'])
-
-            for person in self.worklogPerPerson:
-                for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([
-                        person,
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
-                        self.worklogPerPerson[person][jiraID]['description'],
-                        self.worklogPerPerson[person][jiraID]['Total Hours Spent']])
-        
-        print(f"Writing to {fileName} done.")
-
 def generateReports(progressBarHoursPerSW,
                progressBarTimeSpentPerPerson,
                progressBarFinishedItemsPerPerson,
@@ -134,22 +48,22 @@ def generateReports(progressBarHoursPerSW,
     jiraService = JIRAService.JIRAService(
         CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
-    timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
-        jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, TIME_SPENT_PER_PERSON,  OUTPUT_FOLDER)
-    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, FINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
-    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+    # matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
+    #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
+    # timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
+    #     jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, TIME_SPENT_PER_PERSON,  OUTPUT_FOLDER)
+    # doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, FINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, UNFINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+    # allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
+    #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
             # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
-            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
+            # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
             # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
