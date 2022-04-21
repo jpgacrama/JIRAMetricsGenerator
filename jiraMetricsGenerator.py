@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from tkinter import SW
 from dateutil.parser import parse
 import os
 import time
@@ -11,8 +12,8 @@ import asyncio
 import PySimpleGUI as sg
 import json
 from TimeHelper import TimeHelper
-from WorkLogsForEachSW import WorkLogsForEachSW
 from JIRAService import JIRAService
+from TimeSpentPerSoftware import TimeSpentPerSoftware
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
@@ -38,20 +39,6 @@ with open('software.json', 'r') as softwareFile:
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 
-# This class is responsible for querying each of the
-# PROJECT items belonging to the various SW
-class TimeSpentPerSoftware:
-    def __init__(self) -> None:
-        self.software = {}
-        self.worklogsForEachSW = WorkLogsForEachSW(DESIRED_MONTH, DESIRED_YEAR)
-
-    def extractItemsPerSW(self, person, jIRAService):
-        self.software[person] = {}
-        for sw in SOFTWARE:
-            self.software[person][sw] = jIRAService.queryJIRAPerSW(person, sw)
-
-    def getTimeSpentForEachSW(self, person):
-        return self.worklogsForEachSW.getWorkLogsForEachSW(self.software[person], person)
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
 class ThreadHoursSpentPerSW(threading.Thread):
@@ -85,7 +72,8 @@ class HoursSpentPerSW:
             self.result[1:] = df.values.tolist()
 
     async def extractHoursPerSW(self, progressBarHoursPerSW):
-        timeSpentPerSoftware = TimeSpentPerSoftware()
+        timeSpentPerSoftware = TimeSpentPerSoftware(
+            DESIRED_MONTH, DESIRED_YEAR, SOFTWARE)
 
         print("\n-------- GENERATING MATRIX OF TIME SPENT PER SW --------\n")
 
