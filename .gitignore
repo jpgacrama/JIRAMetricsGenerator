@@ -10,3 +10,5 @@
 .vimrc
 
 Credentials.txt
+
+*.pyc
