@@ -1,5 +1,6 @@
 import pandas as pd
 import threading
+import os
 from Helpers import TimeSpentPerSoftware
 
 # Multithreaded Class for MatrixOfWorklogsPerSW
@@ -24,7 +25,8 @@ class HoursSpentPerSW:
             desiredYear,
             listOfSoftware,
             members,
-            fileName) -> None:
+            fileName,
+            outputFolder) -> None:
         self.jiraService = jiraService
         self.progressBarHoursPerSW = progressBarHoursPerSW
         self.result = []
@@ -34,6 +36,7 @@ class HoursSpentPerSW:
         self.listOfSoftware = listOfSoftware
         self.members = members
         self.fileName = fileName
+        self.outputFolder = outputFolder
 
     # Function to get the total hours spent for every SW
     def __getTotal__(self):
@@ -106,7 +109,8 @@ class HoursSpentPerSW:
             self.result[-1].pop(1)
             
             df = pd.DataFrame(self.result)
-            df.to_csv(self.fileName, index=False, header=False)
+            os.makedirs(self.outputFolder, exist_ok=True) 
+            df.to_csv(self.outputFolder + self.fileName, index=False, header=False)
         else:
             print("Data to write to CSV file is not yet available")
             exit(1)

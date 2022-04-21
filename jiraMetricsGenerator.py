@@ -28,6 +28,9 @@ FINISHED_ITEMS_PER_PERSON = 'FinishedItems.csv'
 UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
 ALL_ITEMS_PER_PERSON = 'AllItems.csv'
 
+# DIRECTORY OF THE OUTPUT FOLDER
+OUTPUT_FOLDER = './output/'
+
 # Member and SW Information
 with open('./data/members.json', 'r') as membersFile:
     MEMBERS = json.load(membersFile)
@@ -296,12 +299,12 @@ def generateReports(progressBarHoursPerSW,
         CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
     # timeSpentPerPerson = TimeSpentPerPerson(jiraService)
     # doneItemsPerPerson = FinishedItemsPerPerson(jiraService)
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson(jiraService)
-    allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON)
+    # allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
+        # jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON)
 
     try:
         loop = asyncio.get_event_loop()
@@ -310,7 +313,7 @@ def generateReports(progressBarHoursPerSW,
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
