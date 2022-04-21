@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from jira import JIRA
 from dateutil.parser import parse
 import os
 import time
@@ -13,6 +12,7 @@ import PySimpleGUI as sg
 import json
 from TimeHelper import TimeHelper
 from WorkLogsForEachSW import WorkLogsForEachSW
+from JIRAService import JIRAService
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
@@ -541,7 +541,8 @@ def generateReports(progressBarHoursPerSW,
                progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
-    jiraService = JIRAService()
+    jiraService = JIRAService(
+        CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
     matrixOfWorklogsPerSW = HoursSpentPerSW(jiraService)
     timeSpentPerPerson = TimeSpentPerPerson(jiraService)

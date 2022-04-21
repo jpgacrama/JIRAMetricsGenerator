@@ -8,7 +8,6 @@ class JIRAService:
                  members,
                  project,
                  doneStatuses) -> None:
-        self.__logInToJIRA__()
         self.username = None
         self.api_token = None
         self.CredentialsFile = CredentialsFile
@@ -17,6 +16,7 @@ class JIRAService:
         self.members = members
         self.project = project
         self.doneStatuses = doneStatuses
+        self.__logInToJIRA__()
 
     def __logInToJIRA__(self):
         
