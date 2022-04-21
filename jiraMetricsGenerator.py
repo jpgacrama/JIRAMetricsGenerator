@@ -12,9 +12,6 @@ from Helpers import JIRAService, Const
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
-# Filenames for the output files
-UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
-ALL_ITEMS_PER_PERSON = 'AllItems.csv'
 
 # DIRECTORY OF THE OUTPUT FOLDER
 OUTPUT_FOLDER = './output/'
@@ -43,18 +40,18 @@ def generateReports(
     timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
         jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForTimeSpentPerPerson(),  OUTPUT_FOLDER)
     doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForFinishedItemsPerPerson(), OUTPUT_FOLDER)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, UNFINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, const.getFilenameForUnfinishedItemsPerPerson(), OUTPUT_FOLDER)
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, const.getFilenameForAllItemsPerPerson(), OUTPUT_FOLDER)
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
             # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
@@ -101,8 +98,6 @@ def main():
     # START THE GUI
     sg.theme('Default1')
 
-    global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON
-
     try:
         layout =[
             [sg.Text('SELECT CREDENTIAL FILE')],
@@ -129,10 +124,10 @@ def main():
                 sg.InputText(key='fileForFinishedItemsPerPerson', size=(40,1), default_text=const.getFilenameForFinishedItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [name('Unfinished Items Per Person'),
-                sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=UNFINISHED_ITEMS_PER_PERSON), 
+                sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=const.getFilenameForUnfinishedItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [name('All Items Per Person'),
-                sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=ALL_ITEMS_PER_PERSON), 
+                sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=const.getFilenameForAllItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('PROGRESS BARS')],
@@ -221,15 +216,15 @@ def main():
                 if not fileForUnfinishedItemsPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForUnfinishedItemsPerPerson != UNFINISHED_ITEMS_PER_PERSON:
-                        UNFINISHED_ITEMS_PER_PERSON = fileForUnfinishedItemsPerPerson
+                    if fileForUnfinishedItemsPerPerson != const.getFilenameForUnfinishedItemsPerPerson():
+                        const.setFilenameForUnfinishedItemsPerPerson(fileForUnfinishedItemsPerPerson)
 
                 fileForAllItemsPerPerson = values['fileForAllItemsPerPerson']
                 if not fileForAllItemsPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForAllItemsPerPerson != ALL_ITEMS_PER_PERSON:
-                        ALL_ITEMS_PER_PERSON = fileForAllItemsPerPerson
+                    if fileForAllItemsPerPerson != const.getFilenameForAllItemsPerPerson():
+                        const.setFilenameForAllItemsPerPerson(fileForAllItemsPerPerson)
                 
                 # Generate Reports
                 reportGeneratingTime = generateReports(
