@@ -51,10 +51,10 @@ class JIRAService:
     def queryNumberOfUnfinishedItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {UPDATED_DATE}
-                AND assignee in ({MEMBERS[person]})
-                AND project = {PROJECT}
-                AND NOT status in ({DONE_STATUSES})
+                {self.updatedDate}
+                AND assignee in ({self.members[person]})
+                AND project = {self.project}
+                AND NOT status in ({self.doneStatuses})
              """,
             fields="worklog")
 
@@ -72,9 +72,9 @@ class JIRAService:
     def queryAllItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {UPDATED_DATE}
-                AND assignee in ({MEMBERS[person]})
-                AND project = {PROJECT}
+                {self.updatedDate}
+                AND assignee in ({self.members[person]})
+                AND project = {self.project}
              """,
             fields="worklog")
 
@@ -117,7 +117,7 @@ class JIRAService:
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
+            f'{self.updatedDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype = Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -129,7 +129,7 @@ class JIRAService:
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
+            f'{self.updatedDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype != Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -141,7 +141,7 @@ class JIRAService:
 
     def queryJIRAPerSW(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'{UPDATED_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{self.updatedDate} AND assignee in ({self.members[memberToQuery]}) AND project = {self.project} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
