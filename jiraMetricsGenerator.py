@@ -13,7 +13,6 @@ from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 # JIRA-related information
-CREDENTIAL_FILE = './data/Credentials.txt'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
@@ -43,7 +42,7 @@ def generateReports(progressBarHoursPerSW,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-        CREDENTIAL_FILE, Const.Const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
+        Const.Const.getCredentialFile(), Const.Const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
@@ -93,23 +92,29 @@ def clean():
                 # deleting the csv file 
                 os.remove(path)
     
-    shutil.rmtree(OUTPUT_FOLDER, ignore_errors=False, onerror=None)
+    shutil.rmtree(OUTPUT_FOLDER, ignore_errors=True, onerror=None)
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def setConstants():
+    const = Const.Const()
+    const.setCredentialFile('./data/Credentials.txt')
+    return const
 
 def main():
     clean()
+    const = setConstants()
     
     # START THE GUI
     sg.theme('Default1')
 
     global HOURS_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
-    global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON, CREDENTIAL_FILE
+    global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON
 
     try:
         layout =[
             [sg.Text('SELECT CREDENTIAL FILE')],
             [name('Credential File'),
-                sg.InputText(key='fileForCredentials', size=(40,1), default_text=CREDENTIAL_FILE), 
+                sg.InputText(key='fileForCredentials', size=(40,1), default_text=const.getCredentialFile()), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('SELECT DATE RANGE')],
@@ -170,8 +175,8 @@ def main():
                 if not fileForCredentials.endswith('txt'):
                     raise Exception('Filename should have .txt extension')
                 else:
-                    if fileForCredentials != CREDENTIAL_FILE:
-                        CREDENTIAL_FILE = fileForCredentials
+                    if fileForCredentials != Const.Const.getCredentialFile():
+                        Const.Const.setCredentialFile(fileForCredentials)
 
                 # Start and End Dates
                 startDate = values['start_date']
