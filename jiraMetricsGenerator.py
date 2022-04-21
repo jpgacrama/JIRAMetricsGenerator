@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from jira import JIRA
-from datetime import datetime
 from dateutil.parser import parse
 import os
 import time
@@ -12,6 +11,7 @@ import threading
 import asyncio
 import PySimpleGUI as sg
 import json
+import TimeHelper
 
 URL = 'https://macrovue.atlassian.net'
 PROJECT = 'OMNI'
@@ -40,18 +40,6 @@ CREDENTIAL_FILE = 'Credentials.txt'
 # Only JIRA Query can filter out DONE Items. 
 DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
 
-class TimeHelper:
-    def trimDate(self, jiraValue):
-        dateOfLog = jiraValue
-        dateOfLog = dateOfLog.split(" ")
-        dateOfLog[-1] = dateOfLog[-1][:10]
-        dateOfLog = " ".join(dateOfLog)
-        extractedDateTime = datetime.strptime(dateOfLog, "%Y-%m-%d")
-        return extractedDateTime
-
-    def convertToHours(self, timeInSeconds):
-        timeInHours = round(timeInSeconds / (60*60), 2)
-        return timeInHours
 
 # Helper Class to get Work Logs per SW
 class WorkLogsForEachSW:
@@ -754,10 +742,10 @@ def generateReports(progressBarHoursPerSW,
         loop = asyncio.get_event_loop()
         tasks = [
             loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW(progressBarHoursPerSW)),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
+            # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
+            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
