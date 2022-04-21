@@ -8,12 +8,11 @@ import asyncio
 import PySimpleGUI as sg
 import json
 import shutil
-from Helpers import JIRAService
+from Helpers import JIRAService, Const
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 # JIRA-related information
-URL = 'https://macrovue.atlassian.net'
 CREDENTIAL_FILE = './data/Credentials.txt'
 PROJECT = 'OMNI'
 STORY_POINT_ESTIMATE = '\"Story point estimate\"'
@@ -44,7 +43,7 @@ def generateReports(progressBarHoursPerSW,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-        CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
+        CREDENTIAL_FILE, Const.Const.get_JIRA_URL(), UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
