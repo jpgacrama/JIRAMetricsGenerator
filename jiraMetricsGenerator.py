@@ -12,6 +12,7 @@ import asyncio
 import PySimpleGUI as sg
 import json
 from TimeHelper import TimeHelper
+from WorkLogsForEachSW import WorkLogsForEachSW
 
 # JIRA-related information
 URL = 'https://macrovue.atlassian.net'
@@ -37,199 +38,12 @@ with open('software.json', 'r') as softwareFile:
 
 NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
 
-
-# Helper Class to get Work Logs per SW
-class WorkLogsForEachSW:
-    def __init__(self) -> None:
-        self.dictionaryWorklog = {}
-        self.timeHelper = TimeHelper()
-        self.issueId = None
-        self.totalTimeSpent = 0
-        self.newTimeSpent = 0
-
-    def __computeTotalTimeSpent__(self, value, person, sw):
-        self.issueId = None
-        self.totalTimeSpent = 0
-        self.newTimeSpent = 0
-
-        # logsPerValue means first log, second log, etc.
-        for logsPerValue in value:
-            extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
-            if extractedDateTime:
-                if extractedDateTime.month == DESIRED_MONTH and extractedDateTime.year == DESIRED_YEAR:
-                    if self.issueId != logsPerValue.issueId:
-                        self.totalTimeSpent = 0
-                        self.issueId = logsPerValue.issueId
-                        self.totalTimeSpent = logsPerValue.timeSpentSeconds
-                        self.totalTimeSpent = self.timeHelper.convertToHours(self.totalTimeSpent)
-                        self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
-                    else:
-                        newTimeSpent = 0
-                        newTimeSpent = logsPerValue.timeSpentSeconds
-                        newTimeSpent = self.timeHelper.convertToHours(newTimeSpent)
-                        self.totalTimeSpent += newTimeSpent
-                        self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
-
-    def getWorkLogsForEachSW(self, software, person):
-        self.dictionaryWorklog[person] = {}
-        if software:
-            for sw in software:
-                self.dictionaryWorklog[person][sw] = {}
-                for value in software[sw].values():
-                    self.__computeTotalTimeSpent__(value, person, sw)
-                self.dictionaryWorklog[person][sw] = round(sum(self.dictionaryWorklog[person][sw].values()), 2)
-            return self.dictionaryWorklog
-
-        else:
-            print("TimeSpentPerSoftware.extractItemsPerSW() should be run first.")
-            exit()
-
-# This Class is responsible for logging in to JIRA and performing Queries
-class JIRAService:
-    def __init__(self) -> None:
-        self.__logInToJIRA__()
-        self.username = None
-        self.api_token = None
-
-    def __logInToJIRA__(self):
-        
-        with open(CREDENTIAL_FILE, 'r', newline='') as file:
-            lines = file.read().splitlines() 
-
-        username = lines[0]
-        api_token = lines[1]
-        self.jiraService = JIRA(URL, basic_auth=(username, api_token))
-
-    def queryNumberOfDoneItemsPerPerson(self, person):
-        allIssues = self.jiraService.search_issues(
-            f"""
-                {UPDATED_DATE}
-                AND assignee in ({MEMBERS[person]})
-                AND project = {PROJECT}
-                AND status in ({DONE_STATUSES})
-             """,
-            fields="worklog")
-
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = {}
-            allWorklogs[str(issue)]['description'] = {}
-            allWorklogs[str(issue)]['Hours Spent for the Month'] = {}
-            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
-
-        # Returns a list of Worklogs
-        return allWorklogs
-
-    def queryNumberOfUnfinishedItemsPerPerson(self, person):
-        allIssues = self.jiraService.search_issues(
-            f"""
-                {UPDATED_DATE}
-                AND assignee in ({MEMBERS[person]})
-                AND project = {PROJECT}
-                AND NOT status in ({DONE_STATUSES})
-             """,
-            fields="worklog")
-
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = {}
-            allWorklogs[str(issue)]['description'] = {}
-            allWorklogs[str(issue)]['Total Hours Spent'] = {}
-            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
-
-        # Returns a list of Worklogs
-        return allWorklogs
-    
-    def queryAllItemsPerPerson(self, person):
-        allIssues = self.jiraService.search_issues(
-            f"""
-                {UPDATED_DATE}
-                AND assignee in ({MEMBERS[person]})
-                AND project = {PROJECT}
-             """,
-            fields="worklog")
-
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = {}
-            allWorklogs[str(issue)]['description'] = {}
-            allWorklogs[str(issue)]['Software'] = {}
-            allWorklogs[str(issue)]['Component'] = {}
-            allWorklogs[str(issue)]['Issue Type'] = {}
-            allWorklogs[str(issue)]['Story Point'] = {}
-            allWorklogs[str(issue)]['Status'] = {}
-            allWorklogs[str(issue)]['Date Started'] = {}
-            allWorklogs[str(issue)]['Date Finished'] = {}
-            allWorklogs[str(issue)]['Hours Spent for the Month'] = {}
-            allWorklogs[str(issue)]['Total Hours Spent'] = {}
-            
-            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
-            allWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
-            allWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
-
-            if 'customfield_11428' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
-                allWorklogs[str(issue)]['Software'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']['value']
-
-            if 'customfield_11414' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
-                allWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
-            
-            allWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
-            allWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
-            allWorklogs[str(issue)]['Status'] = self.jiraService.issue(str(issue)).raw['fields']['status']['name']
-
-            if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
-                allWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
-
-            if len(self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs']) > 0:
-                allWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
-            
-        # Returns a list of Worklogs
-        return allWorklogs
-
-    def queryAdhocItemsPerPerson(self, person):
-        allIssues = self.jiraService.search_issues(
-            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype = Ad-hoc',
-            fields="worklog")
-
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
-
-        # Returns a list of Worklogs
-        return allWorklogs
-    
-    def queryProjectItemsPerPerson(self, person):
-        allIssues = self.jiraService.search_issues(
-            f'{UPDATED_DATE} AND assignee in ({MEMBERS[person]}) AND project = {PROJECT} AND issuetype != Ad-hoc',
-            fields="worklog")
-
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
-
-        # Returns a list of Worklogs
-        return allWorklogs
-
-    def queryJIRAPerSW(self, memberToQuery, swToQuery):
-        allIssues = self.jiraService.search_issues(
-            f'{UPDATED_DATE} AND assignee in ({MEMBERS[memberToQuery]}) AND project = {PROJECT} AND "Software[Dropdown]" = \"{swToQuery}\"',
-            fields="worklog")
-
-        allWorklogs = {}
-        for issue in allIssues:
-            allWorklogs[str(issue)] = self.jiraService.worklogs(issue)
-
-        # Returns a list of Worklogs
-        return allWorklogs
-
 # This class is responsible for querying each of the
 # PROJECT items belonging to the various SW
 class TimeSpentPerSoftware:
     def __init__(self) -> None:
         self.software = {}
-        self.worklogsForEachSW = WorkLogsForEachSW()
+        self.worklogsForEachSW = WorkLogsForEachSW(DESIRED_MONTH, DESIRED_YEAR)
 
     def extractItemsPerSW(self, person, jIRAService):
         self.software[person] = {}
