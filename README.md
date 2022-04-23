@@ -1,5 +1,5 @@
-# TABLE OF CONTENTS
-- [TABLE OF CONTENTS](#table-of-contents)
+# JIRA METRICS GENERATOR
+- [JIRA METRICS GENERATOR](#jira-metrics-generator)
 - [1. Introduction](#1-introduction)
   - [1.1. Pre-requisites](#11-pre-requisites)
   - [1.2. Things to Remember](#12-things-to-remember)
