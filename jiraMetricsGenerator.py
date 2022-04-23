@@ -6,54 +6,29 @@ import os
 import time
 import asyncio
 import PySimpleGUI as sg
-import json
 import shutil
-from Helpers import JIRAService
+from Helpers import JIRAService, Const
 from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
-# JIRA-related information
-URL = 'https://macrovue.atlassian.net'
-CREDENTIAL_FILE = './data/Credentials.txt'
-PROJECT = 'OMNI'
-STORY_POINT_ESTIMATE = '\"Story point estimate\"'
-DONE_STATUSES = "Done, \"READY FOR PROD RELEASE\""
-
-# Filenames for the output files
-HOURS_SPENT_PER_SW = 'HoursPerSW.csv'
-TIME_SPENT_PER_PERSON = 'TimePerPerson.csv'
-FINISHED_ITEMS_PER_PERSON = 'FinishedItems.csv'
-UNFINISHED_ITEMS_PER_PERSON = 'UnfinishedItems.csv'
-ALL_ITEMS_PER_PERSON = 'AllItems.csv'
-
-# DIRECTORY OF THE OUTPUT FOLDER
-OUTPUT_FOLDER = './output/'
-
-# Member and SW Information
-with open('./data/members.json', 'r') as membersFile:
-    MEMBERS = json.load(membersFile)
-
-with open('./data/software.json', 'r') as softwareFile:
-    SOFTWARE = json.load(softwareFile)
-
-NUMBER_OF_PEOPLE = len(MEMBERS) # This is also the number of threads
-
-def generateReports(progressBarHoursPerSW,
+def generateReports(
+               const,
+               progressBarHoursPerSW,
                progressBarTimeSpentPerPerson,
                progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-        CREDENTIAL_FILE, URL, UPDATED_DATE, MEMBERS, PROJECT, DONE_STATUSES)
+       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, SOFTWARE, MEMBERS, HOURS_SPENT_PER_SW, OUTPUT_FOLDER)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getSoftware(), const.getMembers(), const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
     timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
-        jiraService, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, TIME_SPENT_PER_PERSON,  OUTPUT_FOLDER)
-    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, MEMBERS, FINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, MEMBERS, UNFINISHED_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+        jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
+    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
+    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, MEMBERS, ALL_ITEMS_PER_PERSON, OUTPUT_FOLDER)
+        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
         loop = asyncio.get_event_loop()
@@ -81,36 +56,30 @@ def name(name):
     dots = nameSize-len(name)-2
     return sg.Text(name + ' ' + '•'*dots, size=(nameSize,1), justification='r',pad=(0,0), font='Courier 10')
 
-def clean():
+def clean(const):
     for folder, subfolders, files in os.walk('./'): 
         for file in files: 
             if file.endswith('.csv'): 
                 path = os.path.join(folder, file) 
-                    
-                # printing the path of the file 
-                # to be deleted 
                 print('deleted : ', path )
-                
-                # deleting the csv file 
                 os.remove(path)
     
-    shutil.rmtree(OUTPUT_FOLDER, ignore_errors=False, onerror=None)
+    shutil.rmtree(const.getOutputFolder(), ignore_errors=True, onerror=None)
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def main():
-    clean()
-    
-    # START THE GUI
-    sg.theme('Default1')
+def setConstants():
+    const = Const.Const()
+    const.setCredentialFile('./data/Credentials.txt')
+    return const
 
-    global HOURS_SPENT_PER_SW, TIME_SPENT_PER_PERSON, FINISHED_ITEMS_PER_PERSON
-    global UNFINISHED_ITEMS_PER_PERSON, ALL_ITEMS_PER_PERSON, CREDENTIAL_FILE
+def createGUI(const):
+    sg.theme('Default1')
 
     try:
         layout =[
             [sg.Text('SELECT CREDENTIAL FILE')],
             [name('Credential File'),
-                sg.InputText(key='fileForCredentials', size=(40,1), default_text=CREDENTIAL_FILE), 
+                sg.InputText(key='fileForCredentials', size=(40,1), default_text=const.getCredentialFile()), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('SELECT DATE RANGE')],
@@ -123,19 +92,19 @@ def main():
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('ENTER FILE NAMES FOR THE REPORTS IN CSV FORMAT')],
             [name('Hours Spent per SW'),
-                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=HOURS_SPENT_PER_SW), 
+                sg.InputText(key='fileForHoursPerSW', size=(40,1), default_text=const.getFilenameForHoursSpentPerSW()), 
                 sg.FileBrowse(size=(15,1))],
             [name('Time Spent Per Person'),
-                sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=TIME_SPENT_PER_PERSON), 
+                sg.InputText(key='fileForTimeSpentPerPerson', size=(40,1), default_text=const.getFilenameForTimeSpentPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [name('Finished Items Per Person'),
-                sg.InputText(key='fileForFinishedItemsPerPerson', size=(40,1), default_text=FINISHED_ITEMS_PER_PERSON), 
+                sg.InputText(key='fileForFinishedItemsPerPerson', size=(40,1), default_text=const.getFilenameForFinishedItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [name('Unfinished Items Per Person'),
-                sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=UNFINISHED_ITEMS_PER_PERSON), 
+                sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=const.getFilenameForUnfinishedItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [name('All Items Per Person'),
-                sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=ALL_ITEMS_PER_PERSON), 
+                sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=const.getFilenameForAllItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('PROGRESS BARS')],
@@ -171,8 +140,8 @@ def main():
                 if not fileForCredentials.endswith('txt'):
                     raise Exception('Filename should have .txt extension')
                 else:
-                    if fileForCredentials != CREDENTIAL_FILE:
-                        CREDENTIAL_FILE = fileForCredentials
+                    if fileForCredentials != const.getCredentialFile():
+                        const.setCredentialFile(fileForCredentials)
 
                 # Start and End Dates
                 startDate = values['start_date']
@@ -198,44 +167,45 @@ def main():
                     DESIRED_MONTH = endDate.month
 
                 # Filenames for output files
-
                 fileForHoursPerSW = values['fileForHoursPerSW']
                 if not fileForHoursPerSW.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForHoursPerSW != HOURS_SPENT_PER_SW:
-                        HOURS_SPENT_PER_SW = fileForHoursPerSW
+                    if fileForHoursPerSW != const.getFilenameForHoursSpentPerSW():
+                        const.setFilenameForHoursSpentPerSW(fileForHoursPerSW)
 
                 fileForTimeSpentPerPerson = values['fileForTimeSpentPerPerson']
                 if not fileForTimeSpentPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForTimeSpentPerPerson != TIME_SPENT_PER_PERSON:
-                        TIME_SPENT_PER_PERSON = fileForTimeSpentPerPerson
+                    if fileForTimeSpentPerPerson != const.getFilenameForTimeSpentPerPerson():
+                        const.setFilenameForTimeSpentPerPerson(fileForTimeSpentPerPerson)
 
                 fileForFinishedItemsPerPerson = values['fileForFinishedItemsPerPerson']
                 if not fileForFinishedItemsPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForFinishedItemsPerPerson != FINISHED_ITEMS_PER_PERSON:
-                        FINISHED_ITEMS_PER_PERSON = fileForFinishedItemsPerPerson
+                    if fileForFinishedItemsPerPerson != const.getFilenameForFinishedItemsPerPerson():
+                        const.setFilenameForFinishedItemsPerPerson(fileForFinishedItemsPerPerson)
 
                 fileForUnfinishedItemsPerPerson = values['fileForUnfinishedItemsPerPerson']
                 if not fileForUnfinishedItemsPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForUnfinishedItemsPerPerson != UNFINISHED_ITEMS_PER_PERSON:
-                        UNFINISHED_ITEMS_PER_PERSON = fileForUnfinishedItemsPerPerson
+                    if fileForUnfinishedItemsPerPerson != const.getFilenameForUnfinishedItemsPerPerson():
+                        const.setFilenameForUnfinishedItemsPerPerson(fileForUnfinishedItemsPerPerson)
 
                 fileForAllItemsPerPerson = values['fileForAllItemsPerPerson']
                 if not fileForAllItemsPerPerson.endswith('csv'):
                     raise Exception('Filename should have .csv extension')
                 else:
-                    if fileForAllItemsPerPerson != ALL_ITEMS_PER_PERSON:
-                        ALL_ITEMS_PER_PERSON = fileForAllItemsPerPerson
+                    if fileForAllItemsPerPerson != const.getFilenameForAllItemsPerPerson():
+                        const.setFilenameForAllItemsPerPerson(fileForAllItemsPerPerson)
                 
                 # Generate Reports
-                reportGeneratingTime = generateReports(progressBarHoursPerSW,
+                reportGeneratingTime = generateReports(
+                           const,
+                           progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
                            progressBarFinishedItemsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
@@ -248,5 +218,10 @@ def main():
 
     window.CloseNonBlocking()
 
+def main():
+    const = setConstants()
+    clean(const)
+    createGUI(const)
+    
 if __name__ == "__main__":
     main()

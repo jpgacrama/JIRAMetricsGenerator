@@ -1,6 +1,6 @@
 from Helpers import TimeHelper
 
-class WorkLogsForEachSW:
+class APersonsWorkLogsForEachSW:
     def __init__(self, desiredMonth, desiredYear) -> None:
         self.dictionaryWorklog = {}
         self.timeHelper = TimeHelper.TimeHelper()
@@ -33,7 +33,7 @@ class WorkLogsForEachSW:
                         self.totalTimeSpent += newTimeSpent
                         self.dictionaryWorklog[person][sw][self.issueId] = self.totalTimeSpent
 
-    def getWorkLogsForEachSW(self, software, person):
+    def getAPersonsWorkLogForEachSW(self, software, person):
         self.dictionaryWorklog[person] = {}
         if software:
             for sw in software:
