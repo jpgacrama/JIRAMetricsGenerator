@@ -12,3 +12,7 @@
 Credentials.txt
 
 *.pyc
+
+dist/
+
+build/
