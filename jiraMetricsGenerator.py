@@ -216,7 +216,7 @@ def createGUI(const):
     except Exception as error:
         sg.popup_error(error, title='Exception Raised')
 
-    window.CloseNonBlocking()
+    window.close()
 
 def main():
     const = setConstants()
