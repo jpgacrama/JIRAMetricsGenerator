@@ -19,16 +19,6 @@ class Epics:
         self.timeHelper = TimeHelper.TimeHelper()
         self.epics = self.jiraService.queryEpics()
         self.worklogPerPerson = AutoVivification.AutoVivification()
-    
-    def __epicsProgressBar__(self, progressBarEpics):
-        print("\n-------- GENERATING MATRIX OF EPICS --------\n")
-
-        i = 0
-        for epic in self.epics:
-            i += 1
-            progressBarEpics.update_bar(i, len(self.epics) - 1)
-
-        return self.epics
 
     def __computeTimeSpentPerEpic__(self, logsPerValue, jiraID, description):
         if self.jiraIDKey != jiraID:
@@ -51,12 +41,13 @@ class Epics:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[jiraID]['Total Hours Spent'] += timeSpent
 
-    def extractEpics(self, progressBarUnfinishedItemsPerPerson):
-        allWorklogs = self.__epicsProgressBar__(progressBarUnfinishedItemsPerPerson)
-        for person in allWorklogs:
-            for jiraID in allWorklogs[person]:                
+    def extractEpics(self, progressBarEpics):
+        print("\n-------- GENERATING MATRIX OF EPICS --------\n")
+
+        for epic in self.epics:
+            for child in self.epics[epic]:                
                 exclude_keys = ['description']
-                parentDictionary = allWorklogs[person][jiraID]
+                parentDictionary = self.epics[epic]
                 childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
                 
                 for child in childrenDictionary:
