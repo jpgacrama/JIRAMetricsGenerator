@@ -11,7 +11,15 @@
 
 Credentials.txt
 
+<<<<<<< HEAD
 build/
 
 dist/
 *.pyc
+=======
+*.pyc
+
+dist/
+
+build/
+>>>>>>> master
