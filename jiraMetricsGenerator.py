@@ -8,7 +8,7 @@ import asyncio
 import PySimpleGUI as sg
 import shutil
 from Helpers import JIRAService, Const
-from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
+from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson, EpicsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 def generateReports(
@@ -17,9 +17,10 @@ def generateReports(
                progressBarTimeSpentPerPerson,
                progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
+               progressBarEpicsPerPerson,
                progressBarAllItemsPerPerson):
     jiraService = JIRAService.JIRAService(
-       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
+       const.getCredentialFile(), const.get_JIRA_URL(), WORKLOG_DATE, UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getSoftware(), const.getMembers(), const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
@@ -27,17 +28,19 @@ def generateReports(
         jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
     doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
+    epicsPerPerson = EpicsPerPerson.EpicsPerPerson(jiraService, const.getMembers(), const.getFilenameForEpicsPerPerson(), const.getOutputFolder())
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
-            loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
-            loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
-            loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
-            loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
+            # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
+            # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
+            # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            loop.create_task(epicsPerPerson.extractEpicsPerPerson(progressBarEpicsPerPerson)),
+            # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
+            # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
         start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
@@ -152,8 +155,10 @@ def createGUI(const):
                 # Start and End Dates
                 startDate = values['start_date']
                 endDate = values['end_date']
+                global WORKLOG_DATE
+                WORKLOG_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
                 global UPDATED_DATE
-                UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
+                UPDATED_DATE = f"updated >= \"{startDate}\" AND updated < \"{endDate}\""
                 startDate = parse(startDate, fuzzy=True)
                 endDate = parse(endDate, fuzzy=True)
 
@@ -214,8 +219,8 @@ def createGUI(const):
                            progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
                            progressBarFinishedItemsPerPerson,
-                           progressBarEpicsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
+                           progressBarEpicsPerPerson,
                            progressBarAllItemsPerPerson)
                 sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.', title='Success')
                 break

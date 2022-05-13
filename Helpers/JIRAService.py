@@ -4,6 +4,7 @@ class JIRAService:
     def __init__(self, 
                  CredentialsFile,
                  URL,
+                 worklogDate,
                  updatedDate,
                  members,
                  project,
@@ -12,6 +13,7 @@ class JIRAService:
         self.api_token = None
         self.CredentialsFile = CredentialsFile
         self.URL = URL
+        self.worklogDate = worklogDate
         self.updatedDate = updatedDate
         self.members = members
         self.project = project
@@ -27,7 +29,7 @@ class JIRAService:
         api_token = lines[1]
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
 
-    def queryEpicsWithProductionSupportPerPerson(self, person):
+    def queryNumberOfEpicsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
                 {self.updatedDate}
@@ -46,7 +48,7 @@ class JIRAService:
     def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {self.updatedDate}
+                {self.worklogDate}
                 AND assignee in ({self.members[person]})
                 AND project = {self.project}
                 AND status in ({self.doneStatuses})
@@ -67,7 +69,7 @@ class JIRAService:
     def queryNumberOfUnfinishedItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {self.updatedDate}
+                {self.worklogDate}
                 AND assignee in ({self.members[person]})
                 AND project = {self.project}
                 AND NOT status in ({self.doneStatuses})
@@ -88,7 +90,7 @@ class JIRAService:
     def queryAllItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {self.updatedDate}
+                {self.worklogDate}
                 AND assignee in ({self.members[person]})
                 AND project = {self.project}
              """,
@@ -133,7 +135,7 @@ class JIRAService:
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{self.updatedDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype = Ad-hoc',
+            f'{self.worklogDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype = Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -145,7 +147,7 @@ class JIRAService:
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{self.updatedDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype != Ad-hoc',
+            f'{self.worklogDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype != Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -157,7 +159,7 @@ class JIRAService:
 
     def queryJIRAPerSW(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'{self.updatedDate} AND assignee in ({self.members[memberToQuery]}) AND project = {self.project} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{self.worklogDate} AND assignee in ({self.members[memberToQuery]}) AND project = {self.project} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
