@@ -47,7 +47,7 @@ class Epics:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerEpic[jiraID]['Total Hours Spent'] += timeSpent
 
-    def extractEpics(self, progressBarEpics):
+    async def extractEpics(self, progressBarEpics):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
 
         for epic in self.epics:
@@ -64,22 +64,29 @@ class Epics:
                 # Re-attach Children to parent
                 combinedDictionary = {list(self.epics.keys())[0]: self.worklogPerEpic}
 
-        self.__generateCSVFile__()
+        self.__generateCSVFile__(combinedDictionary)
 
-    def __generateCSVFile__(self):
+    def __generateCSVFile__(self, combinedDictionary):
         os.makedirs(self.outputFolder, exist_ok=True) 
         with open(self.outputFolder + self.fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
             
             # Initialize all columns
-            csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Hours Spent'])
+            csvwriter.writerow(['Parent Epic ID','Child ID', 'Description', 'Hours Spent for the Month', 'Total Hours Spent'])
 
-            for item in self.worklogPerEpic:
-                csvwriter.writerow([
-                    item,
-                    f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
-                    self.worklogPerEpic[item][jiraID]['description'],
-                    self.worklogPerEpic[item][jiraID]['Total Hours Spent']])
+            i = 0
+            for item in combinedDictionary:
+                if not i:
+                    csvwriter.writerow([
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")',                        
+                    ])
+                else:
+                    csvwriter.writerow([
+                        item,
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
+                        self.worklogPerEpic[item][jiraID]['description'],
+                        self.worklogPerEpic[item][jiraID]['Total Hours Spent']])
+                i += 1
         
         print(f"Writing to {self.fileName} done.")
 
