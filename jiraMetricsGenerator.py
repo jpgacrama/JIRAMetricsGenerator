@@ -103,6 +103,9 @@ def createGUI(const):
             [name('Unfinished Items Per Person'),
                 sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=const.getFilenameForUnfinishedItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
+            [name('Epics Per Person'),
+                sg.InputText(key='fileForEpicsPerPerson', size=(40,1), default_text=const.getFilenameForEpicsPerPerson()), 
+                sg.FileBrowse(size=(15,1))],
             [name('All Items Per Person'),
                 sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=const.getFilenameForAllItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
@@ -116,6 +119,8 @@ def createGUI(const):
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='doneItemsPerPerson')],
             [name('Unfinished Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='unfinishedItemsPerPerson')],
+            [name('Epics Per Person'),
+                sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='epicsPerPerson')],
             [name('All Items Per Person. This takes time. Please be patient'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='allItemsPerPerson')],
             [sg.Button('Start', size=(15,1)), sg.Exit(size=(15,1))],
@@ -128,6 +133,7 @@ def createGUI(const):
         progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
         progressBarFinishedItemsPerPerson = window['doneItemsPerPerson']
         progressBarUnfinishedItemsPerPerson = window['unfinishedItemsPerPerson']
+        progressBarEpicsPerPerson = window['epicsPerPerson']
         progressBarAllItemsPerPerson = window['allItemsPerPerson']
 
         while True:
@@ -208,6 +214,7 @@ def createGUI(const):
                            progressBarHoursPerSW,
                            progressBarTimeSpentPerPerson,
                            progressBarFinishedItemsPerPerson,
+                           progressBarEpicsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
                            progressBarAllItemsPerPerson)
                 sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.', title='Success')

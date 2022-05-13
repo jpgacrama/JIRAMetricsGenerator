@@ -27,6 +27,22 @@ class JIRAService:
         api_token = lines[1]
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
 
+    def queryEpicsWithProductionSupportPerPerson(self, person):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                {self.updatedDate}
+                AND assignee in ({self.members[person]})
+                AND project = {self.project}
+                AND issuetype = Epic
+                AND labels = production-support
+             """,
+            fields="worklog")
+
+        allWorklogs = {}
+
+        # Returns a list of Worklogs
+        return allWorklogs
+
     def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
