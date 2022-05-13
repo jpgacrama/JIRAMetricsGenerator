@@ -22,15 +22,15 @@ def generateReports(
     jiraService = JIRAService.JIRAService(
        const.getCredentialFile(), const.get_JIRA_URL(), WORKLOG_DATE, UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
 
-    matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getSoftware(), const.getMembers(), const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
-    timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
-        jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
-    doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
-    unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
-    epicsPerPerson = EpicsPerPerson.EpicsPerPerson(jiraService, const.getMembers(), const.getFilenameForEpicsPerPerson(), const.getOutputFolder())
-    allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
-        jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
+    # matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
+    #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getSoftware(), const.getMembers(), const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
+    # timeSpentPerPerson = TimeSpentPerPerson.TimeSpentPerPerson(
+    #     jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
+    # doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
+    # unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
+    epicsPerPerson = EpicsPerPerson.EpicsPerPerson(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForEpicsPerPerson(), const.getOutputFolder())
+    # allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
+    #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
         loop = asyncio.get_event_loop()

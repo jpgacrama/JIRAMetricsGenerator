@@ -18,6 +18,8 @@ class EpicsPerPerson:
     def __init__(
             self,
             jiraService,
+            desiredMonth,
+            desiredYear,
             members,
             fileName,
             outputFolder) -> None:
@@ -26,6 +28,8 @@ class EpicsPerPerson:
         self.members = members
         self.fileName = fileName
         self.outputFolder = outputFolder
+        self.desiredMonth = desiredMonth
+        self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
         self.itemsPerPerson = AutoVivification.AutoVivification()
         self.worklogPerPerson = AutoVivification.AutoVivification()
@@ -56,10 +60,18 @@ class EpicsPerPerson:
             self.worklogPerPerson[jiraID] = {}
             self.worklogPerPerson[jiraID]['description'] = description
             self.worklogPerPerson[jiraID]['Total Hours Spent'] = 0
+            self.worklogPerPerson[jiraID]['Hours Spent for the Month'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
+            # For Hours Spent for the Current Month
+            if extractedDateTime.month == self.desiredMonth and extractedDateTime.year == self.desiredYear:
+                timeSpent = logsPerValue.timeSpentSeconds
+                timeSpent = self.timeHelper.convertToHours(timeSpent)
+                self.worklogPerPerson[jiraID]['Hours Spent for the Month'] += timeSpent
+            
+            # For Total Hours Spent
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[jiraID]['Total Hours Spent'] += timeSpent
@@ -76,7 +88,6 @@ class EpicsPerPerson:
                     for worklog in childrenDictionary[child]['Total Hours Spent']:
                         description = childrenDictionary[child]['description']
                         self.__computeEpicsPerPerson__(worklog, child, description)
-                        pass
 
         self.__generateCSVFile__()
 
