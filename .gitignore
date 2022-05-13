@@ -10,3 +10,8 @@
 .vimrc
 
 Credentials.txt
+
+build/
+
+dist/
+*.pyc
