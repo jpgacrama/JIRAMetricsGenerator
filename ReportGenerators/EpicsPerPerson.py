@@ -51,24 +51,32 @@ class EpicsPerPerson:
 
         return self.itemsPerPerson
 
-    def __computeEpicsPerPerson__(self, logsPerValue, person, jiraID, description):
+    def __computeEpicsPerPerson__(self, logsPerValue, jiraID, description):
         if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[person][jiraID] = {}
-            self.worklogPerPerson[person][jiraID]['description'] = description
-            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
+            self.worklogPerPerson[jiraID] = {}
+            self.worklogPerPerson[jiraID]['description'] = description
+            self.worklogPerPerson[jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
         if extractedDateTime:
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[person][jiraID]['Total Hours Spent'] += timeSpent
+            self.worklogPerPerson[jiraID]['Total Hours Spent'] += timeSpent
 
     async def extractEpicsPerPerson(self, progressBarUnfinishedItemsPerPerson):
         allWorklogs = self.__extractEpicsPerPerson__(progressBarUnfinishedItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
-                pass
+                exclude_keys = ['description']
+                parentDictionary = allWorklogs[person][jiraID]
+                childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
+                
+                for child in childrenDictionary:
+                    for worklog in childrenDictionary[child]['Total Hours Spent']:
+                        description = childrenDictionary[child]['description']
+                        self.__computeEpicsPerPerson__(worklog, child, description)
+                        pass
 
         self.__generateCSVFile__()
 
