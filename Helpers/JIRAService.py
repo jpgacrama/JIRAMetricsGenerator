@@ -29,11 +29,12 @@ class JIRAService:
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
         pass
 
-    def queryNumberOfEpicsPerPerson(self, person):
+    # TODO: This was labeled to have production support.
+    # Change this to support non-production support items
+    def queryEpics(self):
         allEpics = self.jiraService.search_issues(
             f"""
                 {self.updatedDate}
-                AND assignee in ({self.members[person]})
                 AND project = {self.project}
                 AND issuetype = Epic
                 AND labels = production-support

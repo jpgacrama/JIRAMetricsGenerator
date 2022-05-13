@@ -1,61 +1,36 @@
-import threading
 import csv
 import os
 from Helpers import TimeHelper, AutoVivification
 
-# Multithreaded Class for ThreadUnfinishedItemsPerPerson
-class ThreadEpicsPerPerson(threading.Thread):
-    def __init__(self, person, jiraService, epicsPerPerson):
-        threading.Thread.__init__(self)
-        self.person = person
-        self.jiraService = jiraService
-        self.epicsPerPerson = epicsPerPerson
-
-    def run(self):
-        self.epicsPerPerson[self.person] = self.jiraService.queryNumberOfEpicsPerPerson(self.person)
-
-class EpicsPerPerson:
+class Epics:
     def __init__(
             self,
             jiraService,
             desiredMonth,
             desiredYear,
-            members,
             fileName,
             outputFolder) -> None:
         self.jiraService = jiraService
         self.jiraIDKey = None
-        self.members = members
         self.fileName = fileName
         self.outputFolder = outputFolder
         self.desiredMonth = desiredMonth
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
-        self.itemsPerPerson = AutoVivification.AutoVivification()
+        self.epics = self.jiraService.queryEpics()
         self.worklogPerPerson = AutoVivification.AutoVivification()
     
-    def __extractEpicsPerPerson__(self, progressBarEpicsPerPerson):
-        print("\n-------- GENERATING MATRIX OF EPICS PER PERSON --------\n")
-
-        for person in self.members:
-            self.itemsPerPerson[person] = {}
-
-        threads = [ThreadEpicsPerPerson(
-                person, self.jiraService, self.itemsPerPerson) for person in self.members]
-
-        for thread in threads:
-            thread.start()
+    def __epicsProgressBar__(self, progressBarEpics):
+        print("\n-------- GENERATING MATRIX OF EPICS --------\n")
 
         i = 0
-        numberOfPeople = len(self.members)
-        for thread in threads:
-            thread.join()
+        for epic in self.epics:
             i += 1
-            progressBarEpicsPerPerson.update_bar(i, numberOfPeople - 1)
+            progressBarEpics.update_bar(i, len(self.epics) - 1)
 
-        return self.itemsPerPerson
+        return self.epics
 
-    def __computeEpicsPerPerson__(self, logsPerValue, jiraID, description):
+    def __computeTimeSpentPerEpic__(self, logsPerValue, jiraID, description):
         if self.jiraIDKey != jiraID:
             self.worklogPerPerson[jiraID] = {}
             self.worklogPerPerson[jiraID]['description'] = description
@@ -76,8 +51,8 @@ class EpicsPerPerson:
             timeSpent = self.timeHelper.convertToHours(timeSpent)
             self.worklogPerPerson[jiraID]['Total Hours Spent'] += timeSpent
 
-    async def extractEpicsPerPerson(self, progressBarUnfinishedItemsPerPerson):
-        allWorklogs = self.__extractEpicsPerPerson__(progressBarUnfinishedItemsPerPerson)
+    def extractEpics(self, progressBarUnfinishedItemsPerPerson):
+        allWorklogs = self.__epicsProgressBar__(progressBarUnfinishedItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
                 exclude_keys = ['description']
@@ -87,7 +62,7 @@ class EpicsPerPerson:
                 for child in childrenDictionary:
                     for worklog in childrenDictionary[child]['Total Hours Spent']:
                         description = childrenDictionary[child]['description']
-                        self.__computeEpicsPerPerson__(worklog, child, description)
+                        self.__computeTimeSpentPerEpic__(worklog, child, description)
 
         self.__generateCSVFile__()
 
