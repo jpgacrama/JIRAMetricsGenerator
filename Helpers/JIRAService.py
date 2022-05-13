@@ -1,4 +1,5 @@
 from jira import JIRA
+from atlassian import Jira
 
 class JIRAService:
     def __init__(self, 
@@ -21,16 +22,17 @@ class JIRAService:
         self.__logInToJIRA__()
 
     def __logInToJIRA__(self):
-        
         with open(self.CredentialsFile, 'r', newline='') as file:
             lines = file.read().splitlines() 
 
         username = lines[0]
         api_token = lines[1]
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
+        self.JQL = Jira(self.URL, username, api_token)
+        pass
 
     def queryNumberOfEpicsPerPerson(self, person):
-        allIssues = self.jiraService.search_issues(
+        allEpics = self.jiraService.search_issues(
             f"""
                 {self.updatedDate}
                 AND assignee in ({self.members[person]})
@@ -41,6 +43,17 @@ class JIRAService:
             fields="worklog")
 
         allWorklogs = {}
+        for issue in allEpics:
+            allWorklogs[str(issue)] = {} 
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            children = self.jiraService.search_issues(f"parent={str(issue)}")
+            
+            for child in children:
+                allWorklogs[str(issue)][str(child)] = {}
+                allWorklogs[str(issue)][str(child)]['description'] = {}
+                allWorklogs[str(issue)][str(child)]['description'] = self.jiraService.issue(str(child)).fields.summary
+                pass
 
         # Returns a list of Worklogs
         return allWorklogs
