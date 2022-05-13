@@ -1,5 +1,4 @@
 from jira import JIRA
-from atlassian import Jira
 
 class JIRAService:
     def __init__(self, 
@@ -28,7 +27,6 @@ class JIRAService:
         username = lines[0]
         api_token = lines[1]
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
-        self.JQL = Jira(self.URL, username, api_token)
         pass
 
     def queryNumberOfEpicsPerPerson(self, person):
@@ -53,7 +51,8 @@ class JIRAService:
                 allWorklogs[str(issue)][str(child)] = {}
                 allWorklogs[str(issue)][str(child)]['description'] = {}
                 allWorklogs[str(issue)][str(child)]['description'] = self.jiraService.issue(str(child)).fields.summary
-                pass
+                allWorklogs[str(issue)][str(child)]['Hours Spent for the Month'] = self.jiraService.worklogs(child)
+                allWorklogs[str(issue)][str(child)]['Total Hours Spent'] = self.jiraService.worklogs(child)
 
         # Returns a list of Worklogs
         return allWorklogs

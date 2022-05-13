@@ -68,14 +68,7 @@ class EpicsPerPerson:
         allWorklogs = self.__extractEpicsPerPerson__(progressBarUnfinishedItemsPerPerson)
         for person in allWorklogs:
             for jiraID in allWorklogs[person]:                
-                if not allWorklogs[person][jiraID]['Total Hours Spent']:
-                    self.worklogPerPerson[person][jiraID] = {}
-                    self.worklogPerPerson[person][jiraID]['description'] = allWorklogs[person][jiraID]['description']
-                    self.worklogPerPerson[person][jiraID]['Total Hours Spent'] = 0
-                
-                for worklogPerJIRAId in allWorklogs[person][jiraID]['Total Hours Spent']:
-                    description = allWorklogs[person][jiraID]['description']
-                    self.__computeEpicsPerPerson__(worklogPerJIRAId, person, jiraID, description)
+                pass
 
         self.__generateCSVFile__()
 
