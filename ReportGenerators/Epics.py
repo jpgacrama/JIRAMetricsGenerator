@@ -2,6 +2,12 @@ import csv
 import os
 from Helpers import TimeHelper, AutoVivification
 
+# Python code to merge dictionaries using a single
+# expression
+def Merge(dict1, dict2):
+    res = {**dict1, **dict2}
+    return res
+
 class Epics:
     def __init__(
             self,
@@ -18,14 +24,14 @@ class Epics:
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
         self.epics = self.jiraService.queryEpics()
-        self.worklogPerPerson = AutoVivification.AutoVivification()
+        self.worklogPerEpic = AutoVivification.AutoVivification()
 
     def __computeTimeSpentPerEpic__(self, logsPerValue, jiraID, description):
         if self.jiraIDKey != jiraID:
-            self.worklogPerPerson[jiraID] = {}
-            self.worklogPerPerson[jiraID]['description'] = description
-            self.worklogPerPerson[jiraID]['Total Hours Spent'] = 0
-            self.worklogPerPerson[jiraID]['Hours Spent for the Month'] = 0
+            self.worklogPerEpic[jiraID] = {}
+            self.worklogPerEpic[jiraID]['description'] = description
+            self.worklogPerEpic[jiraID]['Hours Spent for the Month'] = 0
+            self.worklogPerEpic[jiraID]['Total Hours Spent'] = 0
             self.jiraIDKey = jiraID
 
         extractedDateTime = self.timeHelper.trimDate(logsPerValue.started)
@@ -34,12 +40,12 @@ class Epics:
             if extractedDateTime.month == self.desiredMonth and extractedDateTime.year == self.desiredYear:
                 timeSpent = logsPerValue.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
-                self.worklogPerPerson[jiraID]['Hours Spent for the Month'] += timeSpent
+                self.worklogPerEpic[jiraID]['Hours Spent for the Month'] += timeSpent
             
             # For Total Hours Spent
             timeSpent = logsPerValue.timeSpentSeconds
             timeSpent = self.timeHelper.convertToHours(timeSpent)
-            self.worklogPerPerson[jiraID]['Total Hours Spent'] += timeSpent
+            self.worklogPerEpic[jiraID]['Total Hours Spent'] += timeSpent
 
     def extractEpics(self, progressBarEpics):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
@@ -55,6 +61,9 @@ class Epics:
                         description = childrenDictionary[child]['description']
                         self.__computeTimeSpentPerEpic__(worklog, child, description)
 
+                # Re-attach Children to parent
+                combinedDictionary = {list(self.epics.keys())[0]: self.worklogPerEpic}
+
         self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
@@ -65,13 +74,12 @@ class Epics:
             # Initialize all columns
             csvwriter.writerow(['Name', 'JIRA ID', 'Description', 'Hours Spent'])
 
-            for person in self.worklogPerPerson:
-                for jiraID in self.worklogPerPerson[person]:
-                    csvwriter.writerow([
-                        person,
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
-                        self.worklogPerPerson[person][jiraID]['description'],
-                        self.worklogPerPerson[person][jiraID]['Total Hours Spent']])
+            for item in self.worklogPerEpic:
+                csvwriter.writerow([
+                    item,
+                    f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
+                    self.worklogPerEpic[item][jiraID]['description'],
+                    self.worklogPerEpic[item][jiraID]['Total Hours Spent']])
         
         print(f"Writing to {self.fileName} done.")
 
