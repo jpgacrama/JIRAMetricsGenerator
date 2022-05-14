@@ -37,7 +37,6 @@ class JIRAService:
                 {self.updatedDate}
                 AND project = {self.project}
                 AND issuetype = Epic
-                AND labels = production-support
              """,
             fields="worklog")
 
