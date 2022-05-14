@@ -84,7 +84,13 @@ class Epics:
             i += 1
             progressBar.update_bar(i, numberOfThreads - 1)
 
-        print(f'\n\nDictionary Contents OUTSIDE of Thread: {self.worklogPerChild}')
+        # Adding Computed Child values back to parent epic
+        # First entry is ALWAYS the PARENT
+        self.epicAndComputedChildren = {}
+        for epic in self.epics:
+            self.epicAndComputedChildren[epic] = self.epics[epic]['description']
+            self.epicAndComputedChildren.update(self.worklogPerChild)
+            print(f'{self.epicAndComputedChildren[epic]}')
     
     async def extractEpics(self, progressBarEpics):
         self.__extractEpics__(progressBarEpics)
