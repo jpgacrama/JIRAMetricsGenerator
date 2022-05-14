@@ -4,15 +4,14 @@ import os
 from Helpers import TimeHelper, AutoVivification
 
 class OneThreadPerEpic(threading.Thread):
-    def __init__(self, key, value, month, year, timeHelper, worklogPerEpic):
+    def __init__(self, key, value, month, year, timeHelper):
         threading.Thread.__init__(self)
         self.key = key
         self.value = value
         self.desiredMonth = month
         self.desiredYear = year
         self.timeHelper = timeHelper
-        self.worklogPerEpic = worklogPerEpic
-        
+        self.worklogPerEpic = AutoVivification.AutoVivification()        
         
         self.worklogPerEpic['description'] = self.value['description']
         self.worklogPerEpic['Hours Spent for the Month'] = 0
@@ -36,7 +35,9 @@ class OneThreadPerEpic(threading.Thread):
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
                 self.worklogPerEpic['Total Hours Spent'] += timeSpent
 
-        print(f'Finished computing{self.key}. Consider passing the result to calling thread')
+        print(f'Finished computing {self.key}.')
+        print(f'\n\tWith the following details{self.worklogPerEpic}.')
+
 
 class Epics:
     def __init__(
@@ -68,8 +69,7 @@ class Epics:
                     key, value,
                     self.desiredMonth,
                     self.desiredYear,
-                    self.timeHelper,
-                    self.worklogPerEpic)
+                    self.timeHelper)
                 for key, value in childrenDictionary.items()]
         
         for thread in threads:
