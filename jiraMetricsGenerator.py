@@ -28,7 +28,7 @@ def generateReports(
     #     jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
     # doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
     # unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
-    epics = Epics.Epics(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getFilenameForEpics(), const.getOutputFolder())
+    epics = Epics.Epics(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getFilenameForEpics(), const.getOutputFolder(), progressBarEpics)
     # allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
     #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
@@ -38,7 +38,7 @@ def generateReports(
             # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             # loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             # loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
-            loop.create_task(epics.extractEpics(progressBarEpics)),
+            loop.create_task(epics.extractEpics()),
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
             # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]

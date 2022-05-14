@@ -31,7 +31,7 @@ class JIRAService:
 
     # TODO: This was labeled to have production support.
     # Change this to support non-production support items
-    def queryEpics(self):
+    def queryEpics(self, progressBar):
         allEpics = self.jiraService.search_issues(
             f"""
                 {self.updatedDate}
@@ -42,6 +42,8 @@ class JIRAService:
             fields="worklog")
 
         allWorklogs = {}
+        numberOfEpics = len(allEpics)
+        i = 0
         for issue in allEpics:
             print(f'\nProcessing EPIC: {issue}')
             allWorklogs[str(issue)] = {} 
@@ -56,6 +58,9 @@ class JIRAService:
                 allWorklogs[str(issue)][str(child)]['description'] = self.jiraService.issue(str(child)).fields.summary
                 allWorklogs[str(issue)][str(child)]['Hours Spent for the Month'] = self.jiraService.worklogs(child)
                 allWorklogs[str(issue)][str(child)]['Total Hours Spent'] = self.jiraService.worklogs(child)
+            
+            i += 1
+            progressBar.update_bar(i, numberOfEpics - 1)
 
         # Returns a list of Worklogs
         return allWorklogs

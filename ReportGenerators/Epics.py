@@ -46,7 +46,8 @@ class Epics:
             desiredMonth,
             desiredYear,
             fileName,
-            outputFolder) -> None:
+            outputFolder,
+            progressBar) -> None:
         self.jiraService = jiraService
         self.jiraIDKey = None
         self.fileName = fileName
@@ -54,10 +55,10 @@ class Epics:
         self.desiredMonth = desiredMonth
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
-        self.epics = self.jiraService.queryEpics()
+        self.epics = self.jiraService.queryEpics(progressBar)
         self.worklogPerChild = AutoVivification.AutoVivification()
 
-    def __extractEpics__ (self, progressBar):
+    def __extractEpics__ (self):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
 
         for epic in self.epics:
@@ -76,12 +77,8 @@ class Epics:
         for thread in threads:
             thread.start()
 
-        i = 0
-        numberOfThreads = len(threads)
         for thread in threads:
             thread.join()
-            i += 1
-            progressBar.update_bar(i, numberOfThreads - 1)
 
         # Adding Computed Child values back to parent epic
         # First entry is ALWAYS the PARENT
@@ -94,8 +91,8 @@ class Epics:
 
         return epicAndComputedChildren
     
-    async def extractEpics(self, progressBarEpics):
-        dictionary = self.__extractEpics__(progressBarEpics)
+    async def extractEpics(self):
+        dictionary = self.__extractEpics__()
         self.__generateCSVFile__(dictionary)
 
     def __generateCSVFile__(self, dictionary):
