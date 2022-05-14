@@ -3,7 +3,7 @@ import csv
 import os
 from Helpers import TimeHelper, AutoVivification
 
-class OneThreadPerEpic(threading.Thread):
+class OneThreadPerChild(threading.Thread):
     def __init__(self, key, value, month, year, timeHelper, parent):
         threading.Thread.__init__(self)
         self.key = key
@@ -56,7 +56,7 @@ class Epics:
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
         self.epics = self.jiraService.queryEpics()
-        self.worklogPerEpic = AutoVivification.AutoVivification()
+        self.worklogPerChild = AutoVivification.AutoVivification()
 
     def __extractEpics__ (self, progressBar):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
@@ -66,25 +66,25 @@ class Epics:
             parentDictionary = self.epics[epic]
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
-            threads = [OneThreadPerEpic(
+            threads = [OneThreadPerChild(
                     key, value,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
-                    self.worklogPerEpic)
+                    self.worklogPerChild)
                 for key, value in childrenDictionary.items()]
         
         for thread in threads:
             thread.start()
 
         i = 0
-        numberOfEpics = len(self.epics)
+        numberOfThreads = len(threads)
         for thread in threads:
             thread.join()
             i += 1
-            progressBar.update_bar(i, numberOfEpics - 1)
+            progressBar.update_bar(i, numberOfThreads - 1)
 
-        print(f'\n\nDictionary Contents OUTSIDE of Thread: {self.worklogPerEpic}')
+        print(f'\n\nDictionary Contents OUTSIDE of Thread: {self.worklogPerChild}')
     
     async def extractEpics(self, progressBarEpics):
         self.__extractEpics__(progressBarEpics)
@@ -108,8 +108,8 @@ class Epics:
                     csvwriter.writerow([
                         item,
                         f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
-                        self.worklogPerEpic[item][jiraID]['description'],
-                        self.worklogPerEpic[item][jiraID]['Total Hours Spent']])
+                        self.worklogPerChild[item][jiraID]['description'],
+                        self.worklogPerChild[item][jiraID]['Total Hours Spent']])
                 i += 1
         
         print(f"Writing to {self.fileName} done.")
