@@ -1,12 +1,42 @@
+import threading
 import csv
 import os
 from Helpers import TimeHelper, AutoVivification
 
-# Python code to merge dictionaries using a single
-# expression
-def Merge(dict1, dict2):
-    res = {**dict1, **dict2}
-    return res
+class OneThreadPerEpic(threading.Thread):
+    def __init__(self, key, value, month, year, timeHelper, worklogPerEpic):
+        threading.Thread.__init__(self)
+        self.key = key
+        self.value = value
+        self.desiredMonth = month
+        self.desiredYear = year
+        self.timeHelper = timeHelper
+        self.worklogPerEpic = worklogPerEpic
+        
+        
+        self.worklogPerEpic['description'] = self.value['description']
+        self.worklogPerEpic['Hours Spent for the Month'] = 0
+        self.worklogPerEpic['Total Hours Spent'] = 0
+
+    def run(self):
+        # Get time started
+        for worklog in self.value['Total Hours Spent']:
+            timeSpent = 0
+            extractedDateTime = self.timeHelper.trimDate(worklog.started)
+            
+            if extractedDateTime:
+                # For Hours Spent for the Current Month
+                if extractedDateTime.month == self.desiredMonth and extractedDateTime.year == self.desiredYear:
+                    timeSpent = worklog.timeSpentSeconds
+                    timeSpent = self.timeHelper.convertToHours(timeSpent)
+                    self.worklogPerEpic['Hours Spent for the Month'] += timeSpent
+
+                # For Total Hours Spent
+                timeSpent = worklog.timeSpentSeconds
+                timeSpent = self.timeHelper.convertToHours(timeSpent)
+                self.worklogPerEpic['Total Hours Spent'] += timeSpent
+
+        print(f'Finished computing{self.key}. Consider passing the result to calling thread')
 
 class Epics:
     def __init__(
@@ -26,6 +56,32 @@ class Epics:
         self.epics = self.jiraService.queryEpics()
         self.worklogPerEpic = AutoVivification.AutoVivification()
 
+    def __extractEpics__ (self, progressBar):
+        print("\n-------- GENERATING MATRIX OF EPICS --------\n")
+
+        for epic in self.epics:
+            exclude_keys = ['description']
+            parentDictionary = self.epics[epic]
+            childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
+            
+            threads = [OneThreadPerEpic(
+                    key, value,
+                    self.desiredMonth,
+                    self.desiredYear,
+                    self.timeHelper,
+                    self.worklogPerEpic)
+                for key, value in childrenDictionary.items()]
+        
+        for thread in threads:
+            thread.start()
+
+        i = 0
+        numberOfEpics = len(self.epics)
+        for thread in threads:
+            thread.join()
+            i += 1
+            progressBar.update_bar(i, numberOfEpics - 1)
+    
     def __computeTimeSpentPerEpic__(self, logsPerValue, jiraID, description):
         if self.jiraIDKey != jiraID:
             self.worklogPerEpic[jiraID] = {}
@@ -48,21 +104,20 @@ class Epics:
             self.worklogPerEpic[jiraID]['Total Hours Spent'] += timeSpent
 
     async def extractEpics(self, progressBarEpics):
-        print("\n-------- GENERATING MATRIX OF EPICS --------\n")
+        self.__extractEpics__(progressBarEpics)
 
-        for epic in self.epics:
-            for child in self.epics[epic]:                
-                exclude_keys = ['description']
-                parentDictionary = self.epics[epic]
-                childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
-                
-                for child in childrenDictionary:
-                    for worklog in childrenDictionary[child]['Total Hours Spent']:
-                        description = childrenDictionary[child]['description']
-                        self.__computeTimeSpentPerEpic__(worklog, child, description)
+        for child in self.epics[epic]:                
+            exclude_keys = ['description']
+            parentDictionary = self.epics[epic]
+            childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
+            
+            for child in childrenDictionary:
+                for worklog in childrenDictionary[child]['Total Hours Spent']:
+                    description = childrenDictionary[child]['description']
+                    self.__computeTimeSpentPerEpic__(worklog, child, description)
 
-                # Re-attach Children to parent
-                combinedDictionary = {list(self.epics.keys())[0]: self.worklogPerEpic}
+            # Re-attach Children to parent
+            combinedDictionary = {list(self.epics.keys())[0]: self.worklogPerEpic}
 
         self.__generateCSVFile__(combinedDictionary)
 
