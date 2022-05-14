@@ -122,7 +122,7 @@ class Epics:
                     csvwriter.writerow([
                         parent,
                         '',
-                        dictionary[item]                    
+                        dictionary[item]['description']                    
                     ])
                 else:
                     csvwriter.writerow([
