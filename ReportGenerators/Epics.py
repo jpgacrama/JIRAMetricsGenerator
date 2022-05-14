@@ -38,7 +38,6 @@ class OneThreadPerChild(threading.Thread):
 
         # Passing out the results to the calling thread
         self.parent[self.key] = self.worklog
-        print(f'\nINSIDE THREAD {self.key}: PARENT: {self.parent}')
 
 class Epics:
     def __init__(
@@ -86,17 +85,19 @@ class Epics:
 
         # Adding Computed Child values back to parent epic
         # First entry is ALWAYS the PARENT
-        self.epicAndComputedChildren = {}
+        epicAndComputedChildren = {}
         for epic in self.epics:
-            self.epicAndComputedChildren[epic] = self.epics[epic]['description']
-            self.epicAndComputedChildren.update(self.worklogPerChild)
-            print(f'{self.epicAndComputedChildren[epic]}')
+            epicAndComputedChildren[epic] = self.epics[epic]['description']
+            epicAndComputedChildren.update(self.worklogPerChild)
+            print(f'{epicAndComputedChildren[epic]}')
+
+        return epicAndComputedChildren
     
     async def extractEpics(self, progressBarEpics):
-        self.__extractEpics__(progressBarEpics)
-        self.__generateCSVFile__(combinedDictionary)
+        dictionary = self.__extractEpics__(progressBarEpics)
+        self.__generateCSVFile__(dictionary)
 
-    def __generateCSVFile__(self, combinedDictionary):
+    def __generateCSVFile__(self, dictionary):
         os.makedirs(self.outputFolder, exist_ok=True) 
         with open(self.outputFolder + self.fileName, 'w', newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
@@ -105,17 +106,21 @@ class Epics:
             csvwriter.writerow(['Parent Epic ID','Child ID', 'Description', 'Hours Spent for the Month', 'Total Hours Spent'])
 
             i = 0
-            for item in combinedDictionary:
+            for item in dictionary:
                 if not i:
+                    parent = f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")'
                     csvwriter.writerow([
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")',                        
+                        parent,
+                        '',
+                        dictionary[item]                    
                     ])
                 else:
                     csvwriter.writerow([
-                        item,
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',                        
-                        self.worklogPerChild[item][jiraID]['description'],
-                        self.worklogPerChild[item][jiraID]['Total Hours Spent']])
+                        parent,
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")',                        
+                        dictionary[item]['description'],
+                        dictionary[item]['Hours Spent for the Month'],
+                        dictionary[item]['Total Hours Spent']])
                 i += 1
         
         print(f"Writing to {self.fileName} done.")
