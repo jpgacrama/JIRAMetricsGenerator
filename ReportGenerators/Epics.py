@@ -87,9 +87,10 @@ class Epics:
         # First entry is ALWAYS the PARENT
         epicAndComputedChildren = {}
         for epic in self.epics:
-            epicAndComputedChildren[epic] = self.epics[epic]['description']
+            epicAndComputedChildren[epic] = {
+                'number of children': len(self.worklogPerChild),
+                'description': self.epics[epic]['description']}
             epicAndComputedChildren.update(self.worklogPerChild)
-            print(f'{epicAndComputedChildren[epic]}')
 
         return epicAndComputedChildren
     
@@ -105,9 +106,18 @@ class Epics:
             # Initialize all columns
             csvwriter.writerow(['Parent Epic ID','Child ID', 'Description', 'Hours Spent for the Month', 'Total Hours Spent'])
 
-            i = 0
+            isParent = True
+            childCount = 0
+            numberOfChildren = 0
             for item in dictionary:
-                if not i:
+                if childCount == numberOfChildren:
+                    # Next entry is again a parent
+                    isParent = True
+                
+                if isParent:
+                    # Next entry will now be a child
+                    isParent = False
+                    numberOfChildren = dictionary[item]['number of children']
                     parent = f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")'
                     csvwriter.writerow([
                         parent,
@@ -121,7 +131,7 @@ class Epics:
                         dictionary[item]['description'],
                         dictionary[item]['Hours Spent for the Month'],
                         dictionary[item]['Total Hours Spent']])
-                i += 1
-        
+                    childCount += 1
+                
         print(f"Writing to {self.fileName} done.")
 
