@@ -97,9 +97,9 @@ class Epics:
         epicAndComputedChildren = {}
         for epic in self.epics:
             epicAndComputedChildren[epic] = {
+                'description': self.epics[epic]['description'],
                 'number of children': len(self.worklogPerChild),
-                'description': self.epics[epic]['description']}
-            epicAndComputedChildren.update(self.worklogPerChild)
+                'children': self.worklogPerChild}
 
         return epicAndComputedChildren
     
@@ -115,32 +115,19 @@ class Epics:
             # Initialize all columns
             csvwriter.writerow(['Parent Epic ID','Child ID', 'Description', 'Hours Spent for the Month', 'Total Hours Spent'])
 
-            isParent = True
-            childCount = 0
-            numberOfChildren = 0
-            for item in dictionary:
-                if childCount == numberOfChildren:
-                    # Next entry is again a parent
-                    isParent = True
-                
-                if isParent:
-                    # Next entry will now be a child
-                    isParent = False
-                    numberOfChildren = dictionary[item]['number of children']
-                    parent = f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")'
+            for parent in dictionary:
+                csvwriter.writerow([
+                    f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
+                    '',
+                    dictionary[parent]['description']                    
+                ])
+                for child in dictionary[parent]['children']:
                     csvwriter.writerow([
-                        parent,
-                        '',
-                        dictionary[item]['description']                    
-                    ])
-                else:
-                    csvwriter.writerow([
-                        parent,
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{item}\"),\"{item}\")',                        
-                        dictionary[item]['description'],
-                        dictionary[item]['Hours Spent for the Month'],
-                        dictionary[item]['Total Hours Spent']])
-                    childCount += 1
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
+                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{child}\"),\"{child}\")',                        
+                        dictionary[parent]['children'][child]['description'],
+                        dictionary[parent]['children'][child]['Hours Spent for the Month'],
+                        dictionary[parent]['children'][child]['Total Hours Spent']])
                 
         print(f"Writing to {self.fileName} done.")
 
