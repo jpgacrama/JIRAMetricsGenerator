@@ -63,26 +63,31 @@ class Epics:
     def __extractEpics__ (self):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
 
+        epicThread = []
         for epic in self.epics:
             exclude_keys = ['description']
             parentDictionary = self.epics[epic]
-            print(f'CALLING CLASS: Parent Key: {list(parentDictionary.keys())[0]}')
+            print(f'CALLING CLASS: Parent Key: {epic}')
             
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
-            threads = [OneThreadPerChild(
+            epicThread.append([OneThreadPerChild(
                     key, value,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
                     self.worklogPerChild)
-                for key, value in childrenDictionary.items()]
-        
-        for thread in threads:
-            thread.start()
+                for key, value in childrenDictionary.items()])
 
-        for thread in threads:
-            thread.join()
+            print(f'\tFinished creating a total of {len(epicThread)} children threads')
+        
+        for thread in epicThread:
+            for childThread in thread:
+                childThread.start()
+
+        for thread in epicThread:
+            for childThread in thread:
+                childThread.join()
 
         # Adding Computed Child values back to parent epic
         # First entry is ALWAYS the PARENT
