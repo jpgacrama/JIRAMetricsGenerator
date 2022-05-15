@@ -91,6 +91,9 @@ class Epics:
 
         # Adding Computed Child values back to parent epic
         # First entry is ALWAYS the PARENT
+
+        # TODO: I don't think this is a good idea
+        # when we have multiple epics to count
         epicAndComputedChildren = {}
         for epic in self.epics:
             epicAndComputedChildren[epic] = {
