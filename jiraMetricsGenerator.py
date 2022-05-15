@@ -33,6 +33,7 @@ def generateReports(
     #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
+        start = time.perf_counter()
         loop = asyncio.get_event_loop()
         tasks = [
             # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
@@ -42,7 +43,6 @@ def generateReports(
             # loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
             # loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
-        start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
     except Exception as e:
         print('There was a problem:')

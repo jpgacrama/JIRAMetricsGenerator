@@ -11,12 +11,12 @@ class OneThreadPerChild(threading.Thread):
         self.desiredMonth = month
         self.desiredYear = year
         self.timeHelper = timeHelper
-        self.worklog = AutoVivification.AutoVivification()   
+        self.childWorklog = AutoVivification.AutoVivification()   
         self.parent = parent     
         
-        self.worklog['description'] = self.value['description']
-        self.worklog['Hours Spent for the Month'] = 0
-        self.worklog['Total Hours Spent'] = 0
+        self.childWorklog['description'] = self.value['description']
+        self.childWorklog['Hours Spent for the Month'] = 0
+        self.childWorklog['Total Hours Spent'] = 0
 
     def run(self):
         print(f'\tTHREAD: Child Key being processed: {self.key}')
@@ -31,15 +31,16 @@ class OneThreadPerChild(threading.Thread):
                 if extractedDateTime.month == self.desiredMonth and extractedDateTime.year == self.desiredYear:
                     timeSpent = worklog.timeSpentSeconds
                     timeSpent = self.timeHelper.convertToHours(timeSpent)
-                    self.worklog['Hours Spent for the Month'] += timeSpent
+                    self.childWorklog['Hours Spent for the Month'] += timeSpent
 
                 # For Total Hours Spent
                 timeSpent = worklog.timeSpentSeconds
                 timeSpent = self.timeHelper.convertToHours(timeSpent)
-                self.worklog['Total Hours Spent'] += timeSpent
+                self.childWorklog['Total Hours Spent'] += timeSpent
 
         # Passing out the results to the calling thread
-        self.parent[self.key] = self.worklog
+        if self.childWorklog:
+            self.parent[self.key] = self.childWorklog
 
 class Epics:
     def __init__(
@@ -58,7 +59,7 @@ class Epics:
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
         self.epics = self.jiraService.queryEpics(progressBar)
-        self.worklogPerChild = AutoVivification.AutoVivification()
+        self.epicAndWorklogsPerChild = AutoVivification.AutoVivification()
 
     def __extractEpics__ (self):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
@@ -71,12 +72,13 @@ class Epics:
             
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
+            self.epicAndWorklogsPerChild[epic] = {}
             epicThread.append([OneThreadPerChild(
                     key, value,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
-                    self.worklogPerChild)
+                    self.epicAndWorklogsPerChild)
                 for key, value in childrenDictionary.items()])
 
             print(f'\tFinished creating a total of {len(epicThread)} children threads')
@@ -98,8 +100,8 @@ class Epics:
         for epic in self.epics:
             epicAndComputedChildren[epic] = {
                 'description': self.epics[epic]['description'],
-                'number of children': len(self.worklogPerChild),
-                'children': self.worklogPerChild}
+                'number of children': len(self.epicAndWorklogsPerChild),
+                'children': self.epicAndWorklogsPerChild}
 
         return epicAndComputedChildren
     
@@ -122,12 +124,13 @@ class Epics:
                     dictionary[parent]['description']                    
                 ])
                 for child in dictionary[parent]['children']:
-                    csvwriter.writerow([
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
-                        f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{child}\"),\"{child}\")',                        
-                        dictionary[parent]['children'][child]['description'],
-                        dictionary[parent]['children'][child]['Hours Spent for the Month'],
-                        dictionary[parent]['children'][child]['Total Hours Spent']])
+                    if dictionary[parent]['children'][child]:
+                        csvwriter.writerow([
+                            f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
+                            f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{child}\"),\"{child}\")',                        
+                            dictionary[parent]['children'][child]['description'],
+                            dictionary[parent]['children'][child]['Hours Spent for the Month'],
+                            dictionary[parent]['children'][child]['Total Hours Spent']])
                 
         print(f"Writing to {self.fileName} done.")
 

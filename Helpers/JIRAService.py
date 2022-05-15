@@ -37,8 +37,7 @@ class JIRAService:
                 {self.updatedDate}
                 AND project = {self.project}
                 AND issuetype = Epic
-                AND status = "In Progress"
-                AND assignee in (61f71f208d9e3c0068862452)
+                AND assignee in (5fbb3d037cc1030069500950)
              """,
             fields="worklog")
 
