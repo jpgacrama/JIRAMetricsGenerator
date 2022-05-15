@@ -19,6 +19,8 @@ class OneThreadPerChild(threading.Thread):
         self.worklog['Total Hours Spent'] = 0
 
     def run(self):
+        print(f'\tTHREAD: Child Key being processed: {self.key}')
+        
         # Get time started
         for worklog in self.value['Total Hours Spent']:
             timeSpent = 0
@@ -64,6 +66,8 @@ class Epics:
         for epic in self.epics:
             exclude_keys = ['description']
             parentDictionary = self.epics[epic]
+            print(f'CALLING CLASS: Parent Key: {list(parentDictionary.keys())[0]}')
+            
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
             threads = [OneThreadPerChild(

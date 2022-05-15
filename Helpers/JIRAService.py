@@ -43,6 +43,8 @@ class JIRAService:
         allWorklogs = {}
         numberOfEpics = len(allEpics)
         i = 0
+        
+        # TODO: Candidate for making into a thread
         for issue in allEpics:
             print(f'\nProcessing EPIC: {issue}')
             allWorklogs[str(issue)] = {} 
