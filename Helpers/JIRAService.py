@@ -29,8 +29,6 @@ class JIRAService:
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
         pass
 
-    # TODO: This was labeled to have production support.
-    # Change this to support non-production support items
     def queryEpics(self, progressBar):
         allEpics = self.jiraService.search_issues(
             f"""
