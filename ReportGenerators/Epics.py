@@ -41,8 +41,7 @@ class OneThreadPerChild(threading.Thread):
 
         # Passing out the results to the calling thread
         if self.childWorklog:
-            self.parent[self.parentKey][self.key] = self.childWorklog
-            pass
+            self.parent[self.parentKey]['children'][self.key] = self.childWorklog
 
 class Epics:
     def __init__(
@@ -61,7 +60,7 @@ class Epics:
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
         self.epics = self.jiraService.queryEpics(progressBar)
-        self.worklogsOfChild = AutoVivification.AutoVivification()
+        self.worklogs = AutoVivification.AutoVivification()
 
     def __extractEpics__ (self):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
@@ -74,14 +73,16 @@ class Epics:
             
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
-            self.worklogsOfChild[epic] = {}
+            self.worklogs[epic] = {}
+            self.worklogs[epic]['description'] = self.epics[epic]['description']
+            self.worklogs[epic]['children'] = {}
             epicThread.append([OneThreadPerChild(
                     key, value,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
                     epic,
-                    self.worklogsOfChild)
+                    self.worklogs)
                 for key, value in childrenDictionary.items()])
 
             print(f'\tFinished creating a total of {len(epicThread)} children threads')
@@ -94,19 +95,7 @@ class Epics:
             for childThread in thread:
                 childThread.join()
 
-        # Adding Computed Child values back to parent epic
-        # First entry is ALWAYS the PARENT
-
-        # TODO: I don't think this is a good idea
-        # when we have multiple epics to count
-        epicAndComputedChildren = {}
-        for epic in self.epics:
-            epicAndComputedChildren[epic] = {
-                'description': self.epics[epic]['description'],
-                'number of children': len(self.worklogsOfChild),
-                'children': self.worklogsOfChild}
-
-        return epicAndComputedChildren
+        return self.worklogs
     
     async def extractEpics(self):
         dictionary = self.__extractEpics__()
