@@ -29,6 +29,8 @@ class JIRAService:
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
         pass
 
+    # TODO: Remove Production support in query.
+    # I just placed it here to test how I can extract the "production-support" label.
     def queryEpics(self, progressBar):
         allEpics = self.jiraService.search_issues(
             f"""
@@ -36,6 +38,7 @@ class JIRAService:
                 AND project = {self.project}
                 AND issuetype = Epic
                 AND status = "In Progress"
+                AND labels = production-support
              """,
             fields="worklog")
 
@@ -47,6 +50,9 @@ class JIRAService:
             print(f'\nProcessing EPIC: {issue}')
             allWorklogs[str(issue)] = {} 
             allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['is production support'] = {}
+
+            allWorklogs[str(issue)]['is production support'] = True if self.jiraService.issue(str(issue)).raw['fields']['labels'] == ['production-support'] else False
             allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             children = self.jiraService.search_issues(f"parent={str(issue)}")
             

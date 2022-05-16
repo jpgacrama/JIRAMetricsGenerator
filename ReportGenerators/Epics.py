@@ -74,6 +74,7 @@ class Epics:
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
             self.worklogs[epic] = {}
+            self.worklogs[epic]['is production support'] = self.epics[epic]['is production support']
             self.worklogs[epic]['description'] = self.epics[epic]['description']
             self.worklogs[epic]['children'] = {}
             epicThread.append([OneThreadPerChild(
@@ -107,11 +108,14 @@ class Epics:
             csvwriter = csv.writer(csv_file, delimiter=',')
             
             # Initialize all columns
-            csvwriter.writerow(['Parent Epic ID','Child ID', 'Description', 'Hours Spent for the Month', 'Total Hours Spent'])
+            csvwriter.writerow(
+                ['Parent Epic ID','Is Production Support', 'Child ID',
+                 'Description', 'Hours Spent for the Month', 'Total Hours Spent'])
 
             for parent in dictionary:
                 csvwriter.writerow([
                     f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
+                    dictionary[parent]['description']['is production support'],
                     '',
                     dictionary[parent]['description']                    
                 ])
@@ -119,6 +123,7 @@ class Epics:
                     if dictionary[parent]['children'][child]:
                         csvwriter.writerow([
                             f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
+                            dictionary[parent]['description']['is production support'],
                             f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{child}\"),\"{child}\")',                        
                             dictionary[parent]['children'][child]['description'],
                             dictionary[parent]['children'][child]['Hours Spent for the Month'],
