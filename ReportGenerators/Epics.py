@@ -4,7 +4,7 @@ import os
 from Helpers import TimeHelper, AutoVivification
 
 class OneThreadPerChild(threading.Thread):
-    def __init__(self, key, value, month, year, timeHelper, parent):
+    def __init__(self, key, value, month, year, timeHelper, parentKey, worklogFromMainThread):
         threading.Thread.__init__(self)
         self.key = key
         self.value = value
@@ -12,7 +12,8 @@ class OneThreadPerChild(threading.Thread):
         self.desiredYear = year
         self.timeHelper = timeHelper
         self.childWorklog = AutoVivification.AutoVivification()   
-        self.parent = parent     
+        self.parent = worklogFromMainThread
+        self.parentKey = parentKey    
         
         self.childWorklog['description'] = self.value['description']
         self.childWorklog['Hours Spent for the Month'] = 0
@@ -40,7 +41,8 @@ class OneThreadPerChild(threading.Thread):
 
         # Passing out the results to the calling thread
         if self.childWorklog:
-            self.parent[self.key] = self.childWorklog
+            self.parent[self.parentKey][self.key] = self.childWorklog
+            pass
 
 class Epics:
     def __init__(
@@ -59,7 +61,7 @@ class Epics:
         self.desiredYear = desiredYear
         self.timeHelper = TimeHelper.TimeHelper()
         self.epics = self.jiraService.queryEpics(progressBar)
-        self.epicAndWorklogsPerChild = AutoVivification.AutoVivification()
+        self.worklogsOfChild = AutoVivification.AutoVivification()
 
     def __extractEpics__ (self):
         print("\n-------- GENERATING MATRIX OF EPICS --------\n")
@@ -72,13 +74,14 @@ class Epics:
             
             childrenDictionary = {k: parentDictionary[k] for k in set(list(parentDictionary.keys())) - set(exclude_keys)}
             
-            self.epicAndWorklogsPerChild[epic] = {}
+            self.worklogsOfChild[epic] = {}
             epicThread.append([OneThreadPerChild(
                     key, value,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
-                    self.epicAndWorklogsPerChild)
+                    epic,
+                    self.worklogsOfChild)
                 for key, value in childrenDictionary.items()])
 
             print(f'\tFinished creating a total of {len(epicThread)} children threads')
@@ -100,8 +103,8 @@ class Epics:
         for epic in self.epics:
             epicAndComputedChildren[epic] = {
                 'description': self.epics[epic]['description'],
-                'number of children': len(self.epicAndWorklogsPerChild),
-                'children': self.epicAndWorklogsPerChild}
+                'number of children': len(self.worklogsOfChild),
+                'children': self.worklogsOfChild}
 
         return epicAndComputedChildren
     
