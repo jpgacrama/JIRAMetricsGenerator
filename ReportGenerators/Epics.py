@@ -67,7 +67,7 @@ class Epics:
 
         epicThread = []
         for epic in self.epics:
-            exclude_keys = ['description']
+            exclude_keys = ['description', 'is production support']
             parentDictionary = self.epics[epic]
             print(f'CALLING CLASS: Parent Key: {epic}')
             
@@ -78,7 +78,8 @@ class Epics:
             self.worklogs[epic]['description'] = self.epics[epic]['description']
             self.worklogs[epic]['children'] = {}
             epicThread.append([OneThreadPerChild(
-                    key, value,
+                    key,
+                    value,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
@@ -115,7 +116,7 @@ class Epics:
             for parent in dictionary:
                 csvwriter.writerow([
                     f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
-                    dictionary[parent]['description']['is production support'],
+                    dictionary[parent]['is production support'],
                     '',
                     dictionary[parent]['description']                    
                 ])
@@ -123,7 +124,7 @@ class Epics:
                     if dictionary[parent]['children'][child]:
                         csvwriter.writerow([
                             f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{parent}\"),\"{parent}\")',
-                            dictionary[parent]['description']['is production support'],
+                            dictionary[parent]['is production support'],
                             f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{child}\"),\"{child}\")',                        
                             dictionary[parent]['children'][child]['description'],
                             dictionary[parent]['children'][child]['Hours Spent for the Month'],

@@ -38,7 +38,6 @@ class JIRAService:
                 AND project = {self.project}
                 AND issuetype = Epic
                 AND status = "In Progress"
-                AND labels = production-support
              """,
             fields="worklog")
 
