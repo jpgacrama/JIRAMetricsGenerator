@@ -19,6 +19,7 @@ def generateReports(
                progressBarUnfinishedItemsPerPerson,
                progressBarEpics,
                progressBarAllItemsPerPerson):
+    start = time.perf_counter()
     jiraService = JIRAService.JIRAService(
        const.getCredentialFile(), const.get_JIRA_URL(), WORKLOG_DATE, UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
 
@@ -33,7 +34,6 @@ def generateReports(
     #     jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
     try:
-        start = time.perf_counter()
         loop = asyncio.get_event_loop()
         tasks = [
             # loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
@@ -122,7 +122,7 @@ def createGUI(const):
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='doneItemsPerPerson')],
             [name('Unfinished Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='unfinishedItemsPerPerson')],
-            [name('Epics'),
+            [name('Epics. This takes time. Please be patient'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='epics')],
             [name('All Items Per Person. This takes time. Please be patient'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='allItemsPerPerson')],

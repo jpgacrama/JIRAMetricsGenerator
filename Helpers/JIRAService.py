@@ -37,7 +37,7 @@ class JIRAService:
                 {self.updatedDate}
                 AND project = {self.project}
                 AND issuetype = Epic
-                AND assignee in (5fbb3d037cc1030069500950)
+                AND status = "In Progress"
              """,
             fields="worklog")
 
@@ -45,7 +45,6 @@ class JIRAService:
         numberOfEpics = len(allEpics)
         i = 0
         
-        # TODO: Candidate for making into a thread
         for issue in allEpics:
             print(f'\nProcessing EPIC: {issue}')
             allWorklogs[str(issue)] = {} 
