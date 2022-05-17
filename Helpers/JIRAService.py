@@ -46,7 +46,6 @@ class JIRAService:
         i = 0
         
         for issue in allEpics:
-            print(f'\nProcessing EPIC: {issue}')
             allWorklogs[str(issue)] = {} 
             allWorklogs[str(issue)]['description'] = {}
             allWorklogs[str(issue)]['is production support'] = {}
@@ -56,7 +55,6 @@ class JIRAService:
             children = self.jiraService.search_issues(f"parent={str(issue)}")
             
             for child in children:
-                print(f'\tChild: {child}')
                 allWorklogs[str(issue)][str(child)] = {}
                 allWorklogs[str(issue)][str(child)]['description'] = {}
                 allWorklogs[str(issue)][str(child)]['description'] = self.jiraService.issue(str(child)).fields.summary
