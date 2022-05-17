@@ -7,6 +7,7 @@ class Const:
         self.filenameForTimeSpentPerPerson = 'TimePerPerson.csv'
         self.filenameForFinishedItemsPerPerson = 'FinishedItems.csv'
         self.filenameForUnfinishedItemsPerPerson = 'UnfinishedItems.csv'
+        self.filenameForEpics = 'Epics.csv'
         self.filenameForAllItemsPerPerson = 'AllItems.csv'
         self.outputFolder = './output/'
         self.members = None
@@ -26,6 +27,9 @@ class Const:
         
     def setFilenameForUnfinishedItemsPerPerson(self, fileName):
         self.filenameForUnfinishedItemsPerPerson = fileName
+
+    def setFilenameForEpics(self, fileName):
+        self.filenameForEpics = fileName
 
     def setFilenameForAllItemsPerPerson(self, fileName):
         self.filenameForAllItemsPerPerson = fileName
@@ -62,6 +66,9 @@ class Const:
     
     def getFilenameForUnfinishedItemsPerPerson(self):
         return self.filenameForUnfinishedItemsPerPerson
+
+    def getFilenameForEpics(self):
+        return self.filenameForEpics
 
     def getFilenameForAllItemsPerPerson(self):
         return self.filenameForAllItemsPerPerson

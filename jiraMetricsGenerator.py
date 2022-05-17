@@ -8,7 +8,7 @@ import asyncio
 import PySimpleGUI as sg
 import shutil
 from Helpers import JIRAService, Const
-from ReportGenerators import HoursSpentPerSW, AllItemsPerPerson
+from ReportGenerators import Epics, HoursSpentPerSW, AllItemsPerPerson
 from ReportGenerators import TimeSpentPerPerson, FinishedItemsPerPerson, UnfinishedItemsPerPerson
 
 def generateReports(
@@ -17,9 +17,11 @@ def generateReports(
                progressBarTimeSpentPerPerson,
                progressBarFinishedItemsPerPerson,
                progressBarUnfinishedItemsPerPerson,
+               progressBarEpics,
                progressBarAllItemsPerPerson):
+    start = time.perf_counter()
     jiraService = JIRAService.JIRAService(
-       const.getCredentialFile(), const.get_JIRA_URL(), UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
+       const.getCredentialFile(), const.get_JIRA_URL(), WORKLOG_DATE, UPDATED_DATE, const.getMembers(), const.getProject(), const.getDoneStatuses())
 
     matrixOfWorklogsPerSW = HoursSpentPerSW.HoursSpentPerSW(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getSoftware(), const.getMembers(), const.getFilenameForHoursSpentPerSW(), const.getOutputFolder())
@@ -27,6 +29,7 @@ def generateReports(
         jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForTimeSpentPerPerson(),  const.getOutputFolder())
     doneItemsPerPerson = FinishedItemsPerPerson.FinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForFinishedItemsPerPerson(), const.getOutputFolder())
     unfinishedItemsPerPerson = UnfinishedItemsPerPerson.UnfinishedItemsPerPerson(jiraService, const.getMembers(), const.getFilenameForUnfinishedItemsPerPerson(), const.getOutputFolder())
+    epics = Epics.Epics(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getFilenameForEpics(), const.getOutputFolder(), progressBarEpics)
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
 
@@ -36,10 +39,10 @@ def generateReports(
             loop.create_task(matrixOfWorklogsPerSW.extractHoursPerSW()),
             loop.create_task(timeSpentPerPerson.extractTimeSpentPerPerson(progressBarTimeSpentPerPerson)),
             loop.create_task(doneItemsPerPerson.extractFinishedItemsPerPerson(progressBarFinishedItemsPerPerson)),
+            loop.create_task(epics.extractEpics()),
             loop.create_task(unfinishedItemsPerPerson.extractUnfinishedItemsPerPerson(progressBarUnfinishedItemsPerPerson)),
             loop.create_task(allItemsPerPerson.extractAllItemsPerPerson(progressBarAllItemsPerPerson)),
         ]
-        start = time.perf_counter()
         loop.run_until_complete(asyncio.wait(tasks))
     except Exception as e:
         print('There was a problem:')
@@ -103,6 +106,9 @@ def createGUI(const):
             [name('Unfinished Items Per Person'),
                 sg.InputText(key='fileForUnfinishedItemsPerPerson', size=(40,1), default_text=const.getFilenameForUnfinishedItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
+            [name('Epics'),
+                sg.InputText(key='fileForEpicsPerPerson', size=(40,1), default_text=const.getFilenameForEpics()), 
+                sg.FileBrowse(size=(15,1))],
             [name('All Items Per Person'),
                 sg.InputText(key='fileForAllItemsPerPerson', size=(40,1), default_text=const.getFilenameForAllItemsPerPerson()), 
                 sg.FileBrowse(size=(15,1))],
@@ -116,6 +122,8 @@ def createGUI(const):
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='doneItemsPerPerson')],
             [name('Unfinished Items Per Person'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='unfinishedItemsPerPerson')],
+            [name('Epics. This takes time. Please be patient'),
+                sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='epics')],
             [name('All Items Per Person. This takes time. Please be patient'),
                 sg.ProgressBar(1, orientation='h', size=(39.4, 20), key='allItemsPerPerson')],
             [sg.Button('Start', size=(15,1)), sg.Exit(size=(15,1))],
@@ -128,6 +136,7 @@ def createGUI(const):
         progressBarTimeSpentPerPerson = window['timeSpentPerPerson']
         progressBarFinishedItemsPerPerson = window['doneItemsPerPerson']
         progressBarUnfinishedItemsPerPerson = window['unfinishedItemsPerPerson']
+        progressBarEpicsPerPerson = window['epics']
         progressBarAllItemsPerPerson = window['allItemsPerPerson']
 
         while True:
@@ -146,8 +155,10 @@ def createGUI(const):
                 # Start and End Dates
                 startDate = values['start_date']
                 endDate = values['end_date']
+                global WORKLOG_DATE
+                WORKLOG_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
                 global UPDATED_DATE
-                UPDATED_DATE = f"worklogDate >= \"{startDate}\" AND worklogDate < \"{endDate}\""
+                UPDATED_DATE = f"updated >= \"{startDate}\" AND updated < \"{endDate}\""
                 startDate = parse(startDate, fuzzy=True)
                 endDate = parse(endDate, fuzzy=True)
 
@@ -209,6 +220,7 @@ def createGUI(const):
                            progressBarTimeSpentPerPerson,
                            progressBarFinishedItemsPerPerson,
                            progressBarUnfinishedItemsPerPerson,
+                           progressBarEpicsPerPerson,
                            progressBarAllItemsPerPerson)
                 sg.popup(f'Finished generating all reports. It took {reportGeneratingTime} minutes 😄.', title='Success')
                 break

@@ -4,6 +4,7 @@ class JIRAService:
     def __init__(self, 
                  CredentialsFile,
                  URL,
+                 worklogDate,
                  updatedDate,
                  members,
                  project,
@@ -12,6 +13,7 @@ class JIRAService:
         self.api_token = None
         self.CredentialsFile = CredentialsFile
         self.URL = URL
+        self.worklogDate = worklogDate
         self.updatedDate = updatedDate
         self.members = members
         self.project = project
@@ -19,18 +21,56 @@ class JIRAService:
         self.__logInToJIRA__()
 
     def __logInToJIRA__(self):
-        
         with open(self.CredentialsFile, 'r', newline='') as file:
             lines = file.read().splitlines() 
 
         username = lines[0]
         api_token = lines[1]
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
+        pass
+
+    # TODO: Remove Production support in query.
+    # I just placed it here to test how I can extract the "production-support" label.
+    def queryEpics(self, progressBar):
+        allEpics = self.jiraService.search_issues(
+            f"""
+                {self.updatedDate}
+                AND project = {self.project}
+                AND issuetype = Epic
+                AND status = "In Progress"
+             """,
+            fields="worklog")
+
+        allWorklogs = {}
+        numberOfEpics = len(allEpics)
+        i = 0
+        
+        for issue in allEpics:
+            allWorklogs[str(issue)] = {} 
+            allWorklogs[str(issue)]['description'] = {}
+            allWorklogs[str(issue)]['is production support'] = {}
+
+            allWorklogs[str(issue)]['is production support'] = True if self.jiraService.issue(str(issue)).raw['fields']['labels'] == ['production-support'] else False
+            allWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            children = self.jiraService.search_issues(f"parent={str(issue)}")
+            
+            for child in children:
+                allWorklogs[str(issue)][str(child)] = {}
+                allWorklogs[str(issue)][str(child)]['description'] = {}
+                allWorklogs[str(issue)][str(child)]['description'] = self.jiraService.issue(str(child)).fields.summary
+                allWorklogs[str(issue)][str(child)]['Hours Spent for the Month'] = self.jiraService.worklogs(child)
+                allWorklogs[str(issue)][str(child)]['Total Hours Spent'] = self.jiraService.worklogs(child)
+            
+            i += 1
+            progressBar.update_bar(i, numberOfEpics - 1)
+
+        # Returns a list of Worklogs
+        return allWorklogs
 
     def queryNumberOfDoneItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {self.updatedDate}
+                {self.worklogDate}
                 AND assignee in ({self.members[person]})
                 AND project = {self.project}
                 AND status in ({self.doneStatuses})
@@ -51,7 +91,7 @@ class JIRAService:
     def queryNumberOfUnfinishedItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {self.updatedDate}
+                {self.worklogDate}
                 AND assignee in ({self.members[person]})
                 AND project = {self.project}
                 AND NOT status in ({self.doneStatuses})
@@ -72,7 +112,7 @@ class JIRAService:
     def queryAllItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
             f"""
-                {self.updatedDate}
+                {self.worklogDate}
                 AND assignee in ({self.members[person]})
                 AND project = {self.project}
              """,
@@ -117,7 +157,7 @@ class JIRAService:
 
     def queryAdhocItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{self.updatedDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype = Ad-hoc',
+            f'{self.worklogDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype = Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -129,7 +169,7 @@ class JIRAService:
     
     def queryProjectItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
-            f'{self.updatedDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype != Ad-hoc',
+            f'{self.worklogDate} AND assignee in ({self.members[person]}) AND project = {self.project} AND issuetype != Ad-hoc',
             fields="worklog")
 
         allWorklogs = {}
@@ -141,7 +181,7 @@ class JIRAService:
 
     def queryJIRAPerSW(self, memberToQuery, swToQuery):
         allIssues = self.jiraService.search_issues(
-            f'{self.updatedDate} AND assignee in ({self.members[memberToQuery]}) AND project = {self.project} AND "Software[Dropdown]" = \"{swToQuery}\"',
+            f'{self.worklogDate} AND assignee in ({self.members[memberToQuery]}) AND project = {self.project} AND "Software[Dropdown]" = \"{swToQuery}\"',
             fields="worklog")
 
         allWorklogs = {}
