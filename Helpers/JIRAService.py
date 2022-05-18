@@ -107,12 +107,14 @@ class JIRAService:
         # Returns a list of Worklogs
         return allWorklogs
     
+    # TODO: Removed Austin-specific query when this is successful
     def queryAllOperationalTicketsNotUnderAnEpic(self, progressBar):
         allIssues = self.jiraService.search_issues(
             f"""
                 {self.worklogDate}
                 AND project = {self.project}
                 AND parent is empty
+                AND assignee in (5fbb3d037cc1030069500950) 
              """,
             fields="worklog")
 
@@ -121,6 +123,7 @@ class JIRAService:
         i = 0
         for issue in allIssues:
             allOperationalWorklogs[str(issue)] = {}
+            allOperationalWorklogs[str(issue)]['is production support'] = {}
             allOperationalWorklogs[str(issue)]['description'] = {}
             allOperationalWorklogs[str(issue)]['Software'] = {}
             allOperationalWorklogs[str(issue)]['Component'] = {}
@@ -131,7 +134,8 @@ class JIRAService:
             allOperationalWorklogs[str(issue)]['Date Finished'] = {}
             allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = {}
             allOperationalWorklogs[str(issue)]['Total Hours Spent'] = {}
-            
+
+            allOperationalWorklogs[str(issue)]['is production support'] = True if self.jiraService.issue(str(issue)).raw['fields']['labels'] == ['production-support'] else False
             allOperationalWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
             allOperationalWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
