@@ -117,6 +117,8 @@ class JIRAService:
             fields="worklog")
 
         allOperationalWorklogs = {}
+        numberOfOperationalItems = len(allIssues)
+        i = 0
         for issue in allIssues:
             allOperationalWorklogs[str(issue)] = {}
             allOperationalWorklogs[str(issue)]['description'] = {}
@@ -149,7 +151,10 @@ class JIRAService:
 
             if len(self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs']) > 0:
                 allOperationalWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
-            
+
+            i += 1
+            progressBar.update_bar(i, numberOfOperationalItems - 1)
+
         # Returns a list of Worklogs
         return allOperationalWorklogs
     
