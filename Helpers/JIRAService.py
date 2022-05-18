@@ -35,7 +35,6 @@ class JIRAService:
                 {self.updatedDate}
                 AND project = {self.project}
                 AND issuetype = Epic
-                AND status = "In Progress"
              """,
             fields="worklog")
 
@@ -125,13 +124,6 @@ class JIRAService:
             allOperationalWorklogs[str(issue)] = {}
             allOperationalWorklogs[str(issue)]['is production support'] = {}
             allOperationalWorklogs[str(issue)]['description'] = {}
-            allOperationalWorklogs[str(issue)]['Software'] = {}
-            allOperationalWorklogs[str(issue)]['Component'] = {}
-            allOperationalWorklogs[str(issue)]['Issue Type'] = {}
-            allOperationalWorklogs[str(issue)]['Story Point'] = {}
-            allOperationalWorklogs[str(issue)]['Status'] = {}
-            allOperationalWorklogs[str(issue)]['Date Started'] = {}
-            allOperationalWorklogs[str(issue)]['Date Finished'] = {}
             allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = {}
             allOperationalWorklogs[str(issue)]['Total Hours Spent'] = {}
 
@@ -139,22 +131,6 @@ class JIRAService:
             allOperationalWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
             allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
             allOperationalWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
-
-            if 'customfield_11428' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
-                allOperationalWorklogs[str(issue)]['Software'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']['value']
-
-            if 'customfield_11414' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
-                allOperationalWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
-            
-            allOperationalWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
-            allOperationalWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
-            allOperationalWorklogs[str(issue)]['Status'] = self.jiraService.issue(str(issue)).raw['fields']['status']['name']
-
-            if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
-                allOperationalWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
-
-            if len(self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs']) > 0:
-                allOperationalWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
 
             i += 1
             progressBar.update_bar(i, numberOfOperationalItems - 1)

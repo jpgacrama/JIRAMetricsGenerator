@@ -51,7 +51,6 @@ class Epics:
             outputFolder,
             progressBar) -> None:
         self.jiraService = jiraService
-        self.jiraIDKey = None
         self.fileName = fileName
         self.outputFolder = outputFolder
         self.desiredMonth = desiredMonth
@@ -74,14 +73,14 @@ class Epics:
             self.worklogs[epic]['description'] = self.epics[epic]['description']
             self.worklogs[epic]['children'] = {}
             epicThread.append([OneThreadPerChild(
-                    key,
-                    value,
+                    childKey,
+                    childValue,
                     self.desiredMonth,
                     self.desiredYear,
                     self.timeHelper,
                     epic,
                     self.worklogs)
-                for key, value in childrenDictionary.items()])
+                for childKey, childValue in childrenDictionary.items()])
 
         for thread in epicThread:
             for childThread in thread:
