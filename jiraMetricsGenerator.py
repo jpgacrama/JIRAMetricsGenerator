@@ -116,7 +116,7 @@ def createGUI(const):
                 sg.InputText(key='fileForEpics', size=(40,1), default_text=const.getFilenameForEpics()), 
                 sg.FileBrowse(size=(15,1))],
             [name('Operational Items'),
-                sg.InputText(key='fileForOperationalItems', size=(40,1), default_text=const.getFilenameForEpics()), 
+                sg.InputText(key='fileForOperationalItems', size=(40,1), default_text=const.getFilenameForOperationalItems()), 
                 sg.FileBrowse(size=(15,1))],
             [sg.VerticalSeparator(pad=(0,0))],
             [sg.Text('PROGRESS BARS')],
