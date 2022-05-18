@@ -29,8 +29,6 @@ class JIRAService:
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
         pass
 
-    # TODO: Remove Production support in query.
-    # I just placed it here to test how I can extract the "production-support" label.
     def queryEpics(self, progressBar):
         allEpics = self.jiraService.search_issues(
             f"""
@@ -108,6 +106,52 @@ class JIRAService:
 
         # Returns a list of Worklogs
         return allWorklogs
+    
+    def queryAllOperationalTicketsNotUnderAnEpic(self, progressBar):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                {self.worklogDate}
+                AND project = {self.project}
+                AND parent is empty
+             """,
+            fields="worklog")
+
+        allOperationalWorklogs = {}
+        for issue in allIssues:
+            allOperationalWorklogs[str(issue)] = {}
+            allOperationalWorklogs[str(issue)]['description'] = {}
+            allOperationalWorklogs[str(issue)]['Software'] = {}
+            allOperationalWorklogs[str(issue)]['Component'] = {}
+            allOperationalWorklogs[str(issue)]['Issue Type'] = {}
+            allOperationalWorklogs[str(issue)]['Story Point'] = {}
+            allOperationalWorklogs[str(issue)]['Status'] = {}
+            allOperationalWorklogs[str(issue)]['Date Started'] = {}
+            allOperationalWorklogs[str(issue)]['Date Finished'] = {}
+            allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = {}
+            allOperationalWorklogs[str(issue)]['Total Hours Spent'] = {}
+            
+            allOperationalWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
+            allOperationalWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
+
+            if 'customfield_11428' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']:
+                allOperationalWorklogs[str(issue)]['Software'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11428']['value']
+
+            if 'customfield_11414' in self.jiraService.issue(str(issue)).raw['fields'] and self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']:
+                allOperationalWorklogs[str(issue)]['Component'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11414']['value']
+            
+            allOperationalWorklogs[str(issue)]['Issue Type'] = self.jiraService.issue(str(issue)).raw['fields']['issuetype']['name']
+            allOperationalWorklogs[str(issue)]['Story Point'] = self.jiraService.issue(str(issue)).raw['fields']['customfield_11410']
+            allOperationalWorklogs[str(issue)]['Status'] = self.jiraService.issue(str(issue)).raw['fields']['status']['name']
+
+            if self.jiraService.issue(str(issue)).raw['fields']['status']['name'] == 'Done':
+                allOperationalWorklogs[str(issue)]['Date Finished'] = self.jiraService.issue(str(issue)).raw['fields']['statuscategorychangedate'][:10]
+
+            if len(self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs']) > 0:
+                allOperationalWorklogs[str(issue)]['Date Started'] = self.jiraService.issue(str(issue)).raw['fields']['worklog']['worklogs'][0]['started'][:10]
+            
+        # Returns a list of Worklogs
+        return allOperationalWorklogs
     
     def queryAllItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
