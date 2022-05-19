@@ -12,32 +12,31 @@ class OneThreadPerChild(threading.Thread):
         self.desiredYear = year
         self.timeHelper = timeHelper
         self.worklog = worklogFromMainThread # Value to be mutated   
-        pass  
 
     def run(self): 
         # Get time started
         print(f'THREAD: {self.key}')
+        self.worklog[self.key]['Hours Spent for the Month'] = 0
+        self.worklog[self.key]['Total Hours Spent'] = 0
         for worklog in self.value['Total Hours Spent']:
             timeSpent = 0
             extractedDateTime = self.timeHelper.trimDate(worklog.started)
-            
-            self.worklog[self.key]['Hours Spent for the Month'] = {}
-            self.worklog[self.key]['Total Hours Spent'] = {}
             if extractedDateTime:
                 # For Hours Spent for the Current Month
-                if extractedDateTime.month == self.desiredMonth and extractedDateTime.year == self.desiredYear:
+                if (extractedDateTime.month == self.desiredMonth and
+                    extractedDateTime.year == self.desiredYear and 
+                    'Hours Spent for the Month' in self.worklog[self.key].keys()):
+                    
                     timeSpent = worklog.timeSpentSeconds
                     timeSpent = self.timeHelper.convertToHours(timeSpent)
                     self.worklog[self.key]['Hours Spent for the Month'] += timeSpent
 
-                # For Total Hours Spent
-                timeSpent = worklog.timeSpentSeconds
-                timeSpent = self.timeHelper.convertToHours(timeSpent)
-                self.worklog[self.key]['Total Hours Spent'] += timeSpent
-
-        # Passing out the results to the calling thread
-        self.worklog[self.key] = self.worklog
-
+                if 'Total Hours Spent' in self.worklog[self.key].keys():
+                    # For Total Hours Spent
+                    timeSpent = worklog.timeSpentSeconds
+                    timeSpent = self.timeHelper.convertToHours(timeSpent)                
+                    self.worklog[self.key]['Total Hours Spent'] += timeSpent
+                    
 class OperationalItems:
     def __init__(
             self,
@@ -80,12 +79,10 @@ class OperationalItems:
         for thread in operationalItemsThread:
             for childThread in thread:
                 childThread.join()
-
-        return self.worklogs
     
     async def extractOperationalItems(self):
-        dictionary = self.__extractOperationalItems__()
-        self.__generateCSVFile__(dictionary)
+        self.__extractOperationalItems__()
+        self.__generateCSVFile__()
 
     def __generateCSVFile__(self):
         os.makedirs(self.outputFolder, exist_ok=True) 
