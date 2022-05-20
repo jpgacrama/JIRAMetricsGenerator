@@ -24,19 +24,17 @@ class OneThreadPerChild(threading.Thread):
             if extractedDateTime:
                 # For Hours Spent for the Current Month
                 if (extractedDateTime.month == self.desiredMonth and
-                    extractedDateTime.year == self.desiredYear and 
-                    'Hours Spent for the Month' in self.worklog[self.key].keys()):
+                    extractedDateTime.year == self.desiredYear):
                     
                     timeSpent = worklog.timeSpentSeconds
                     timeSpent = self.timeHelper.convertToHours(timeSpent)
                     self.worklog[self.key]['Hours Spent for the Month'] += timeSpent
 
-                if 'Total Hours Spent' in self.worklog[self.key].keys():
-                    # For Total Hours Spent
-                    timeSpent = worklog.timeSpentSeconds
-                    timeSpent = self.timeHelper.convertToHours(timeSpent)                
-                    self.worklog[self.key]['Total Hours Spent'] += timeSpent
-                    
+                # For Total Hours Spent
+                timeSpent = worklog.timeSpentSeconds
+                timeSpent = self.timeHelper.convertToHours(timeSpent)                
+                self.worklog[self.key]['Total Hours Spent'] += timeSpent
+
 class OperationalItems:
     def __init__(
             self,
@@ -91,25 +89,16 @@ class OperationalItems:
             
             # Initialize all columns
             csvwriter.writerow(['JIRA ID', 'Is production support', 'Description',
-                'Software', 'Component', 'Issue Type', 'Story Point',
-                'Status', 'Date Started', 'Date Finished',
                 'Hours Spent for the Month', 'Total Hours Spent'])
 
-            for person in self.worklogPerPerson:
-                for jiraID in self.worklogPerPerson[person]:
+            for jiraID in self.worklogs:
+                if set(('is production support', 'description', 'Total Hours Spent')).issubset(self.worklogs[jiraID].keys()):
                     csvwriter.writerow([
                         f'=HYPERLINK(CONCAT("https://macrovue.atlassian.net/browse/", \"{jiraID}\"),\"{jiraID}\")',
-                        self.worklogPerPerson[jiraID]['is production support'],
-                        self.worklogPerPerson[jiraID]['description'],
-                        self.worklogPerPerson[jiraID]['Software'],
-                        self.worklogPerPerson[jiraID]['Component'],
-                        self.worklogPerPerson[jiraID]['Issue Type'],
-                        self.worklogPerPerson[jiraID]['Story Point'],
-                        self.worklogPerPerson[jiraID]['Status'],
-                        self.worklogPerPerson[jiraID]['Date Started'],
-                        self.worklogPerPerson[jiraID]['Date Finished'],
-                        self.worklogPerPerson[jiraID]['Hours Spent for the Month'],
-                        self.worklogPerPerson[jiraID]['Total Hours Spent']])
+                        self.worklogs[jiraID]['is production support'],
+                        self.worklogs[jiraID]['description'],
+                        self.worklogs[jiraID]['Hours Spent for the Month'],
+                        self.worklogs[jiraID]['Total Hours Spent']])
                 
         print(f"Writing to {self.fileName} done.")
 

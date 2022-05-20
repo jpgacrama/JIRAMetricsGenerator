@@ -106,14 +106,12 @@ class JIRAService:
         # Returns a list of Worklogs
         return allWorklogs
     
-    # TODO: Removed Austin-specific query when this is successful
     def queryAllOperationalTicketsNotUnderAnEpic(self, progressBar):
         allIssues = self.jiraService.search_issues(
             f"""
                 {self.worklogDate}
                 AND project = {self.project}
                 AND parent is empty
-                AND assignee in (5fbb3d037cc1030069500950) 
              """,
             fields="worklog")
 
