@@ -15,7 +15,6 @@ class OneThreadPerChild(threading.Thread):
 
     def run(self): 
         # Get time started
-        print(f'THREAD: {self.key}')
         self.worklog[self.key]['Hours Spent for the Month'] = 0
         self.worklog[self.key]['Total Hours Spent'] = 0
         for worklog in self.value['Total Hours Spent']:
