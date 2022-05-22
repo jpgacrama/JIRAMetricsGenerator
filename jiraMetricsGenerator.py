@@ -33,7 +33,7 @@ def generateReports(
     allItemsPerPerson = AllItemsPerPerson.AllItemsPerPerson(
         jiraService, progressBarHoursPerSW, DESIRED_MONTH, DESIRED_YEAR, const.getMembers(), const.getFilenameForAllItemsPerPerson(), const.getOutputFolder())
     epics = Epics.Epics(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getFilenameForEpics(), const.getOutputFolder(), progressBarEpics)
-    operationalItems = OperationalItems.OperationalItems(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getFilenameForEpics(), const.getOutputFolder(), progressBarOperationalItems)
+    operationalItems = OperationalItems.OperationalItems(jiraService, DESIRED_MONTH, DESIRED_YEAR, const.getFilenameForOperationalItems(), const.getOutputFolder(), progressBarOperationalItems)
 
     try:
         loop = asyncio.get_event_loop()
