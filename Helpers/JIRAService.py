@@ -29,15 +29,12 @@ class JIRAService:
         self.jiraService = JIRA(self.URL, basic_auth=(username, api_token))
         pass
 
-    # TODO: Remove Production support in query.
-    # I just placed it here to test how I can extract the "production-support" label.
     def queryEpics(self, progressBar):
         allEpics = self.jiraService.search_issues(
             f"""
                 {self.updatedDate}
                 AND project = {self.project}
                 AND issuetype = Epic
-                AND status = "In Progress"
              """,
             fields="worklog")
 
@@ -108,6 +105,36 @@ class JIRAService:
 
         # Returns a list of Worklogs
         return allWorklogs
+    
+    def queryAllOperationalTicketsNotUnderAnEpic(self, progressBar):
+        allIssues = self.jiraService.search_issues(
+            f"""
+                {self.worklogDate}
+                AND project = {self.project}
+                AND parent is empty
+             """,
+            fields="worklog")
+
+        allOperationalWorklogs = {}
+        numberOfOperationalItems = len(allIssues)
+        i = 0
+        for issue in allIssues:
+            allOperationalWorklogs[str(issue)] = {}
+            allOperationalWorklogs[str(issue)]['is production support'] = {}
+            allOperationalWorklogs[str(issue)]['description'] = {}
+            allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = {}
+            allOperationalWorklogs[str(issue)]['Total Hours Spent'] = {}
+
+            allOperationalWorklogs[str(issue)]['is production support'] = True if self.jiraService.issue(str(issue)).raw['fields']['labels'] == ['production-support'] else False
+            allOperationalWorklogs[str(issue)]['description'] = self.jiraService.issue(str(issue)).fields.summary
+            allOperationalWorklogs[str(issue)]['Hours Spent for the Month'] = self.jiraService.worklogs(issue)
+            allOperationalWorklogs[str(issue)]['Total Hours Spent'] = self.jiraService.worklogs(issue)
+
+            i += 1
+            progressBar.update_bar(i, numberOfOperationalItems - 1)
+
+        # Returns a list of Worklogs
+        return allOperationalWorklogs
     
     def queryAllItemsPerPerson(self, person):
         allIssues = self.jiraService.search_issues(
